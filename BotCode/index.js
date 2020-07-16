@@ -9,7 +9,7 @@ const debugWebServer = require('./debugWebServer');
 let dWB = new debugWebServer();
 const dbManagement = require('./scheduling/db');
 let dbUrl;
-if(process.env.IS_HEROKU){
+if (process.env.IS_HEROKU) {
     dbUrl = new URL(process.env.DATABASE_URL);
 } else {
     dbUrl = new URL(process.env.SMART_SCHEDULER_DB_URL);
@@ -103,7 +103,9 @@ Just type your plans and he will automatically find scheduling date and what's t
 <b>Available commands:</b>
 /list - shows active schedules for this chat
 /del <b>1,2,...,N</b> - disables and deletes <b>N</b>-th schedule(s) from list`));
-bot.help(ctx => ctx.reply('Send me a sticker'));
+bot.help(ctx => ctx.replyWithHTML(`<b>Commands:</b>:
+/list - shows active schedules for this chat
+/del <b>1,2,...,N</b> - disables and deletes <b>N</b>-th schedule(s) from list`));
 
 bot.on('text', async ctx => {
     let chatID = ctx.chat.id.toString(10);
@@ -142,8 +144,7 @@ async function ServiceMsgs(ctxs) {
                     deletingSchedulesIDs = ['all'];
                     deleteAll = true;
                 } else {
-                    if (!deletingSchedulesIDs.length) deletingSchedulesIDs = serviceRes;
-                    else deletingSchedulesIDs = deletingSchedulesIDs.concat(serviceRes);
+                    deletingSchedulesIDs = deletingSchedulesIDs.concat(serviceRes);
                 }
             }
         } else if (msgText[0] == '.') {
@@ -214,36 +215,15 @@ async function ServiceCommand(ctx) {
             await ctx.reply('Scheduled jobs list empty.');
         }
     } else if (msgText.indexOf('/del') == 0) {
-        let parsingMsgText = msgText.substring(4, msgText.length).trim();
-        if (parsingMsgText.indexOf('all') == 0) {
+        if (msgText.indexOf('all') > -1) {
             return ['all'];
         } else {
-            let separatorIndex = parsingMsgText.indexOf(',');
-            let ids = [];
-            if (separatorIndex >= 0) {
-                //                ids.push(parseInt(parsingMsgText.substring(0, separatorIndex)));
-                for (separatorIndex = parsingMsgText.indexOf(','); separatorIndex >= 0;
-                    parsingMsgText = parsingMsgText.substring(separatorIndex + 1, parsingMsgText.length),
-                    separatorIndex = parsingMsgText.indexOf(',')) {
-                    let word = parsingMsgText.substring(0, separatorIndex);
-                    if (word.indexOf('all') === 0) {
-                        return ['all'];
-                    } else {
-                        let num = parseInt(parsingMsgText.substring(0, separatorIndex));
-                        if (!ids.includes(num)) ids.push(num);
-                    }
-                }
-                if (parsingMsgText.indexOf('all') > -1) {
-                    return ['all'];
-                } else {
-                    let num = parseInt(parsingMsgText);
-                    if (!ids.includes(num)) ids.push(num);
-                }
-            } else {
-                ids.push(parseInt(parsingMsgText));
+            let ids = msgText.match(/[0-9]+/g);
+            for (let i in ids) {
+                ids[i] = parseInt(ids[i], 10);
             }
+            ids.sort((a, b) => a - b);
             if (!isNaN(ids[0])) {
-                ids.sort((a, b) => a - b);
                 return ids;
             }
         }
