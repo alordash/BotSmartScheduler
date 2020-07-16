@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "test",
+			"path": "BotCode/",
+			"group": "test",
+			"problemMatcher": [],
+			"label": "npm: test - BotCode",
+			"detail": "jasmine"
+		}
+	]
+}
