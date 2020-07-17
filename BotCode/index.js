@@ -99,13 +99,21 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
 bot.start(ctx => ctx.replyWithHTML(
     `Welcome.
 This is <b>Bot-Scheduler</b>. He can help you to schedule your tasks fast and accurate.
-Just type your plans and he will automatically find scheduling date and what's to schedule.
+Just type your plans and he will automatically find scheduling date and what's to schedule ⏰
 <b>Available commands:</b>
-/list - shows active schedules for this chat
-/del <b>1,2,...,N</b> - disables and deletes <b>N</b>-th schedule(s) from list`));
-bot.help(ctx => ctx.replyWithHTML(`<b>Commands:</b>:
-/list - shows active schedules for this chat
-/del <b>1,2,...,N</b> - disables and deletes <b>N</b>-th schedule(s) from list`));
+🗓 /list
+        Shows active schedules for this chat.
+🗑 /del <b>1, 2, ...N</b>
+        Disables and deletes schedules with corresponding id.
+🗑 /del <b>1-10, A-B</b>
+        Disables and deletes all schedules in corresponding range.`));
+bot.help(ctx => ctx.replyWithHTML(`<b>Available Commands:</b>
+🗓 /list
+        Shows active schedules for this chat.
+🗑 /del <b>1, 2, ...N</b>
+        Disables and deletes schedules with corresponding id.
+🗑 /del <b>1-10, A-B</b>
+        Disables and deletes all schedules in corresponding range.`));
 
 bot.on('text', async ctx => {
     let chatID = ctx.chat.id.toString(10);
@@ -218,13 +226,31 @@ async function ServiceCommand(ctx) {
         if (msgText.indexOf('all') > -1) {
             return ['all'];
         } else {
-            let ids = msgText.match(/[0-9]+/g);
-            for (let i in ids) {
-                ids[i] = parseInt(ids[i], 10);
+            let nums = msgText.match(/[0-9]+/g);
+            let ranges = msgText.match(/[0-9]+-[0-9]+/g);
+            for (let i in nums) {
+                nums[i] = parseInt(nums[i], 10);
             }
-            ids.sort((a, b) => a - b);
-            if (!isNaN(ids[0])) {
-                return ids;
+            for(let i in ranges){
+                let range = ranges[i];
+                let index = range.indexOf('-');
+                let leftNum = +range.substring(0, index);
+                let rightNum = +range.substring(index + 1);
+                if(leftNum > rightNum) {
+                    let t = leftNum;
+                    leftNum = rightNum;
+                    rightNum = t;
+                }
+                for (let j = leftNum; j <= rightNum; j++) {
+                    nums.push(j);
+                }
+            }
+            nums = nums.filter((item, pos) => {
+                return nums.indexOf(item) == pos;
+            });
+            nums.sort((a, b) => a - b);
+            if (!isNaN(nums[0])) {
+                return nums;
             }
         }
     } else if (MiscFunctions.IsInteger(msgText[1])) {
