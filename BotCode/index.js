@@ -102,18 +102,18 @@ This is <b>Bot-Scheduler</b>. He can help you to schedule your tasks fast and ac
 Just type your plans and he will automatically find scheduling date and what's to schedule ⏰
 <b>Available commands:</b>
 🗓 /list
-        Shows active schedules for this chat.
+        Shows active tasks for this chat.
 🗑 /del <b>1, 2, ...N</b>
-        Disables and deletes schedules with corresponding id.
+        Deletes tasks with corresponding id.
 🗑 /del <b>1-10, A-B</b>
-        Disables and deletes all schedules in corresponding range.`));
+        Deletes all tasks in corresponding range.`));
 bot.help(ctx => ctx.replyWithHTML(`<b>Available Commands:</b>
 🗓 /list
-        Shows active schedules for this chat.
+        Shows active tasks for this chat.
 🗑 /del <b>1, 2, ...N</b>
-        Disables and deletes schedules with corresponding id.
+        Deletes tasks with corresponding id.
 🗑 /del <b>1-10, A-B</b>
-        Disables and deletes all schedules in corresponding range.`));
+        Deletes all tasks in corresponding range.`));
 
 bot.on('text', async ctx => {
     let chatID = ctx.chat.id.toString(10);
