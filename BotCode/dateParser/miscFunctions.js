@@ -83,8 +83,8 @@ MiscFunctions = {
         }
     },
 
-    GetTimeTillDayOfWeek: function (currentDay, day, numberOfWeaks) {
-        let res = 7 * numberOfWeaks;
+    GetTimeTillDayOfWeek: function (currentDay, day, numberOfWeeks) {
+        let res = 7 * numberOfWeeks;
         if (currentDay < day) res += day - currentDay;
         else res += 7 - (currentDay - day);
         return res;

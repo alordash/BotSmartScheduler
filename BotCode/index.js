@@ -172,7 +172,7 @@ async function ServiceMsgs(ctxs) {
     if (deletingSchedulesIDs.length) {
         if (deleteAll) {
             await db.ClearAllSchedules(chatID);
-            reply += `Cleared all schedules.\r\nShow list: /list\r\n`;
+            reply += `Cleared all schedules.\r\nShow list: /list`;
         } else {
             let s = '';
             for (let i in deletingSchedulesIDs) {
@@ -186,8 +186,8 @@ async function ServiceMsgs(ctxs) {
             let end = '';
             if (deletingSchedulesIDs.length > 1) end = 's';
 
-            if (reply.length > 0) reply += `Deleted ${deletingSchedulesIDs.join(', ')} schedule${end}. Show list: /list\r\n`;
-            else reply += `Deleted ${deletingSchedulesIDs.join(', ')} schedule${end}.\r\nShow list: /list\r\n`;
+            if (reply.length > 0) reply += `Deleted ${deletingSchedulesIDs.join(', ')} schedule${end}. Show list: /list`;
+            else reply += `Deleted ${deletingSchedulesIDs.join(', ')} schedule${end}.\r\nShow list: /list`;
         }
     }
     if (schedules.length) await db.AddNewSchedules(schedules);
@@ -203,7 +203,7 @@ async function ServiceCommand(ctx) {
     if (msgText.indexOf('/list') == 0) {
         let schedules = await db.ListSchedules(chatID);
         if (schedules !== false) {
-            let answer = `List of scheduled jobs:\r\n`;
+            let answer = ``;
             schedules.sort((a, b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
             for (let schedule of schedules) {
                 let scheduledBy = '';
@@ -212,7 +212,7 @@ async function ServiceCommand(ctx) {
             }
             await ctx.replyWithHTML(answer);
         } else {
-            await ctx.reply('Scheduled jobs list empty.');
+            await ctx.reply('List of plans empty.');
         }
     } else if (msgText.indexOf('/del') == 0) {
         if (msgText.indexOf('all') > -1) {

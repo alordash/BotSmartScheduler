@@ -211,37 +211,49 @@ function FindAdditiveLiterals() {
         }
     }
     if (i > -1) {
-        let num = this.words[i + 1];
-        let numIsInt = MiscFunctions.IsInteger(num);
-        if (numIsInt) {
-            MiscFunctions.AddWordIndex.call(this, i)
-        }
-        for (let j = 0, numIsInt = MiscFunctions.IsInteger(num); i + j + 2 < this.words.length && numIsInt; j += 2) {
-            num = this.words[i + 1 + j];
-            let additiveLiteralWord = this.words[i + 2 + j];
+        let lastUsedWordIndex = i;
+        let num = 0;
+        let foundTimeTypes = [];
+        for (let wordIndex = i; wordIndex < this.words.length && wordIndex - lastUsedWordIndex <= 2; wordIndex++) {
+            const word = this.words[wordIndex];
+            let found = false;
+            let prevWordIsNum = false;
             for (const [timeType, timeVal] of Object.entries(constants.additiveLiterals)) {
                 for (const additiveLiteral of timeVal) {
-                    if (!this.time[timeType].locked && additiveLiteralWord.toLowerCase().indexOf(additiveLiteral.string) === 0) {
-                        MiscFunctions.AddWordIndex.call(this, i, i + 1 + j, i + 2 + j);
-                        dateParserConsole(`Found additiveLiteral "${additiveLiteral.string}" in "${additiveLiteralWord}", num = "${+num}"`);
-
-                        this.time[timeType].values.push({ priority: constants.priorityTools.max, word: i + 1, val: MiscFunctions.GetCurrentTime(timeType, this.ComposedDate) + +num * additiveLiteral.multiplyer });
-                        this.time[timeType].locked = true;
-
-                        this.words[i + j] = this.words[i + 1 + j] = this.words[i + 2 + j] = '';
-
-                        if (this.time.hours.values.length < 1) {
-                            this.time.hours.values.push({ priority: 12, word: i, val: MiscFunctions.GetCurrentTime("hours", this.ComposedDate) });
+                    if (word.toLowerCase().indexOf(additiveLiteral.string) === 0) {
+                        if (MiscFunctions.IsInteger(num = this.words[wordIndex - 1])) {
+                            num = +num;
+                            prevWordIsNum = true;
+                        } else {
+                            num = 1;
+                            prevWordIsNum = false;
                         }
-                        /*
-                        let prevTimeType = MiscFunctions.GetPreviousTimeType(timeType);
-                        while (prevTimeType != 'years') {
-                            if (!this.time[prevTimeType].locked) this.time[prevTimeType].values.push({ priority: 12, word: i, val: 0 });
-                            prevTimeType = MiscFunctions.GetPreviousTimeType(prevTimeType);
-                        }*/
+                        if (!additiveLiteral.needNum || (additiveLiteral.needNum && prevWordIsNum)) {
+                            dateParserConsole(`Found additiveLiteral "${additiveLiteral.string}" in "${word}", num = "${+num}"`);
+                            lastUsedWordIndex = wordIndex;
+                            if (!this.time[timeType].locked) {
+                                MiscFunctions.AddWordIndex.call(this, i, wordIndex - 1, wordIndex);
+                                this.time[timeType].values.push({ priority: constants.priorityTools.max, word: wordIndex, val: MiscFunctions.GetCurrentTime(timeType, this.ComposedDate) + num * additiveLiteral.multiplyer });
+                                foundTimeTypes.push(timeType);
+                            }
+
+                            //                                this.words[i + j] = this.words[i + 1 + j] = this.words[i + 2 + j] = '';
+
+                        }
+                        break;
                     }
+
+                }
+                if (found) {
+                    break;
                 }
             }
+        }
+        for(let timeType of foundTimeTypes) {
+            this.time[timeType].locked = true;
+        }
+        if(!foundTimeTypes.includes("hours")) {
+            this.time.hours.values.push({ priority: 12, word: i, val: MiscFunctions.GetCurrentTime("hours", this.ComposedDate) });
         }
     }
 }

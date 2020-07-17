@@ -103,11 +103,11 @@ constants = {
     },
     additiveWord: 'через',
     additiveLiterals: {
-        years: [{ string: 'лет', multiplyer: 1 }, { string: 'год', multiplyer: 1 }],
-        months: [{ string: 'месяц', multiplyer: 1 }],
-        dates: [{ string: 'дн', multiplyer: 1 }, { string: 'ден', multiplyer: 1 }, { string: 'недел', multiplyer: 7 }],
-        hours: [{ string: 'час', multiplyer: 1 }],
-        minutes: [{ string: 'мин', multiplyer: 1 }]
+        years: [{ string: 'лет', multiplyer: 1, needNum: true }, { string: 'год', multiplyer: 1, needNum: false }],
+        months: [{ string: 'месяц', multiplyer: 1, needNum: false }],
+        dates: [{ string: 'дне', multiplyer: 1, needNum: true }, { string: 'дня', multiplyer: 1, needNum: true }, { string: 'ден', multiplyer: 1, needNum: false }, { string: 'недел', multiplyer: 7, needNum: false }],
+        hours: [{ string: 'час', multiplyer: 1, needNum: false }],
+        minutes: [{ string: 'мин', multiplyer: 1, needNum: false }]
     },
 
     hourTimeOfDayDefiners: [
