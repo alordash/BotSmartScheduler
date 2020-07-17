@@ -104,16 +104,20 @@ Just type your plans and he will automatically find scheduling date and what's t
 🗓 /list
         Shows active tasks for this chat.
 🗑 /del <b>1, 2, ...N</b>
-        Deletes tasks with corresponding id.
+        Deletes tasks by id.
 🗑 /del <b>1-10, A-B</b>
-        Deletes all tasks in corresponding range.`));
+        Deletes all tasks within range.
+#️⃣ /N
+        Deletes N-th task.`));
 bot.help(ctx => ctx.replyWithHTML(`<b>Available Commands:</b>
 🗓 /list
         Shows active tasks for this chat.
 🗑 /del <b>1, 2, ...N</b>
-        Deletes tasks with corresponding id.
+        Deletes tasks by id.
 🗑 /del <b>1-10, A-B</b>
-        Deletes all tasks in corresponding range.`));
+        Deletes all tasks within range.
+#️⃣ /N
+        Deletes N-th task.`));
 
 bot.on('text', async ctx => {
     let chatID = ctx.chat.id.toString(10);
@@ -216,7 +220,7 @@ async function ServiceCommand(ctx) {
             for (let schedule of schedules) {
                 let scheduledBy = '';
                 if (schedule.username != 'none') scheduledBy = ` by <b>${schedule.username}</b>`;
-                answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: ${MiscFunctions.FormDateStringFormat(new Date(+schedule.ts))}\r\n`;
+                answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${MiscFunctions.FormDateStringFormat(new Date(+schedule.ts))}</b>\r\n`;
             }
             await ctx.replyWithHTML(answer);
         } else {
