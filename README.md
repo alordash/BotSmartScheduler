@@ -1,5 +1,7 @@
 # Bot Smart Scheduler
 Если вам нужен быстрый и удобный инструмент для планирования, бот Smart Scheduler то что вам нужно.  
+  
+![Пример использования](https://raw.githubusercontent.com/alordash/BotSmartScheduler/master/UsageExample.png)  
 ## Как использовать
 [Бот Smart Scheduler работает в Telegram.](https://t.me/SmartScheduler_bot)  
 Просто напишите задачу и требуемое время, а Smart Scheduler автоматически найдет дату и задачу в сообщении.  
