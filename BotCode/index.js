@@ -224,7 +224,7 @@ async function ServiceCommand(ctx) {
             }
             await ctx.replyWithHTML(answer);
         } else {
-            await ctx.reply('List of plans empty.');
+            await ctx.reply('List of plans is empty.');
         }
     } else if (msgText.indexOf('/del') == 0) {
         if (msgText.indexOf('all') > -1) {
