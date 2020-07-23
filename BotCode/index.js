@@ -99,6 +99,7 @@ bot.start(ctx => ctx.replyWithHTML(
     `Welcome.
 This is <b>Bot-Scheduler</b>. He can help you to schedule your tasks fast and accurate.
 Just type your plans and he will automatically find scheduling date and what's to schedule ⏰
+It is an open source project and is <a href="http://github.com/alordash/BotSmartScheduler">available here</a>
 <b>Available commands:</b>
 🗓 /list
         Shows active tasks for this chat.
@@ -107,7 +108,7 @@ Just type your plans and he will automatically find scheduling date and what's t
 🗑 /del <b>1-10, A-B</b>
         Deletes all tasks within range.
 #️⃣ /N
-        Deletes N-th task.`));
+        Deletes N-th task.`, { disable_web_page_preview: true }));
 bot.help(ctx => ctx.replyWithHTML(`<b>Available Commands:</b>
 🗓 /list
         Shows active tasks for this chat.
