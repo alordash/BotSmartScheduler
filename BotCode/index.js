@@ -5,6 +5,7 @@ let incomingMsgTimer = {};
 let incomingMsgCtxs = {};
 const DateParser = require('./dateParser/dateParser');
 const { MiscFunctions } = require('./dateParser/miscFunctions');
+const { Replies } = require('./replies');
 const debugWebServer = require('./debugWebServer');
 let dWB = new debugWebServer();
 const dbManagement = require('./scheduling/db');
@@ -95,29 +96,9 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
     }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
     if (process.env.IS_HEROKU == 'true') console.log = function () { };
 })();
-bot.start(ctx => ctx.replyWithHTML(
-    `Welcome.
-This is <b>Bot-Scheduler</b>. He can help you to schedule your tasks fast and accurate.
-Just type your plans and he will automatically find scheduling date and what's to schedule ⏰
-It is an open source project and is <a href="http://github.com/alordash/BotSmartScheduler">available here</a>
-<b>Available commands:</b>
-🗓 /list
-        Shows active tasks for this chat.
-🗑 /del <b>1, 2, ...N</b>
-        Deletes tasks by id.
-🗑 /del <b>1-10, A-B</b>
-        Deletes all tasks within range.
-#️⃣ /N
-        Deletes N-th task.`, { disable_web_page_preview: true }));
-bot.help(ctx => ctx.replyWithHTML(`<b>Available Commands:</b>
-🗓 /list
-        Shows active tasks for this chat.
-🗑 /del <b>1, 2, ...N</b>
-        Deletes tasks by id.
-🗑 /del <b>1-10, A-B</b>
-        Deletes all tasks within range.
-#️⃣ /N
-        Deletes N-th task.`));
+bot.start(ctx => ctx.replyWithHTML(Replies.welcome + Replies.commands,
+    { disable_web_page_preview: true }));
+bot.help(ctx => ctx.replyWithHTML(Replies.commands));
 
 bot.on('text', async ctx => {
     let chatID = ctx.chat.id.toString(10);
@@ -164,7 +145,7 @@ async function ServiceMsgs(ctxs) {
             await ctx.reply(`Postgres response: ${JSON.stringify(res.rows)}`);
         } else {
             let parsedMessage = await DateParser.ParseDate(msgText, process.env.IS_HEROKU != 'true');
-            servicedMessages.push({ parsedMessage: parsedMessage, chatID: chatID, username: ctx.from.username });
+            servicedMessages.push({ parsedMessage: parsedMessage, chatID: chatID, username: ctx.from.username, userID: ctx.from.id });
         }
     }
     let reply = '';
@@ -173,18 +154,23 @@ async function ServiceMsgs(ctxs) {
         let isScheduled = await db.GetScheduleByText(servicedMessage.chatID, servicedMessage.parsedMessage.text);
         if (isScheduled !== false) {
             isScheduled = +isScheduled;
-            reply += `"${servicedMessage.parsedMessage.text}" already scheduled at: <b>${MiscFunctions.FormDateStringFormat(new Date(isScheduled))}</b>\r\n`;
-        } else if (typeof (servicedMessage.parsedMessage.date) != 'undefined') {
-            schedules.push({ chatID: servicedMessage.chatID, text: servicedMessage.parsedMessage.text, timestamp: servicedMessage.parsedMessage.date.getTime(), username: servicedMessage.username });
-            reply += servicedMessage.parsedMessage.answer + `\r\n`;
+            reply += Replies.scheduled(servicedMessage.parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(isScheduled)));
         } else {
-            if (servicedMessage.chatID[0] !== '_') reply += servicedMessage.parsedMessage.answer + `\r\n`;
+            if (typeof (servicedMessage.parsedMessage.date) != 'undefined') {
+                schedules.push({ chatID: servicedMessage.chatID, text: servicedMessage.parsedMessage.text, timestamp: servicedMessage.parsedMessage.date.getTime(), username: servicedMessage.username });
+                reply += servicedMessage.parsedMessage.answer + `\r\n`;
+            } else {
+                if (servicedMessage.chatID[0] !== '_') reply += servicedMessage.parsedMessage.answer + `\r\n`;
+            }
+            if (!(await db.HasUserID(servicedMessage.userID))) {
+                reply += Replies.tzWarning;
+            }
         }
     }
     if (deletingSchedulesIDs.length) {
         if (deleteAll) {
             await db.ClearAllSchedules(chatID);
-            reply += `Cleared all schedules.\r\nShow list: /list`;
+            reply += Replies.cleared;
         } else {
             let s = '';
             for (let i in deletingSchedulesIDs) {
@@ -198,8 +184,7 @@ async function ServiceMsgs(ctxs) {
             let end = '';
             if (deletingSchedulesIDs.length > 1) end = 's';
 
-            if (reply.length > 0) reply += `Deleted ${deletingSchedulesIDs.join(', ')} schedule${end}. Show list: /list`;
-            else reply += `Deleted ${deletingSchedulesIDs.join(', ')} schedule${end}.\r\nShow list: /list`;
+            reply + Replies.deleted(deletingSchedulesIDs.join(', '), end, reply.length > 0);
         }
     }
     if (schedules.length) await db.AddNewSchedules(schedules);
@@ -224,7 +209,7 @@ async function ServiceCommand(ctx) {
             }
             await ctx.replyWithHTML(answer);
         } else {
-            await ctx.reply('List of plans is empty.');
+            await ctx.reply(Replies.listIsEmpty);
         }
     } else if (msgText.indexOf('/del') == 0) {
         if (msgText.indexOf('all') > -1) {
