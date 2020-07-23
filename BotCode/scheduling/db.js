@@ -81,9 +81,9 @@ class dbManagment {
             }
             queryString = queryString.substring(0, queryString.length - 2);
             console.log(`queryString = ${queryString}`);
-            let res = await this.Query(queryString);
             return true;
-        } else return false;
+        }
+        return false;
     }
 
     async ListSchedules(chatID) {
@@ -113,34 +113,34 @@ class dbManagment {
     async GetScheduleByText(chatID, text) {
         let res = await this.Query(`SELECT * FROM Schedules WHERE text = '${text}' AND ChatID = '${chatID}'`);
         console.log(`Picked schedule by text ${JSON.stringify(res.rows)}`);
-        if (res.rows.length > 0) return res.rows[0].ts;
+        if (typeof(res) != 'undefined' && res.rows.length > 0) return res.rows[0].ts;
         else return false;
     }
 
     async GetScheduleById(chatID, id) {
         let res = await this.Query(`SELECT * FROM Schedules WHERE id = '${id}' AND ChatID = '${chatID}'`);
         console.log(`Picked schedule by id ${JSON.stringify(res.rows)}`);
-        if (res.rows.length > 0) return res.rows[0].ts;
+        if (typeof(res) != 'undefined' && res.rows.length > 0) return res.rows[0].ts;
         else return false;
     }
 
     async GetAllSchedules() {
         let res = await this.Query(`SELECT * FROM Schedules`);
         console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
-        if (res.rows.length > 0) return res.rows;
+        if (typeof(res) != 'undefined' && res.rows.length > 0) return res.rows;
         else return false;
     }
 
     async GetSchedules(chatID) {
         let res = await this.Query(`SELECT * FROM Schedules WHERE ChatID = '${chatID}'`);
         console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
-        if (res.rows.length > 0) return res.rows;
+        if (typeof(res) != 'undefined' && res.rows.length > 0) return res.rows;
         else return false;
     }
 
     async HasUserID(id) {
         let res = await this.Query(`SELECT * FROM UserIDs where id = ${id}`);
-        if(res.rows.length > 0) return true;
+        if(typeof(res) != 'undefined' && res.rows.length > 0) return true;
         else return false;
     }
 }
