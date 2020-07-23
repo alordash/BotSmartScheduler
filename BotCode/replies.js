@@ -20,6 +20,17 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
     deleted: function (str, end, newline) {
         return `Deleted ${str} schedule${end}.${newline === false ? `\r\nShow list: /list` : ``}`;
     },
-    listIsEmpty: `List of plans is empty.`
+    listIsEmpty: `List of plans is empty.`,
+
+    //#region TZ config
+    tzPrivateChat: `🛠 To configure time zone you can either:\r\n1. Let us know your location.\r\n2. Type GMT offset in <b>± HH</b>:<b>DD</b> format.`,
+    tzGroupChat: `🛠 To configure time zone type GMT offset in <b>± HH</b>:<b>DD</b> format.`,
+    tzUseLocation: `🔍 Use my location`,
+    tzUseLocationResponse: `Configuring...`,
+    tzTypeManually: `⌨️ Type manually`,
+    tzTypeManuallyReponse: `Type your GMT offset in in <b>± HH</b>:<b>DD</b> format.`,
+    tzCancel: `❌ Cancel`,
+    tzCancelReponse: `⏳ Cancelled. Please notice that determined time zone increases time accuracy.`,
+    //#endregion TZ config
 }
 module.exports = { Replies };

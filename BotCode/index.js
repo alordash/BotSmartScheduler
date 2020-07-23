@@ -100,18 +100,53 @@ bot.start(ctx => ctx.replyWithHTML(Replies.welcome + Replies.commands,
     { disable_web_page_preview: true }));
 bot.help(ctx => ctx.replyWithHTML(Replies.commands));
 
+var tzPendingConfirmationUsers = [];
+bot.command('tz', (ctx) => {
+    let isPrivateChat = ctx.chat.id >= 0;
+    if (isPrivateChat) {
+        return ctx.replyWithHTML(Replies.tzPrivateChat, Markup
+            .keyboard([
+                [{ text: Replies.tzUseLocation, request_location: true }, { text: Replies.tzTypeManually }],
+                [{ text: Replies.tzCancel }],
+            ]).oneTime()
+            .removeKeyboard()
+            .resize()
+            .extra()
+        );
+    }
+    tzPendingConfirmationUsers.push(ctx.from.id);
+    return ctx.replyWithHTML(Replies.tzGroupChat);
+});
+
+bot.hears(Replies.tzUseLocation, ctx => {
+    ctx.replyWithHTML(Replies.property);
+});
+bot.hears(Replies.tzTypeManually, ctx => {
+    tzPendingConfirmationUsers.push(ctx.from.id);
+    ctx.replyWithHTML(Replies.tzTypeManuallyReponse);
+});
+bot.hears(Replies.tzCancel, ctx => {
+    tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
+    ctx.replyWithHTML(Replies.tzCancelReponse);
+});
+
 bot.on('text', async ctx => {
     let chatID = ctx.chat.id.toString(10);
     if (chatID[0] == '-') {
         chatID = '_' + chatID.substring(1, chatID.length);
     }
-    if (typeof (incomingMsgCtxs[chatID]) == 'undefined') incomingMsgCtxs[chatID] = [];
-    incomingMsgCtxs[chatID].push(ctx);
-    if (typeof (incomingMsgTimer[chatID]) != 'undefined') clearTimeout(incomingMsgTimer[chatID]);
-    incomingMsgTimer[chatID] = setTimeout(() => {
-        ServiceMsgs(incomingMsgCtxs[chatID]);
-        incomingMsgCtxs[chatID] = [];
-    }, 1000);
+    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
+        //Parse tz from msg;
+        ctx.replyWithHTML(`TZ has been determined!`);
+    } else {
+        if (typeof (incomingMsgCtxs[chatID]) == 'undefined') incomingMsgCtxs[chatID] = [];
+        incomingMsgCtxs[chatID].push(ctx);
+        if (typeof (incomingMsgTimer[chatID]) != 'undefined') clearTimeout(incomingMsgTimer[chatID]);
+        incomingMsgTimer[chatID] = setTimeout(() => {
+            ServiceMsgs(incomingMsgCtxs[chatID]);
+            incomingMsgCtxs[chatID] = [];
+        }, 1000);
+    }
     console.log(`Received msg`);
     /*
         if (!db.sending) await ServiceMsg(ctx);
@@ -162,7 +197,7 @@ async function ServiceMsgs(ctxs) {
             } else {
                 if (servicedMessage.chatID[0] !== '_') reply += servicedMessage.parsedMessage.answer + `\r\n`;
             }
-            if (!(await db.HasUserID(servicedMessage.userID))) {
+            if (servicedMessage.chatID[0] !== '_' && !(await db.HasUserID(servicedMessage.userID))) {
                 reply += Replies.tzWarning;
             }
         }
