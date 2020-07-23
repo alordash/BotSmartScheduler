@@ -85,7 +85,6 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
 
 (async function Init() {
     await db.InitDB();
-    console.log(`db.HasChatID(302) = ${await db.HasChatID(302)}`);
     await dWB.dWBinit();
     await bot.launch();
     let ts = Date.now();
@@ -235,12 +234,12 @@ async function ServiceCommand(ctx) {
             for (let i in nums) {
                 nums[i] = parseInt(nums[i], 10);
             }
-            for(let i in ranges){
+            for (let i in ranges) {
                 let range = ranges[i];
                 let index = range.indexOf('-');
                 let leftNum = +range.substring(0, index);
                 let rightNum = +range.substring(index + 1);
-                if(leftNum > rightNum) {
+                if (leftNum > rightNum) {
                     let t = leftNum;
                     leftNum = rightNum;
                     rightNum = t;
