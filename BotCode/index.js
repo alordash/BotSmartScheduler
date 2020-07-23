@@ -1,4 +1,4 @@
-require('dotenv').config();
+const Markup = require('telegraf/markup')
 let telegraf = require('telegraf');
 
 let incomingMsgTimer = {};
@@ -76,7 +76,7 @@ async function CheckExpiredSchedules() {
             let ctxs = incomingMsgCtxs[chatID];
             if (typeof (ctxs) != 'undefined' && ctxs.length) await ServiceMsgs(incomingMsgCtxs[chatID]);
         }
-        console.log(`Serviced incoming msgs`)
+        console.log(`Serviced incoming msgs`);
     }
     db.sending = false;
     console.log(`Done checking expired schedules`);
