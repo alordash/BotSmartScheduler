@@ -252,7 +252,7 @@ async function ServiceMsgs(ctxs) {
             let end = '';
             if (deletingSchedulesIDs.length > 1) end = 's';
 
-            reply + Replies.deleted(deletingSchedulesIDs.join(', '), end, reply.length > 0);
+            reply += Replies.deleted(deletingSchedulesIDs.join(', '), end, reply.length > 0);
         }
     }
     if (schedules.length) await db.AddNewSchedules(schedules);
