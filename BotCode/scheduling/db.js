@@ -81,6 +81,7 @@ class dbManagment {
             }
             queryString = queryString.substring(0, queryString.length - 2);
             console.log(`queryString = ${queryString}`);
+            await this.Query(queryString);
             return true;
         }
         return false;
