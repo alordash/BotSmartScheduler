@@ -1,3 +1,5 @@
+const e = require("express");
+
 Replies = {
     welcome: `Welcome.
 This is <b>Bot-Scheduler</b>. He can help you to schedule your tasks fast and accurate.
@@ -23,19 +25,26 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
 
     //#region TZ config
     tzWarning: `⚠️ Please select your time zone by typing <b>/tz</b>\r\n`,
-    tzPrivateChat: `🛠 To configure time zone you can either:\r\n1. Let us know your location.\r\n2. Type UTC offset in <b>± HH</b>:<b>MM</b> format.`,
-    tzGroupChat: `🛠 To configure time zone type UTC offset in <b>± HH</b>:<b>MM</b> format.`,
+    tzPrivateChat: `🛠 To configure time zone you can either:\r\n1. Let us know your location.\r\n2. Type GMT offset in <b>± HH</b>:<b>MM</b> format.`,
+    tzGroupChat: `🛠 To configure time zone type GMT offset in <b>± HH</b>:<b>MM</b> format.`,
     tzUseLocation: `🔍 Use my location`,
     tzUseLocationResponse: `Configuring...`,
     tzTypeManually: `⌨️ Type manually`,
-    tzTypeManuallyReponse: `Type your UTC offset in <b>± HH</b>:<b>MM</b> format.`,
-    tzInvalidInput: `🚫 Please enter valid UTC offset in <b>± HH</b>:<b>MM</b> format,\r\nwhere ± — plus or minus, HH - hours, MM - minutes.`,
+    tzTypeManuallyReponse: `Type your GMT offset in <b>± HH</b>:<b>MM</b> format.`,
+    tzInvalidInput: `🚫 Please enter valid GMT offset in <b>± HH</b>:<b>MM</b> format,\r\nwhere ± — plus or minus, HH - hours, MM - minutes.`,
     tzDetermined: function (tz) {
-        return `🌐 Your time zone: UTC <b>${tz}</b>.`;
+        return `🌐 Your time zone: GMT <b>${tz}</b>.`;
     },
     tzCancel: `❌ Cancel`,
     tzCancelReponse: `⏳ Cancelled.`,
-    tzCancelWarning: `❗️ Please note that defining time zone increases time accuracy.`
+    tzCancelWarning: `❗️ Please note that defining time zone increases time accuracy.`,
+    tzLocation: function(tz) {
+        let t = '';
+        if(tz*tz < 100) t = '0';
+        if(tz < 0) t = '-' + t;
+        else t = '+' + t;
+        return `🌐 Your time zone: GMT <b>${t}${tz}:00</b>.`
+    }
     //#endregion TZ config
 }
 module.exports = { Replies };

@@ -1,3 +1,4 @@
+const request = require('async-request');
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
 let telegraf = require('telegraf');
@@ -97,6 +98,7 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
     }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
     if (process.env.IS_HEROKU == 'true') console.log = function () { };
 })();
+
 bot.start(ctx => ctx.replyWithHTML(Replies.welcome + Replies.commands,
     { disable_web_page_preview: true }));
 bot.help(ctx => ctx.replyWithHTML(Replies.commands));
@@ -139,6 +141,22 @@ bot.action('tz cancel', async (ctx) => {
     await ctx.answerCbQuery();
     tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
     await ctx.editMessageReplyMarkup();
+});
+
+bot.on('location', async ctx => {
+    let location = ctx.message.location;
+    let tz = await request(`http://api.geonames.org/timezoneJSON?lat=${location.latitude}&lng=${location.longitude}&username=alordash`);
+    tz.body = JSON.parse(tz.body);
+    console.log(`Received location: ${JSON.stringify(location)}`);
+    console.log(`tz = ${JSON.stringify(tz)}`);
+    let rawOffset = tz.body.rawOffset;
+    let userId = ctx.from.id;
+    let ts = rawOffset * 3600;
+    if (await db.HasUserID(userId)) {
+        await db.RemoveUserTZ(userId);
+    }
+    await db.AddUserTZ(userId, ts);
+    ctx.replyWithHTML(Replies.tzLocation(rawOffset));
 });
 
 bot.on('text', async ctx => {

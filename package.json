@@ -9,5 +9,7 @@
     "node": "13.12.x",
     "npm": "6.14.x"
   },
-  "dependencies": {}
+  "dependencies": {
+    "async-request": "^1.2.0"
+  }
 }
