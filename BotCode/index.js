@@ -1,4 +1,5 @@
-const Markup = require('telegraf/markup')
+const Markup = require('telegraf/markup');
+const Extra = require('telegraf/extra');
 let telegraf = require('telegraf');
 
 let incomingMsgTimer = {};
@@ -107,7 +108,7 @@ bot.command('tz', (ctx) => {
         return ctx.replyWithHTML(Replies.tzPrivateChat, Markup
             .keyboard([
                 [{ text: Replies.tzUseLocation, request_location: true }, { text: Replies.tzTypeManually }],
-                [{ text: Replies.tzCancel }],
+                [{ text: Replies.tzCancel }]
             ]).oneTime()
             .removeKeyboard()
             .resize()
@@ -119,15 +120,25 @@ bot.command('tz', (ctx) => {
 });
 
 bot.hears(Replies.tzUseLocation, ctx => {
-    ctx.replyWithHTML(Replies.property);
+    ctx.replyWithHTML(Replies.tzUseLocationResponse);
 });
 bot.hears(Replies.tzTypeManually, ctx => {
     tzPendingConfirmationUsers.push(ctx.from.id);
     ctx.replyWithHTML(Replies.tzTypeManuallyReponse);
 });
-bot.hears(Replies.tzCancel, ctx => {
+bot.hears(Replies.tzCancel, async ctx => {
     tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-    ctx.replyWithHTML(Replies.tzCancelReponse);
+    let reply = Replies.tzCancelReponse;
+    if (!await db.HasUserID(ctx.from.id)) {
+        reply += '\r\n' + Replies.tzCancelWarning;
+    }
+    ctx.replyWithHTML(reply);
+});
+
+bot.action('tz cancel', async (ctx) => {
+    await ctx.answerCbQuery();
+    tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
+    await ctx.editMessageReplyMarkup();
 });
 
 bot.on('text', async ctx => {
@@ -136,8 +147,30 @@ bot.on('text', async ctx => {
         chatID = '_' + chatID.substring(1, chatID.length);
     }
     if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
-        //Parse tz from msg;
-        ctx.replyWithHTML(`TZ has been determined!`);
+        let userId = ctx.from.id;
+        let matches = ctx.message.text.match(/(\+|-)([0-9])+:([0-9])+/g);
+        if (matches != null) {
+            //Parse tz from msg;
+            let offset = matches[0];
+            let index = offset.indexOf(':');
+            let hours = parseInt(offset.substring(0, index));
+            let minutes = parseInt(offset.substring(index + 1));
+            let ts = hours * 3600 + minutes * 60;
+            console.log(`Determining tz: offset = ${offset}, hours = ${hours}, minutes = ${minutes}, ts = ${ts}`);
+            if (await db.HasUserID(userId)) {
+                await db.RemoveUserTZ(userId);
+            }
+            await db.AddUserTZ(userId, ts);
+            tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
+            ctx.replyWithHTML(Replies.tzDetermined(offset));
+        } else {
+            console.log(`Can't determine tz in ${ctx.message.text}`);
+            return ctx.replyWithHTML(Replies.tzInvalidInput, Extra.markup((m) =>
+                m.inlineKeyboard([
+                    m.callbackButton(Replies.tzCancel, 'tz cancel')
+                ]).oneTime()
+            ));
+        }
     } else {
         if (typeof (incomingMsgCtxs[chatID]) == 'undefined') incomingMsgCtxs[chatID] = [];
         incomingMsgCtxs[chatID].push(ctx);

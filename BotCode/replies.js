@@ -15,7 +15,6 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
     scheduled: function (text, myFormattedDate) {
         return `"${text}" already scheduled at: <b>${myFormattedDate}</b>\r\n`;
     },
-    tzWarning: `⚠️ Please select your time zone by typing <b>/tz</b>`,
     cleared: `Cleared all schedules.\r\nShow list: /list`,
     deleted: function (str, end, newline) {
         return `Deleted ${str} schedule${end}.${newline === false ? `\r\nShow list: /list` : ``}`;
@@ -23,14 +22,20 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
     listIsEmpty: `List of plans is empty.`,
 
     //#region TZ config
-    tzPrivateChat: `🛠 To configure time zone you can either:\r\n1. Let us know your location.\r\n2. Type GMT offset in <b>± HH</b>:<b>DD</b> format.`,
-    tzGroupChat: `🛠 To configure time zone type GMT offset in <b>± HH</b>:<b>DD</b> format.`,
+    tzWarning: `⚠️ Please select your time zone by typing <b>/tz</b>\r\n`,
+    tzPrivateChat: `🛠 To configure time zone you can either:\r\n1. Let us know your location.\r\n2. Type GMT offset in <b>± HH</b>:<b>MM</b> format.`,
+    tzGroupChat: `🛠 To configure time zone type GMT offset in <b>± HH</b>:<b>MM</b> format.`,
     tzUseLocation: `🔍 Use my location`,
     tzUseLocationResponse: `Configuring...`,
     tzTypeManually: `⌨️ Type manually`,
-    tzTypeManuallyReponse: `Type your GMT offset in in <b>± HH</b>:<b>DD</b> format.`,
+    tzTypeManuallyReponse: `Type your GMT offset in <b>± HH</b>:<b>MM</b> format.`,
+    tzInvalidInput: `🚫 Please enter valid GMT offset in <b>± HH</b>:<b>MM</b> format,\r\nwhere ± — plus or minus, HH - hours, MM - minutes.`,
+    tzDetermined: function (tz) {
+        return `🌐 Your time zone: GMT <b>${tz}</b>.`;
+    },
     tzCancel: `❌ Cancel`,
-    tzCancelReponse: `⏳ Cancelled. Please notice that determined time zone increases time accuracy.`,
+    tzCancelReponse: `⏳ Cancelled.`,
+    tzCancelWarning: `❗️ Please note that defining time zone increases time accuracy.`
     //#endregion TZ config
 }
 module.exports = { Replies };

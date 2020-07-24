@@ -139,6 +139,14 @@ class dbManagment {
         else return false;
     }
 
+    async AddUserTZ(id, tz) {
+        return await this.Query(`INSERT INTO UserIDs VALUES (${id}, ${tz})`);
+    }
+
+    async RemoveUserTZ(id) {
+        return await this.Query(`DELETE FROM UserIDs WHERE id = ${id}`);
+    }
+
     async HasUserID(id) {
         let res = await this.Query(`SELECT * FROM UserIDs where id = ${id}`);
         if(typeof(res) != 'undefined' && res.rows.length > 0) return true;
