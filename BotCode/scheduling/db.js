@@ -146,7 +146,7 @@ class dbManagment {
     async GetUserTZ(id) {
         let res = await this.Query(`SELECT * FROM UserIDs where id = ${id}`);
         if(typeof(res) != 'undefined' && res.rows.length > 0) return parseInt(res.rows[0].tz);
-        else return 3;
+        else return 3 * 3600;
     }
 
     async RemoveUserTZ(id) {
