@@ -67,7 +67,7 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
         }
         this.tzCurrent = function(tz) {
             let hour = tz / 3600 | 0;
-            let minutes = tz % 3600;
+            let minutes = tz % 3600 / 60;
             return this.tzDetermined(hour, minutes);
         }
         //#endregion TZ config
