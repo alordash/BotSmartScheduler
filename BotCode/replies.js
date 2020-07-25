@@ -65,6 +65,11 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
             else t = '+' + t;
             return `🌐 Your time zone: GMT <b>${t}${tz}:00</b>.`
         }
+        this.tzCurrent = function(tz) {
+            let hour = tz / 3600 | 0;
+            let minutes = tz % 3600;
+            return this.tzDetermined(hour, minutes);
+        }
         //#endregion TZ config
     }
 }

@@ -62,9 +62,15 @@ async function LoadSchedulesList(chatID, tsOffset) {
     }
 }
 async function StartTimeZoneDetermination(ctx) {
+    let curTZ = await db.GetUserTZ(ctx.from.id);
+    let reply = '';
+    if(curTZ !== 0) {
+        reply = rp.tzCurrent(curTZ) + '\r\n';
+    }
     let isPrivateChat = ctx.chat.id >= 0;
     if (isPrivateChat) {
-        return ctx.replyWithHTML(rp.tzPrivateChat, Markup
+        reply += rp.tzPrivateChat;
+        return ctx.replyWithHTML(reply, Markup
             .keyboard([
                 [{ text: rp.tzUseLocation, request_location: true }, { text: rp.tzTypeManually }],
                 [{ text: rp.tzCancel }]
@@ -74,6 +80,7 @@ async function StartTimeZoneDetermination(ctx) {
             .extra()
         );
     }
+    reply += rp.tzGroupChat;
     if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) tzPendingConfirmationUsers.push(ctx.from.id);
     return ctx.replyWithHTML(rp.tzGroupChat);
 }
