@@ -143,6 +143,12 @@ class dbManagment {
         return await this.Query(`INSERT INTO UserIDs VALUES (${id}, ${tz})`);
     }
 
+    async GetUserTZ(id) {
+        let res = await this.Query(`SELECT * FROM UserIDs where id = ${id}`);
+        if(typeof(res) != 'undefined' && res.rows.length > 0) return parseInt(res.rows[0].tz);
+        else return 0;
+    }
+
     async RemoveUserTZ(id) {
         return await this.Query(`DELETE FROM UserIDs WHERE id = ${id}`);
     }

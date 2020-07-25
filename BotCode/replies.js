@@ -41,10 +41,14 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
         this.tzDetermined = function (hours, minutes) {
             let s = '+'
             let t = '';
-            if(hours < 0) s = '-';
-            if(hours < 10) t = '0';
+            if (hours < 0) {
+                s = '-';
+                hours *= -1;
+            }
+            if (hours < 10)
+                t = '0';
             s += t + hours + ':';
-            if(minutes >= 10) t = '';
+            if (minutes >= 10) t = '';
             s += t + minutes;
             return `🌐 Your time zone: GMT <b>${s}</b>.`;
         };
@@ -54,7 +58,10 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
         this.tzLocation = function (tz) {
             let t = '';
             if (tz * tz < 100) t = '0';
-            if (tz < 0) t = '-' + t;
+            if (tz < 0) {
+                t = '-' + t;
+                tz *= -1;
+            }
             else t = '+' + t;
             return `🌐 Your time zone: GMT <b>${t}${tz}:00</b>.`
         }

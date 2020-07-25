@@ -39,7 +39,14 @@ function GetDeletingIDsIndex(chatID, deletingIDs) {
     }
     return false;
 }
-async function LoadSchedulesList(chatID) {
+function FormatChatId(id) {
+    id = id.toString(10);
+    if (id[0] == '-') {
+        id = '_' + id.substring(1);
+    }
+    return id;
+}
+async function LoadSchedulesList(chatID, tsOffset) {
     let schedules = await db.ListSchedules(chatID);
     if (schedules !== false) {
         let answer = ``;
@@ -47,7 +54,7 @@ async function LoadSchedulesList(chatID) {
         for (let schedule of schedules) {
             let scheduledBy = '';
             if (schedule.username != 'none') scheduledBy = ` by <b>${schedule.username}</b>`;
-            answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${MiscFunctions.FormDateStringFormat(new Date(+schedule.ts))}</b>\r\n`;
+            answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${MiscFunctions.FormDateStringFormat(new Date(+schedule.ts + tsOffset * 1000))}</b>\r\n`;
         }
         return answer;
     } else {
@@ -159,7 +166,9 @@ bot.hears(rp.tzCancel, async ctx => {
     ctx.replyWithHTML(reply, rp.mainKeyboard);
 });
 bot.hears(rp.showListAction, async (ctx) => {
-    return await ctx.replyWithHTML(await LoadSchedulesList(ctx.chat.id));
+    let chatID = FormatChatId(ctx.chat.id);
+    let tz = await db.GetUserTZ(ctx.from.id);
+    return await ctx.replyWithHTML(await LoadSchedulesList(chatID, tz));
 });
 
 bot.hears(rp.changeTimeZoneAction, async (ctx) => {
@@ -200,13 +209,10 @@ bot.on('location', async ctx => {
 });
 
 bot.on('text', async ctx => {
-    let chatID = ctx.chat.id.toString(10);
-    if (chatID[0] == '-') {
-        chatID = '_' + chatID.substring(1, chatID.length);
-    }
+    let chatID = FormatChatId(ctx.chat.id)
     if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
         let userId = ctx.from.id;
-        let matches = ctx.message.text.match(/(\+|-)([0-9])+:([0-9])+/g);
+        let matches = ctx.message.text.match(/(\+|-|)([0-9])+:([0-9])+/g);
         if (matches != null) {
             //Parse tz from msg;
             let offset = matches[0];
@@ -248,7 +254,7 @@ bot.on('text', async ctx => {
 async function ServiceMsgs(ctxs) {
     let servicedMessages = [];
     let deletingSchedulesIDs = [];
-    let chatID = ctxs[0].chat.id.toString(10);
+    let chatID = ctxs[0].chat.id.toString();
     if (chatID[0] == '-') {
         chatID = '_' + chatID.substring(1, chatID.length);
     }
@@ -271,7 +277,8 @@ async function ServiceMsgs(ctxs) {
             let res = await db.Query(msgText.substring(1, msgText.length));
             await ctx.reply(`Postgres response: ${JSON.stringify(res.rows)}`);
         } else {
-            let parsedMessage = await DateParser.ParseDate(msgText, process.env.IS_HEROKU != 'true');
+            let tz = await db.GetUserTZ(ctx.from.id);
+            let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.IS_HEROKU != 'true');
             servicedMessages.push({ parsedMessage: parsedMessage, chatID: chatID, username: ctx.from.username, userID: ctx.from.id });
         }
     }
@@ -279,9 +286,10 @@ async function ServiceMsgs(ctxs) {
     let schedules = [];
     for (let servicedMessage of servicedMessages) {
         let isScheduled = await db.GetScheduleByText(servicedMessage.chatID, servicedMessage.parsedMessage.text);
+        let tz = await db.GetUserTZ(servicedMessage.userID);
         if (isScheduled !== false) {
             isScheduled = +isScheduled;
-            reply += rp.scheduled(servicedMessage.parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(isScheduled)));
+            reply += rp.scheduled(servicedMessage.parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(isScheduled + tz * 1000)));
         } else {
             if (typeof (servicedMessage.parsedMessage.date) != 'undefined') {
                 schedules.push({ chatID: servicedMessage.chatID, text: servicedMessage.parsedMessage.text, timestamp: servicedMessage.parsedMessage.date.getTime(), username: servicedMessage.username });
@@ -315,17 +323,15 @@ async function ServiceMsgs(ctxs) {
         }
     }
     if (schedules.length) await db.AddNewSchedules(schedules);
-    if (reply.length) await ctxs[0].replyWithHTML(reply, rp.mainKeyboard);
+    if (reply.length) await ctxs[0].replyWithHTML(reply);
 }
 
 async function ServiceCommand(ctx) {
-    let chatID = ctx.chat.id.toString(10);
-    if (chatID[0] == '-') {
-        chatID = '_' + chatID.substring(1, chatID.length);
-    }
+    let chatID = FormatChatId(ctx.chat.id)
     let msgText = ctx.message.text
     if (msgText.indexOf('/list') == 0) {
-        await ctx.replyWithHTML(await LoadSchedulesList(chatID));
+        let tz = await db.GetUserTZ(ctx.from.id);
+        await ctx.replyWithHTML(await LoadSchedulesList(chatID, tz));
     } else if (msgText.indexOf('/del') == 0) {
         if (msgText.indexOf('all') > -1) {
             return ['all'];
