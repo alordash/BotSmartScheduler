@@ -38,10 +38,10 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
         this.tzTypeManually = `⌨️ Type manually`;
         this.tzTypeManuallyReponse = `Type your GMT offset in <b>± HH</b>:<b>MM</b> format.`;
         this.tzInvalidInput = `🚫 Please enter valid GMT offset in <b>± HH</b>:<b>MM</b> format,\r\nwhere ± — plus or minus, HH - hours, MM - minutes.`;
-        this.tzDetermined = function (hours, minutes) {
+        this.tzDetermined = function (hours, minutes, isNegative) {
             let s = '+'
             let t = '';
-            if (hours < 0) {
+            if (isNegative) {
                 s = '-';
                 hours *= -1;
             }
@@ -57,7 +57,7 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
         this.tzCancelWarning = `❗️ Please note that defining time zone increases time accuracy.`;
         this.tzLocation = function (tz) {
             let t = '';
-            if (tz * tz < 100) t = '0';
+            if (Math.abs(tz) < 10) t = '0';
             if (tz < 0) {
                 t = '-' + t;
                 tz *= -1;
@@ -66,9 +66,10 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
             return `🌐 Your time zone: GMT <b>${t}${tz}:00</b>.`
         }
         this.tzCurrent = function(tz) {
+            let negative = tz < 0;
             let hour = tz / 3600 | 0;
-            let minutes = tz % 3600 / 60;
-            return this.tzDetermined(hour, minutes);
+            let minutes = Math.abs(tz % 3600 / 60);
+            return this.tzDetermined(hour, minutes, negative);
         }
         //#endregion TZ config
     }
