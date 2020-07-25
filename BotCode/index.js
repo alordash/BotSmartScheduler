@@ -316,6 +316,7 @@ async function ServiceCommand(ctx) {
             for (let i in nums) {
                 nums[i] = parseInt(nums[i], 10);
             }
+            let count = 0;
             for (let i in ranges) {
                 let range = ranges[i];
                 let index = range.indexOf('-');
@@ -326,7 +327,7 @@ async function ServiceCommand(ctx) {
                     leftNum = rightNum;
                     rightNum = t;
                 }
-                for (let j = leftNum; j <= rightNum; j++) {
+                for (let j = leftNum; j <= rightNum && j - leftNum <= 10; j++) {
                     nums.push(j);
                 }
             }
