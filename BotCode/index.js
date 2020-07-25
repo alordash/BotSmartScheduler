@@ -39,6 +39,37 @@ function GetDeletingIDsIndex(chatID, deletingIDs) {
     }
     return false;
 }
+async function LoadSchedulesList(chatID) {
+    let schedules = await db.ListSchedules(chatID);
+    if (schedules !== false) {
+        let answer = ``;
+        schedules.sort((a, b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
+        for (let schedule of schedules) {
+            let scheduledBy = '';
+            if (schedule.username != 'none') scheduledBy = ` by <b>${schedule.username}</b>`;
+            answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${MiscFunctions.FormDateStringFormat(new Date(+schedule.ts))}</b>\r\n`;
+        }
+        return answer;
+    } else {
+        return rp.listIsEmpty;
+    }
+}
+async function StartTimeZoneDetermination(ctx) {
+    let isPrivateChat = ctx.chat.id >= 0;
+    if (isPrivateChat) {
+        return ctx.replyWithHTML(rp.tzPrivateChat, Markup
+            .keyboard([
+                [{ text: rp.tzUseLocation, request_location: true }, { text: rp.tzTypeManually }],
+                [{ text: rp.tzCancel }]
+            ]).oneTime()
+            .removeKeyboard()
+            .resize()
+            .extra()
+        );
+    }
+    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) tzPendingConfirmationUsers.push(ctx.from.id);
+    return ctx.replyWithHTML(rp.tzGroupChat);
+}
 async function CheckExpiredSchedules() {
     console.log('Checking expired schedules ' + new Date());
     db.sending = true;
@@ -100,33 +131,23 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
     if (process.env.IS_HEROKU == 'true') console.log = function () { };
 })();
 
-bot.start(ctx => ctx.replyWithHTML(rp.welcome + rp.commands,
-    { disable_web_page_preview: true }));
-bot.help(ctx => ctx.replyWithHTML(rp.commands));
+bot.start(ctx => {
+    let options = rp.mainKeyboard;
+    options['disable_web_page_preview'] = true;
+    ctx.replyWithHTML(rp.welcome + rp.commands, options);
+});
+bot.help(ctx => ctx.replyWithHTML(rp.commands, rp.mainKeyboard));
 
 var tzPendingConfirmationUsers = [];
-bot.command('tz', (ctx) => {
-    let isPrivateChat = ctx.chat.id >= 0;
-    if (isPrivateChat) {
-        return ctx.replyWithHTML(rp.tzPrivateChat, Markup
-            .keyboard([
-                [{ text: rp.tzUseLocation, request_location: true }, { text: rp.tzTypeManually }],
-                [{ text: rp.tzCancel }]
-            ]).oneTime()
-            .removeKeyboard()
-            .resize()
-            .extra()
-        );
-    }
-    tzPendingConfirmationUsers.push(ctx.from.id);
-    return ctx.replyWithHTML(rp.tzGroupChat);
+bot.command('tz', async (ctx) => {
+    await StartTimeZoneDetermination(ctx);
 });
 
 bot.hears(rp.tzUseLocation, ctx => {
     ctx.replyWithHTML(rp.tzUseLocationResponse);
 });
 bot.hears(rp.tzTypeManually, ctx => {
-    tzPendingConfirmationUsers.push(ctx.from.id);
+    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) tzPendingConfirmationUsers.push(ctx.from.id);
     ctx.replyWithHTML(rp.tzTypeManuallyReponse);
 });
 bot.hears(rp.tzCancel, async ctx => {
@@ -137,17 +158,26 @@ bot.hears(rp.tzCancel, async ctx => {
     }
     ctx.replyWithHTML(reply, rp.mainKeyboard);
 });
+bot.hears(rp.showListAction, async (ctx) => {
+    return await ctx.replyWithHTML(await LoadSchedulesList(ctx.chat.id));
+});
+
+bot.hears(rp.changeTimeZoneAction, async (ctx) => {
+    return await StartTimeZoneDetermination(ctx);
+});
 
 bot.action('tz cancel', async (ctx) => {
     await ctx.answerCbQuery();
     tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
     let text = rp.tzCancelReponse;
-    if(!await db.HasUserID(ctx.from.id)) {
+    if (!await db.HasUserID(ctx.from.id)) {
         text += '\r\n' + rp.tzCancelWarning;
     }
-    /*!*/ ctx.editMessageReplyMarkup();
-    await ctx.editMessageText(text);
+    ctx.editMessageText('...');
+    await ctx.replyWithHTML(text, rp.mainKeyboard);
+    await ctx.deleteMessage();
 });
+
 
 bot.on('location', async ctx => {
     let location = ctx.message.location;
@@ -191,7 +221,7 @@ bot.on('text', async ctx => {
             }
             await db.AddUserTZ(userId, ts);
             tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-            ctx.replyWithHTML(rp.tzDetermined(offset), rp.mainKeyboard);
+            ctx.replyWithHTML(rp.tzDetermined(hours, minutes), rp.mainKeyboard);
         } else {
             console.log(`Can't determine tz in "${ctx.message.text}"`);
             return ctx.replyWithHTML(rp.tzInvalidInput, Extra.markup((m) =>
@@ -295,19 +325,7 @@ async function ServiceCommand(ctx) {
     }
     let msgText = ctx.message.text
     if (msgText.indexOf('/list') == 0) {
-        let schedules = await db.ListSchedules(chatID);
-        if (schedules !== false) {
-            let answer = ``;
-            schedules.sort((a, b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
-            for (let schedule of schedules) {
-                let scheduledBy = '';
-                if (schedule.username != 'none') scheduledBy = ` by <b>${schedule.username}</b>`;
-                answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${MiscFunctions.FormDateStringFormat(new Date(+schedule.ts))}</b>\r\n`;
-            }
-            await ctx.replyWithHTML(answer);
-        } else {
-            await ctx.replyWithHTML(rp.listIsEmpty);
-        }
+        await ctx.replyWithHTML(await LoadSchedulesList(chatID));
     } else if (msgText.indexOf('/del') == 0) {
         if (msgText.indexOf('all') > -1) {
             return ['all'];
