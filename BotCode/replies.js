@@ -1,5 +1,3 @@
-const e = require("express");
-
 Replies = {
     welcome: `Welcome.
 This is <b>Bot-Scheduler</b>. He can help you to schedule your tasks fast and accurate.
