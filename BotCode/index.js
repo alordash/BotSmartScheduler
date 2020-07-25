@@ -7,7 +7,8 @@ let incomingMsgTimer = {};
 let incomingMsgCtxs = {};
 const DateParser = require('./dateParser/dateParser');
 const { MiscFunctions } = require('./dateParser/miscFunctions');
-const { Replies } = require('./replies');
+const { Replies } = require('./Replies');
+const rp = new Replies();
 const debugWebServer = require('./debugWebServer');
 let dWB = new debugWebServer();
 const dbManagement = require('./scheduling/db');
@@ -99,18 +100,18 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
     if (process.env.IS_HEROKU == 'true') console.log = function () { };
 })();
 
-bot.start(ctx => ctx.replyWithHTML(Replies.welcome + Replies.commands,
+bot.start(ctx => ctx.replyWithHTML(rp.welcome + rp.commands,
     { disable_web_page_preview: true }));
-bot.help(ctx => ctx.replyWithHTML(Replies.commands));
+bot.help(ctx => ctx.replyWithHTML(rp.commands));
 
 var tzPendingConfirmationUsers = [];
 bot.command('tz', (ctx) => {
     let isPrivateChat = ctx.chat.id >= 0;
     if (isPrivateChat) {
-        return ctx.replyWithHTML(Replies.tzPrivateChat, Markup
+        return ctx.replyWithHTML(rp.tzPrivateChat, Markup
             .keyboard([
-                [{ text: Replies.tzUseLocation, request_location: true }, { text: Replies.tzTypeManually }],
-                [{ text: Replies.tzCancel }]
+                [{ text: rp.tzUseLocation, request_location: true }, { text: rp.tzTypeManually }],
+                [{ text: rp.tzCancel }]
             ]).oneTime()
             .removeKeyboard()
             .resize()
@@ -118,31 +119,31 @@ bot.command('tz', (ctx) => {
         );
     }
     tzPendingConfirmationUsers.push(ctx.from.id);
-    return ctx.replyWithHTML(Replies.tzGroupChat);
+    return ctx.replyWithHTML(rp.tzGroupChat);
 });
 
-bot.hears(Replies.tzUseLocation, ctx => {
-    ctx.replyWithHTML(Replies.tzUseLocationResponse);
+bot.hears(rp.tzUseLocation, ctx => {
+    ctx.replyWithHTML(rp.tzUseLocationResponse);
 });
-bot.hears(Replies.tzTypeManually, ctx => {
+bot.hears(rp.tzTypeManually, ctx => {
     tzPendingConfirmationUsers.push(ctx.from.id);
-    ctx.replyWithHTML(Replies.tzTypeManuallyReponse);
+    ctx.replyWithHTML(rp.tzTypeManuallyReponse);
 });
-bot.hears(Replies.tzCancel, async ctx => {
+bot.hears(rp.tzCancel, async ctx => {
     tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-    let reply = Replies.tzCancelReponse;
+    let reply = rp.tzCancelReponse;
     if (!await db.HasUserID(ctx.from.id)) {
-        reply += '\r\n' + Replies.tzCancelWarning;
+        reply += '\r\n' + rp.tzCancelWarning;
     }
-    ctx.replyWithHTML(reply, Markup.removeKeyboard().extra());
+    ctx.replyWithHTML(reply, rp.mainKeyboard);
 });
 
 bot.action('tz cancel', async (ctx) => {
     await ctx.answerCbQuery();
     tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-    let text = Replies.tzCancelReponse;
+    let text = rp.tzCancelReponse;
     if(!await db.HasUserID(ctx.from.id)) {
-        text += '\r\n' + Replies.tzCancelWarning;
+        text += '\r\n' + rp.tzCancelWarning;
     }
     /*!*/ ctx.editMessageReplyMarkup();
     await ctx.editMessageText(text);
@@ -162,7 +163,7 @@ bot.on('location', async ctx => {
             await db.RemoveUserTZ(userId);
         }
         await db.AddUserTZ(userId, ts);
-        ctx.replyWithHTML(Replies.tzLocation(rawOffset), Markup.removeKeyboard().extra());
+        ctx.replyWithHTML(rp.tzLocation(rawOffset), rp.mainKeyboard);
     } catch (e) {
         console.error(e);
     }
@@ -190,12 +191,12 @@ bot.on('text', async ctx => {
             }
             await db.AddUserTZ(userId, ts);
             tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-            ctx.replyWithHTML(Replies.tzDetermined(offset), Markup.removeKeyboard().extra());
+            ctx.replyWithHTML(rp.tzDetermined(offset), rp.mainKeyboard);
         } else {
             console.log(`Can't determine tz in "${ctx.message.text}"`);
-            return ctx.replyWithHTML(Replies.tzInvalidInput, Extra.markup((m) =>
+            return ctx.replyWithHTML(rp.tzInvalidInput, Extra.markup((m) =>
                 m.inlineKeyboard([
-                    m.callbackButton(Replies.tzCancel, 'tz cancel')
+                    m.callbackButton(rp.tzCancel, 'tz cancel')
                 ]).oneTime()
             ));
         }
@@ -250,7 +251,7 @@ async function ServiceMsgs(ctxs) {
         let isScheduled = await db.GetScheduleByText(servicedMessage.chatID, servicedMessage.parsedMessage.text);
         if (isScheduled !== false) {
             isScheduled = +isScheduled;
-            reply += Replies.scheduled(servicedMessage.parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(isScheduled)));
+            reply += rp.scheduled(servicedMessage.parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(isScheduled)));
         } else {
             if (typeof (servicedMessage.parsedMessage.date) != 'undefined') {
                 schedules.push({ chatID: servicedMessage.chatID, text: servicedMessage.parsedMessage.text, timestamp: servicedMessage.parsedMessage.date.getTime(), username: servicedMessage.username });
@@ -259,14 +260,14 @@ async function ServiceMsgs(ctxs) {
                 if (servicedMessage.chatID[0] !== '_') reply += servicedMessage.parsedMessage.answer + `\r\n`;
             }
             if (servicedMessage.chatID[0] !== '_' && !(await db.HasUserID(servicedMessage.userID))) {
-                reply += Replies.tzWarning;
+                reply += rp.tzWarning;
             }
         }
     }
     if (deletingSchedulesIDs.length) {
         if (deleteAll) {
             await db.ClearAllSchedules(chatID);
-            reply += Replies.cleared;
+            reply += rp.cleared;
         } else {
             let s = '';
             for (let i in deletingSchedulesIDs) {
@@ -280,11 +281,11 @@ async function ServiceMsgs(ctxs) {
             let end = '';
             if (deletingSchedulesIDs.length > 1) end = 's';
 
-            reply += Replies.deleted(deletingSchedulesIDs.join(', '), end, reply.length > 0);
+            reply += rp.deleted(deletingSchedulesIDs.join(', '), end, reply.length > 0);
         }
     }
     if (schedules.length) await db.AddNewSchedules(schedules);
-    if (reply.length) await ctxs[0].replyWithHTML(reply, Markup.removeKeyboard().extra());
+    if (reply.length) await ctxs[0].replyWithHTML(reply, rp.mainKeyboard);
 }
 
 async function ServiceCommand(ctx) {
@@ -305,7 +306,7 @@ async function ServiceCommand(ctx) {
             }
             await ctx.replyWithHTML(answer);
         } else {
-            await ctx.reply(Replies.listIsEmpty);
+            await ctx.replyWithHTML(rp.listIsEmpty);
         }
     } else if (msgText.indexOf('/del') == 0) {
         if (msgText.indexOf('all') > -1) {
