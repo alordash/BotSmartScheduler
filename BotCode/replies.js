@@ -31,13 +31,13 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
 
         //#region TZ config
         this.tzWarning = `⚠️ Please select your time zone by typing <b>/tz</b>\r\n`;
-        this.tzPrivateChat = `🛠 To configure time zone you can either:\r\n1. Let us know your location.\r\n2. Type GMT offset in <b>± HH</b>:<b>MM</b> format.`;
-        this.tzGroupChat = `🛠 To configure time zone type GMT offset in <b>± HH</b>:<b>MM</b> format.`;
+        this.tzPrivateChat = `🛠 To configure time zone you can either:\r\n1. Let us know your location.\r\n2. Type GMT offset in <b>±HH</b>:<b>MM</b> format.`;
+        this.tzGroupChat = `🛠 To configure time zone type GMT offset in <b>±HH</b>:<b>MM</b> format.`;
         this.tzUseLocation = `🔍 Use my location`;
         this.tzUseLocationResponse = `Configuring...`;
         this.tzTypeManually = `⌨️ Type manually`;
-        this.tzTypeManuallyReponse = `Type your GMT offset in <b>± HH</b>:<b>MM</b> format.`;
-        this.tzInvalidInput = `🚫 Please enter valid GMT offset in <b>± HH</b>:<b>MM</b> format,\r\nwhere ± — plus or minus, HH - hours, MM - minutes.`;
+        this.tzTypeManuallyReponse = `Type your GMT offset in <b>±HH</b>:<b>MM</b> format.`;
+        this.tzInvalidInput = `🚫 Please enter valid GMT offset in <b>±HH</b>:<b>MM</b> format,\r\nwhere ± — plus or minus, HH - hours, MM - minutes.`;
         this.tzDetermined = function (hours, minutes, isNegative) {
             let s = '+'
             let t = '';
