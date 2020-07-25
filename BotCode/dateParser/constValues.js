@@ -27,7 +27,7 @@ constants = {
             this.text = '';
         }
     },
-    MAX_WORDS_COUNT: 16,
+    MAX_WORDS_COUNT: 40,
     maxMonthLength: 31,
     maxMonthCount: 12,
     maxHoursPerDay: 23,
