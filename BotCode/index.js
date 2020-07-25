@@ -7,10 +7,8 @@ let incomingMsgTimer = {};
 let incomingMsgCtxs = {};
 const DateParser = require('./dateParser/dateParser');
 const { MiscFunctions } = require('./dateParser/miscFunctions');
-const { Replies } = require('./Replies');
+const { Replies } = require('./replies');
 const rp = new Replies();
-const debugWebServer = require('./debugWebServer');
-let dWB = new debugWebServer();
 const dbManagement = require('./scheduling/db');
 let dbUrl;
 if (process.env.IS_HEROKU) {
