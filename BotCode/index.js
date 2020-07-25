@@ -132,7 +132,6 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
 
 (async function Init() {
     await db.InitDB();
-    await dWB.dWBinit();
     await bot.launch();
     let ts = Date.now();
     setTimeout(async function () {
@@ -266,7 +265,6 @@ async function ServiceMsgs(ctxs) {
     }
     let deleteAll = false;
     for (let ctx of ctxs) {
-        dWB.msgData = ctx.message;
         let msgText = ctx.message.text;
 
         if (msgText[0] == '/') {
