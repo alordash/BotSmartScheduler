@@ -36,7 +36,7 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
         return `🌐 Your time zone: GMT <b>${tz}</b>.`;
     },
     tzCancel: `❌ Cancel`,
-    tzCancelReponse: `⏳ Cancelled.`,
+    tzCancelReponse: `🚫 Cancelled.`,
     tzCancelWarning: `❗️ Please note that defining time zone increases time accuracy.`,
     tzLocation: function(tz) {
         let t = '';

@@ -134,29 +134,38 @@ bot.hears(Replies.tzCancel, async ctx => {
     if (!await db.HasUserID(ctx.from.id)) {
         reply += '\r\n' + Replies.tzCancelWarning;
     }
-    ctx.replyWithHTML(reply);
+    ctx.replyWithHTML(reply, Markup.removeKeyboard().extra());
 });
 
 bot.action('tz cancel', async (ctx) => {
     await ctx.answerCbQuery();
     tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-    await ctx.editMessageReplyMarkup();
+    let text = Replies.tzCancelReponse;
+    if(!await db.HasUserID(ctx.from.id)) {
+        text += '\r\n' + Replies.tzCancelWarning;
+    }
+    /*!*/ ctx.editMessageReplyMarkup();
+    await ctx.editMessageText(text);
 });
 
 bot.on('location', async ctx => {
     let location = ctx.message.location;
-    let tz = await request(`http://api.geonames.org/timezoneJSON?lat=${location.latitude}&lng=${location.longitude}&username=alordash`);
-    tz.body = JSON.parse(tz.body);
-    console.log(`Received location: ${JSON.stringify(location)}`);
-    console.log(`tz = ${JSON.stringify(tz)}`);
-    let rawOffset = tz.body.rawOffset;
-    let userId = ctx.from.id;
-    let ts = rawOffset * 3600;
-    if (await db.HasUserID(userId)) {
-        await db.RemoveUserTZ(userId);
+    try {
+        let tz = await request(`http://api.geonames.org/timezoneJSON?lat=${location.latitude}&lng=${location.longitude}&username=alordash`);
+        tz.body = JSON.parse(tz.body);
+        console.log(`Received location: ${JSON.stringify(location)}`);
+        console.log(`tz = ${JSON.stringify(tz)}`);
+        let rawOffset = tz.body.rawOffset;
+        let userId = ctx.from.id;
+        let ts = rawOffset * 3600;
+        if (await db.HasUserID(userId)) {
+            await db.RemoveUserTZ(userId);
+        }
+        await db.AddUserTZ(userId, ts);
+        ctx.replyWithHTML(Replies.tzLocation(rawOffset), Markup.removeKeyboard().extra());
+    } catch (e) {
+        console.error(e);
     }
-    await db.AddUserTZ(userId, ts);
-    ctx.replyWithHTML(Replies.tzLocation(rawOffset));
 });
 
 bot.on('text', async ctx => {
@@ -173,16 +182,17 @@ bot.on('text', async ctx => {
             let index = offset.indexOf(':');
             let hours = parseInt(offset.substring(0, index));
             let minutes = parseInt(offset.substring(index + 1));
-            let ts = hours * 3600 + minutes * 60;
+            let ts = hours * 3600;
+            ts += minutes * 60 * (ts < 0 ? -1 : 1);
             console.log(`Determining tz: offset = ${offset}, hours = ${hours}, minutes = ${minutes}, ts = ${ts}`);
             if (await db.HasUserID(userId)) {
                 await db.RemoveUserTZ(userId);
             }
             await db.AddUserTZ(userId, ts);
             tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-            ctx.replyWithHTML(Replies.tzDetermined(offset));
+            ctx.replyWithHTML(Replies.tzDetermined(offset), Markup.removeKeyboard().extra());
         } else {
-            console.log(`Can't determine tz in ${ctx.message.text}`);
+            console.log(`Can't determine tz in "${ctx.message.text}"`);
             return ctx.replyWithHTML(Replies.tzInvalidInput, Extra.markup((m) =>
                 m.inlineKeyboard([
                     m.callbackButton(Replies.tzCancel, 'tz cancel')
@@ -274,7 +284,7 @@ async function ServiceMsgs(ctxs) {
         }
     }
     if (schedules.length) await db.AddNewSchedules(schedules);
-    if (reply.length) await ctxs[0].replyWithHTML(reply);
+    if (reply.length) await ctxs[0].replyWithHTML(reply, Markup.removeKeyboard().extra());
 }
 
 async function ServiceCommand(ctx) {
