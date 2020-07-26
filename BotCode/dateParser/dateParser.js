@@ -708,18 +708,10 @@ function DetermineTime() {
 
 function FormText() {
     this.text = '';
-    for (let i in this.words) {
+    for (let i in this.originalWords) {
         i = +i;
-        let word = this.words[i];
+        let word = this.originalWords[i];
         if (!this.usedWords.includes(i)) {
-            if (!(MiscFunctions.IsInteger(word) || MiscFunctions.IsLetter(word)))
-                this.text += word;
-            else this.text += " " + word;
-        }
-    }
-    if (this.originalWords.length > constants.MAX_WORDS_COUNT) {
-        for (let i = constants.MAX_WORDS_COUNT; i < this.originalWords.length; i++) {
-            let word = this.originalWords[i];
             if (!(MiscFunctions.IsInteger(word) || MiscFunctions.IsLetter(word)))
                 this.text += word;
             else this.text += " " + word;
