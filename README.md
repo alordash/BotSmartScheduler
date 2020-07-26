@@ -22,9 +22,12 @@ Smart Scheduler хранит для каждого чата задачи раз�
 #### 3. 🗑 <b>/del</b> <i>1-10, A-B</i> 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Удаляет задачи в&nbsp;введенном диапазоне. 
 
-#### 4. #️⃣ <b>/<i>N</b></i> 
+#### 4. #️⃣  <b>/<i>N</b></i> 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Удаляет N-ную задачу. 
 
+#### 5. 🌐 <b>/<i>tz</b></i> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Настройка часового пояса. 
+  
 и&nbsp;конечно&nbsp;же /start и&nbsp;/help. 
 
 ### На&nbsp;данный момент бот распознает написанное только на&nbsp;русском языке время.
@@ -53,6 +56,9 @@ Supported commands:
 #### 4. #️⃣ <b>/<i>N</b></i> 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Deletes N-th task. 
 
+#### 5. 🌐 <b>/<i>tz</b></i> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Configures time zone. 
+  
 and /start with /help of&nbsp;course. 
 
 ### Currently bot recognizes the time written only in&nbsp;Russian.
