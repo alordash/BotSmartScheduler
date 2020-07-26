@@ -62,7 +62,7 @@ async function LoadSchedulesList(chatID, tsOffset) {
 async function StartTimeZoneDetermination(ctx) {
     let curTZ = await db.GetUserTZ(ctx.from.id);
     let reply = '';
-    if(curTZ !== 0) {
+    if (curTZ !== 0) {
         reply = rp.tzCurrent(curTZ) + '\r\n';
     }
     let isPrivateChat = ctx.chat.id >= 0;
@@ -217,16 +217,28 @@ bot.on('text', async ctx => {
     if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
         let userId = ctx.from.id;
         let matches = ctx.message.text.match(/(\+|-|–|—|)([0-9])+:([0-9])+/g);
+        let hours, minutes, negative, ts;
         if (matches != null) {
             //Parse tz from msg;
             let offset = matches[0];
             let index = offset.indexOf(':');
-            let hours = parseInt(offset.substring(0, index));
-            let negative = offset[0].match(/-|–|—/g) != null;
-            let minutes = parseInt(offset.substring(index + 1));
+            hours = parseInt(offset.substring(0, index));
+            negative = offset[0].match(/-|–|—/g) != null;
+            minutes = parseInt(offset.substring(index + 1));
+            console.log(`Determining tz: offset = ${offset}, hours = ${hours}, minutes = ${minutes}, ts = ${ts}`);
+        } else {
+            matches = ctx.message.text.match(/(\+|-|–|—|)([0-9])+/g);
+            if (matches != null) {
+                let offset = matches[0];
+                hours = parseInt(offset);
+                minutes = 0;
+                negative = offset[0].match(/-|–|—/g) != null;
+                console.log(`Determining tz from only hour option: offset = ${offset}, hours = ${hours}, minutes = ${minutes}, ts = ${ts}`);
+            }
+        }
+        if(matches != null) {
             let ts = hours * 3600;
             ts += minutes * 60 * (negative ? -1 : 1);
-            console.log(`Determining tz: offset = ${offset}, hours = ${hours}, minutes = ${minutes}, ts = ${ts}`);
             if (await db.HasUserID(userId)) {
                 await db.RemoveUserTZ(userId);
             }
