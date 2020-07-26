@@ -14,7 +14,9 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
 🗑 /del <b>1-10, A-B</b>
         Deletes all tasks within range.
 #️⃣ /N
-        Deletes N-th task.`;
+        Deletes N-th task.
+🌐 /tz
+        Configures time zone.`;
         this.showListAction = `🗓 Show list`;
         this.changeTimeZoneAction = `🌐 Change time zone`;
         this.mainKeyboard = Markup.keyboard([
