@@ -289,9 +289,6 @@ async function ServiceMsgs(ctxs) {
                     deletingSchedulesIDs = deletingSchedulesIDs.concat(serviceRes);
                 }
             }
-        } else if (msgText[0] == '.') {
-            let res = await db.Query(msgText.substring(1, msgText.length));
-            await ctx.reply(`Postgres response: ${JSON.stringify(res.rows)}`);
         } else {
             let tz = await db.GetUserTZ(ctx.from.id);
             let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.IS_HEROKU != 'true');
