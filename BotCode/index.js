@@ -34,7 +34,11 @@ console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
 function GetDeletingIDsIndex(chatID, deletingIDs) {
     if (deletingIDs.length) {
-        for (let i in deletingIDs) if (deletingIDs[i].chatID == chatID) return i;
+        for (let i in deletingIDs) {
+            if (deletingIDs[i].chatID == chatID) {
+                return i;
+            }
+        }
     }
     return false;
 }
@@ -52,7 +56,9 @@ async function LoadSchedulesList(chatID, tsOffset) {
         schedules.sort((a, b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
         for (let schedule of schedules) {
             let scheduledBy = '';
-            if (schedule.username != 'none') scheduledBy = ` by <b>${schedule.username}</b>`;
+            if (schedule.username != 'none') {
+                scheduledBy = ` by <b>${schedule.username}</b>`;
+            }
             answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${MiscFunctions.FormDateStringFormat(new Date(+schedule.ts + tsOffset * 1000))}</b>\r\n`;
         }
         return answer;
@@ -80,7 +86,9 @@ async function StartTimeZoneDetermination(ctx) {
         );
     }
     reply += rp.tzGroupChat;
-    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) tzPendingConfirmationUsers.push(ctx.from.id);
+    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
+        tzPendingConfirmationUsers.push(ctx.from.id);
+    }
     return ctx.replyWithHTML(rp.tzGroupChat);
 }
 async function CheckExpiredSchedules() {
@@ -93,12 +101,20 @@ async function CheckExpiredSchedules() {
         let deletingIDs = [];
         for (let schedule of expiredSchedules) {
             let chatID = schedule.chatid;
-            if (chatID[0] == '_') chatID = '-' + chatID.substring(1, chatID.length);
+            if (chatID[0] == '_') {
+                chatID = '-' + chatID.substring(1, chatID.length);
+            }
             console.log(`Expired schedule = ${JSON.stringify(schedule)}`);
-            if (!ChatIDs.includes(schedule.chatid)) ChatIDs.push(schedule.chatid);
-            if (typeof (incomingMsgTimer[schedule.chatid]) != 'undefined') clearTimeout(incomingMsgTimer[schedule.chatid]);
+            if (!ChatIDs.includes(schedule.chatid)) {
+                ChatIDs.push(schedule.chatid);
+            }
+            if (typeof (incomingMsgTimer[schedule.chatid]) != 'undefined') {
+                clearTimeout(incomingMsgTimer[schedule.chatid]);
+            }
             let mentionUser = '';
-            if (schedule.username != 'none') mentionUser = ' @' + schedule.username;
+            if (schedule.username != 'none') {
+                mentionUser = ' @' + schedule.username;
+            }
             try {
                 await bot.telegram.sendMessage(+chatID, `⏰${mentionUser} "${schedule.text}"`);
             } catch (e) {
@@ -125,7 +141,9 @@ async function CheckExpiredSchedules() {
         console.log('Removed and reordered, Servicing incoming msgs');
         for (let chatID of ChatIDs) {
             let ctxs = incomingMsgCtxs[chatID];
-            if (typeof (ctxs) != 'undefined' && ctxs.length) await ServiceMsgs(incomingMsgCtxs[chatID]);
+            if (typeof (ctxs) != 'undefined' && ctxs.length) {
+                await ServiceMsgs(incomingMsgCtxs[chatID]);
+            }
         }
         console.log(`Serviced incoming msgs`);
     }
@@ -139,13 +157,14 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
     await db.InitDB();
     await bot.launch();
     let ts = Date.now();
-    
     setTimeout(async function () {
         console.log(`Timeout expired`);
         setInterval(CheckExpiredSchedules, 60000);
         await CheckExpiredSchedules();
     }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
-    if (process.env.ENABLE_LOGS == 'false') console.log = function () { };
+    if (process.env.ENABLE_LOGS == 'false') {
+        console.log = function () { };
+    }
 })();
 
 bot.start(ctx => {
@@ -164,7 +183,9 @@ bot.hears(rp.tzUseLocation, ctx => {
     ctx.replyWithHTML(rp.tzUseLocationResponse);
 });
 bot.hears(rp.tzTypeManually, ctx => {
-    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) tzPendingConfirmationUsers.push(ctx.from.id);
+    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
+        tzPendingConfirmationUsers.push(ctx.from.id);
+    }
     ctx.replyWithHTML(rp.tzTypeManuallyReponse);
 });
 bot.hears(rp.tzCancel, async ctx => {
@@ -260,9 +281,13 @@ bot.on('text', async ctx => {
             ));
         }
     } else {
-        if (typeof (incomingMsgCtxs[chatID]) == 'undefined') incomingMsgCtxs[chatID] = [];
+        if (typeof (incomingMsgCtxs[chatID]) == 'undefined') {
+            incomingMsgCtxs[chatID] = [];
+        }
         incomingMsgCtxs[chatID].push(ctx);
-        if (typeof (incomingMsgTimer[chatID]) != 'undefined') clearTimeout(incomingMsgTimer[chatID]);
+        if (typeof (incomingMsgTimer[chatID]) != 'undefined') {
+            clearTimeout(incomingMsgTimer[chatID]);
+        }
         incomingMsgTimer[chatID] = setTimeout(() => {
             ServiceMsgs(incomingMsgCtxs[chatID]);
             incomingMsgCtxs[chatID] = [];
@@ -307,7 +332,9 @@ async function ServiceMsgs(ctxs) {
         let isScheduled = await db.GetScheduleByText(servicedMessage.chatID, servicedMessage.parsedMessage.text);
         let tz = await db.GetUserTZ(servicedMessage.userID);
         let schedulesCount = (await db.GetSchedules(servicedMessage.chatID)).length;
-        if (typeof (schedulesCount) == 'undefined') { schedulesCount = 0 }
+        if (typeof (schedulesCount) == 'undefined') {
+            schedulesCount = 0;
+        }
         console.log(`schedulesCount = ${schedulesCount}`);
         let count = 0
         if (isScheduled !== false) {
@@ -320,7 +347,9 @@ async function ServiceMsgs(ctxs) {
                     reply += servicedMessage.parsedMessage.answer + `\r\n`;
                     count++;
                 } else {
-                    if (servicedMessage.chatID[0] !== '_') reply += servicedMessage.parsedMessage.answer + `\r\n`;
+                    if (servicedMessage.chatID[0] !== '_') {
+                        reply += servicedMessage.parsedMessage.answer + `\r\n`;
+                    }
                 }
                 if (servicedMessage.chatID[0] !== '_' && !(await db.HasUserID(servicedMessage.userID))) {
                     reply += rp.tzWarning;
@@ -346,13 +375,19 @@ async function ServiceMsgs(ctxs) {
             await db.RemoveSchedules(chatID, s)
             await db.ReorderSchedules(chatID);
             let end = '';
-            if (deletingSchedulesIDs.length > 1) end = 's';
+            if (deletingSchedulesIDs.length > 1) {
+                end = 's';
+            }
 
             reply += rp.deleted(deletingSchedulesIDs.join(', '), end, reply.length > 0);
         }
     }
-    if (schedules.length) await db.AddNewSchedules(schedules);
-    if (reply.length) await ctxs[0].replyWithHTML(reply);
+    if (schedules.length) {
+        await db.AddNewSchedules(schedules);
+    }
+    if (reply.length) {
+        await ctxs[0].replyWithHTML(reply);
+    }
 }
 
 async function ServiceCommand(ctx) {

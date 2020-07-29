@@ -29,15 +29,19 @@ class dbManagment {
         let queryString = `INSERT INTO Schedules VALUES `;
         let id;
         let schedules = await this.GetSchedules(newSchedules[0].chatID);
-        if (schedules === false) id = 1;
-        else id = schedules.length + 1;
+        if (schedules === false) {
+            id = 1;
+        } else {
+            id = schedules.length + 1;
+        }
         for (let schedule of newSchedules) {
-            if (schedule.chatID[0] != '_' || typeof (schedule.username) == 'undefined') schedule.username = 'none';
+            if (schedule.chatID[0] != '_' || typeof (schedule.username) == 'undefined') {
+                schedule.username = 'none';
+            }
             queryString += `('${schedule.chatID}', ${id}, '${schedule.text}', ${schedule.timestamp}, '${schedule.username}'), `;
             id++;
         }
         queryString = queryString.substring(0, queryString.length - 2);
-        let res = await this.Query(queryString);
         console.log(`Added multiple schedules = ${JSON.stringify(newSchedules)}`);
     }
 
@@ -45,9 +49,14 @@ class dbManagment {
         if (chatID[0] != '_' || typeof (username) == 'undefined') username = 'none';
         let id;
         let schedules = await this.GetSchedules(chatID);
-        if (schedules === false) id = 1;
-        else id = schedules.length + 1;
-        if (typeof (id) == 'undefined') id = 1;
+        if (schedules === false) {
+            id = 1;
+        } else {
+            id = schedules.length + 1;
+        }
+        if (typeof (id) == 'undefined') {
+            id = 1;
+        }
         console.log(`Timestamp = ${timestamp}`);
         await this.Query(`INSERT INTO Schedules VALUES ('${chatID}', ${id}, '${text}', ${timestamp}, '${username}')`);
         console.log(`Added "${text}" to ${timestamp} from chat "${chatID}"`);
@@ -90,9 +99,7 @@ class dbManagment {
     async ListSchedules(chatID) {
         if (!this.sending) {
             let schedules = await this.GetSchedules(chatID);
-            if (schedules.length) {
-                return schedules;
-            }
+            if (schedules.length) return schedules;
         }
         return false;
     }
@@ -114,29 +121,41 @@ class dbManagment {
     async GetScheduleByText(chatID, text) {
         let res = await this.Query(`SELECT * FROM Schedules WHERE text = '${text}' AND ChatID = '${chatID}'`);
         console.log(`Picked schedule by text ${JSON.stringify(res.rows)}`);
-        if (typeof(res) != 'undefined' && res.rows.length > 0) return res.rows[0].ts;
-        else return false;
+        if (typeof (res) != 'undefined' && res.rows.length > 0) {
+            return res.rows[0].ts;
+        } else {
+            return false;
+        }
     }
 
     async GetScheduleById(chatID, id) {
         let res = await this.Query(`SELECT * FROM Schedules WHERE id = '${id}' AND ChatID = '${chatID}'`);
         console.log(`Picked schedule by id ${JSON.stringify(res.rows)}`);
-        if (typeof(res) != 'undefined' && res.rows.length > 0) return res.rows[0].ts;
-        else return false;
+        if (typeof (res) != 'undefined' && res.rows.length > 0) {
+            return res.rows[0].ts;
+        } else {
+            return false;
+        }
     }
 
     async GetAllSchedules() {
         let res = await this.Query(`SELECT * FROM Schedules`);
         console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
-        if (typeof(res) != 'undefined' && res.rows.length > 0) return res.rows;
-        else return false;
+        if (typeof (res) != 'undefined' && res.rows.length > 0) {
+            return res.rows;
+        } else {
+            return false;
+        }
     }
 
     async GetSchedules(chatID) {
         let res = await this.Query(`SELECT * FROM Schedules WHERE ChatID = '${chatID}'`);
         console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
-        if (typeof(res) != 'undefined' && res.rows.length > 0) return res.rows;
-        else return false;
+        if (typeof (res) != 'undefined' && res.rows.length > 0) {
+            return res.rows;
+        } else {
+            return false;
+        }
     }
 
     async AddUserTZ(id, tz) {
@@ -145,8 +164,11 @@ class dbManagment {
 
     async GetUserTZ(id) {
         let res = await this.Query(`SELECT * FROM UserIDs where id = ${id}`);
-        if(typeof(res) != 'undefined' && res.rows.length > 0) return parseInt(res.rows[0].tz);
-        else return 3 * 3600;
+        if (typeof (res) != 'undefined' && res.rows.length > 0) {
+            return parseInt(res.rows[0].tz);
+        } else {
+            return 3 * 3600;
+        }
     }
 
     async RemoveUserTZ(id) {
@@ -155,8 +177,7 @@ class dbManagment {
 
     async HasUserID(id) {
         let res = await this.Query(`SELECT * FROM UserIDs where id = ${id}`);
-        if(typeof(res) != 'undefined' && res.rows.length > 0) return true;
-        else return false;
+        return typeof (res) != 'undefined' && res.rows.length > 0
     }
 }
 

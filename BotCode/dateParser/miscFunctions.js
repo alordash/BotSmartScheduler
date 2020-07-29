@@ -17,23 +17,25 @@ exports.IsSpecicalChar = function (c) {
     return false;
 }
 
-exports.IsLetter= function (c) {
+exports.IsLetter = function (c) {
     return c.toLowerCase() != c.toUpperCase();
 }
 
 exports.GetCurrentTime = function (timeType, date) {
-    if (timeType == 'years') {
-        return date.getFullYear();
-    } else if (timeType == 'months') {
-        return date.getMonth() + 1;
-    } else if (timeType == 'dates') {
-        return date.getDate();
-    } else if (timeType == 'hours') {
-        return date.getHours();
-    } else if (timeType == 'minutes') {
-        return date.getMinutes();
+    switch (timeType) {
+        case 'years':
+            return date.getFullYear();
+        case 'months':
+            return date.getMonth() + 1;
+        case 'dates':
+            return date.getDate();
+        case 'hours':
+            return date.getHours();
+        case 'minutes':
+            return date.getMinutes();
+        default:
+            return 0;
     }
-    return 0;
 }
 
 exports.IsInteger = function (str) {
@@ -82,14 +84,19 @@ exports.GetNextTimeType = function (timeType) {
 
 exports.GetTimeTillDayOfWeek = function (currentDay, day, numberOfWeeks) {
     let res = 7 * numberOfWeeks;
-    if (currentDay < day) res += day - currentDay;
-    else res += 7 - (currentDay - day);
+    if (currentDay < day) {
+        res += day - currentDay;
+    } else {
+        res += 7 - (currentDay - day);
+    }
     return res;
 }
 
 exports.AddWordIndex = function (...indexes) {
     for (let index of indexes) {
-        if (!this.usedWords.includes(index)) this.usedWords.push(index);
+        if (!this.usedWords.includes(index)) {
+            this.usedWords.push(index);
+        }
     }
 }
 
@@ -97,9 +104,15 @@ exports.FormDateStringFormat = function (date) {
     let month = date.getMonth();
     let hour = date.getHours().toString(10),
         minute = date.getMinutes().toString(10);
-    if (hour.length <= 1) hour = '0' + hour;
-    if (minute.length <= 1) minute = '0' + minute;
+    if (hour.length <= 1) {
+        hour = '0' + hour;
+    }
+    if (minute.length <= 1) {
+        minute = '0' + minute;
+    }
     let year = '';
-    if (date.getFullYear() != new Date().getFullYear()) year = ` ${date.getFullYear()} г.`;
+    if (date.getFullYear() != new Date().getFullYear()) {
+        year = ` ${date.getFullYear()} г.`;
+    }
     return (`${date.getDate()} ${constants.monthsRusRoot[month]}${constants.monthsRusEnding[month][1]} ${hour}:${minute}${year}`);
 }

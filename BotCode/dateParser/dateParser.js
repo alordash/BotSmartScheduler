@@ -58,8 +58,7 @@ function ReplaceWordNumbers(words) {
     let result = [];
     let composing = false,
         num = 0,
-        prevFoundWord,
-        wordNum = 0;
+        prevFoundWord;
     for (let word of words) {
         let found = false,
             i = 0,
@@ -76,7 +75,9 @@ function ReplaceWordNumbers(words) {
                         }
                     }
                 }
-                if (isOffsetBeforeHour) break;
+                if (isOffsetBeforeHour) {
+                    break;
+                }
             }
         }
         while (!found && i < constants.numbersDictionary.length) {
@@ -85,7 +86,9 @@ function ReplaceWordNumbers(words) {
             while (!found && j < numbersDictionaryWord.str.length) {
                 let fits = false;
                 if (numbersDictionaryWord.end) {
-                    if (word.length == numbersDictionaryWord.str[j].length) fits = true;
+                    if (word.length == numbersDictionaryWord.str[j].length) {
+                        fits = true;
+                    }
                 } else {
                     fits = true;
                 }
@@ -223,11 +226,11 @@ function FindAdditiveLiterals() {
                                 break;
 
                             case constants.numModes.require:
-                                if(prevWordIsNum) {
+                                if (prevWordIsNum) {
                                     store = true
                                 }
                                 break;
-                                
+
                             case constants.numModes.ignore:
                                 num = 1;
                                 store = true
@@ -236,7 +239,7 @@ function FindAdditiveLiterals() {
                                 store = false
                                 break;
                         }
-                        
+
                         if (store) {
                             dateParserConsole(`Found additiveLiteral "${additiveLiteral.string}" in "${word}", num = "${+num}"`);
                             lastUsedWordIndex = wordIndex;
@@ -284,7 +287,9 @@ function FindSimplifiedHour() {
                         MiscFunctions.AddWordIndex.call(this, wordIndex);
                         this.time.hours.values.push({ priority: 20, word: wordIndex, val: 1 });
                         this.time.minutes.values.push({ priority: 20, word: wordIndex, val: +nextWord });
-                        if (prevWord == 'в') MiscFunctions.AddWordIndex.call(this, wordIndex - 1);
+                        if (prevWord == 'в') {
+                            MiscFunctions.AddWordIndex.call(this, wordIndex - 1);
+                        }
                     }
                 } else {
                     if (nextWordIsInt) {
@@ -335,9 +340,13 @@ function FindDayOfWeek() {
                     }
                 }
             }
-            if (found) break;
+            if (found) {
+                break;
+            }
         }
-        if (found) break;
+        if (found) {
+            break;
+        }
     }
 }
 
@@ -435,12 +444,16 @@ async function ParseIntegerWord(index) {
                                                 value += 12;
                                             }
                                             this.time.hours.values.push({ priority: 15, word: index, val: value });
-                                            if (index > 0 && this.words[index - 1] == 'в') MiscFunctions.AddWordIndex.call(this, index - 1);
+                                            if (index > 0 && this.words[index - 1] == 'в') {
+                                                MiscFunctions.AddWordIndex.call(this, index - 1);
+                                            }
                                             MiscFunctions.AddWordIndex.call(this, index, index + 1, index + 2);
                                             break;
                                         }
                                     }
-                                    if (timeOfDayDefined) break;
+                                    if (timeOfDayDefined) {
+                                        break;
+                                    }
                                 }
                             }
                             if (!timeOfDayDefined) {
@@ -461,19 +474,25 @@ async function ParseIntegerWord(index) {
                                                 value += 12;
                                             }
                                             this.time.hours.values[prevHourIndex].val = value;
-                                            if (index > 0 && this.words[index - 1] == 'в') MiscFunctions.AddWordIndex.call(this, index - 1);
+                                            if (index > 0 && this.words[index - 1] == 'в') {
+                                                MiscFunctions.AddWordIndex.call(this, index - 1);
+                                            }
                                             MiscFunctions.AddWordIndex.call(this, index, index + 1, index + 2);
                                             break;
                                         }
                                     }
-                                    if (timeOfDayDefined) break;
+                                    if (timeOfDayDefined) {
+                                        break;
+                                    }
                                 }
                             }
                             this.time[timeType].values.push({ priority: 10, word: index, val: num });
                         } else {
                             this.time[timeType].values.push({ priority: 10, word: index, val: num });
                         }
-                        if (index > 0 && this.words[index - 1] == 'в') MiscFunctions.AddWordIndex.call(this, index - 1);
+                        if (index > 0 && this.words[index - 1] == 'в') {
+                            MiscFunctions.AddWordIndex.call(this, index - 1);
+                        }
                         MiscFunctions.AddWordIndex.call(this, index, index + 1);
                         let prevTimeType = MiscFunctions.GetPreviousTimeType(timeType);
                         while (prevTimeType != 'years') {
@@ -486,7 +505,9 @@ async function ParseIntegerWord(index) {
                     break;
                 }
             }
-            if (parsed) break;
+            if (parsed) {
+                break;
+            }
         }
     }
 
@@ -520,7 +541,9 @@ async function ParseIntegerWord(index) {
                                             break;
                                         }
                                     }
-                                    if (timeOfDayDefined) break;
+                                    if (timeOfDayDefined) {
+                                        break;
+                                    }
                                 }
                             } else {
                                 MiscFunctions.AddWordIndex.call(this, index, index - 1, index - 2);
@@ -554,7 +577,9 @@ async function ParseIntegerWord(index) {
                                         break;
                                     }
                                 }
-                                if (timeOfDayDefined) break;
+                                if (timeOfDayDefined) {
+                                    break;
+                                }
                             }
                         } else {
                             MiscFunctions.AddWordIndex.call(this, index, index - 1);
@@ -566,7 +591,9 @@ async function ParseIntegerWord(index) {
                     }
                 }
             }
-            if (parsed) return;
+            if (parsed) {
+                return;
+            }
         }
     }
 }
@@ -592,10 +619,10 @@ async function FilterTimeProperties() {
                 //dateParserConsole(`filteringProp = ${JSON.stringify(filteringProp)}, property: ${filteringPropName}`);
                 if (filteringPropName != propName) {
                     let shouldDelete = true;
-                    if (filteringPropName == 'hours') {
-                        if (propName == 'minutes') shouldDelete = false;
-                    } else if (filteringPropName == 'minutes') {
-                        if (propName == 'hours') shouldDelete = false;
+                    if (filteringPropName == 'hours' && propName == 'minutes') {
+                        shouldDelete = false;
+                    } else if (filteringPropName == 'minutes' && propName == 'hours') {
+                        shouldDelete = false;
                     }
                     if (shouldDelete) for (const p in filteringProp.values) {
                         if (filteringProp.values[p].word == unicWordIndex && filteringProp.values.length > 1
@@ -610,7 +637,9 @@ async function FilterTimeProperties() {
             //FILTERING MINIMUM VAL TIME PROPERTIES
             for (let i in prop.values) {
                 let timeProp = prop.values[i];
-                if (timeProp.priority <= constants.priorityTools.min) prop.values.splice(i, 1);
+                if (timeProp.priority <= constants.priorityTools.min) {
+                    prop.values.splice(i, 1);
+                }
             }
         }
     }
@@ -742,7 +771,9 @@ function FormText() {
 }
 
 async function ParseDate(text, tsOffset, debug) {
-    if (!debug) dateParserConsole = () => { };
+    if (!debug) {
+        dateParserConsole = () => { };
+    }
     let schedule = new constants.Schedule();
     schedule.ComposedDate = new Date();
     await DefineMinimumTimeValues.call(schedule);
@@ -771,15 +802,12 @@ async function ParseDate(text, tsOffset, debug) {
         for (const word of schedule.words) {
             let time, fullDate, month;
             if (!schedule.time.hours.locked && !schedule.time.minutes.locked && (time = await IsTime(word))) {
-                //            if (time.hours >= schedule.minTime.hours && time.minutes > schedule.minTime.minutes) {
                 MiscFunctions.AddWordIndex.call(schedule, i);
                 schedule.time.hours.values.push({ priority: 20, word: i, val: time.hours });
                 schedule.time.minutes.values.push({ priority: 20, word: i, val: time.minutes });
                 dateParserConsole(`Found time ${time.hours}:${time.minutes} in ${word}`);
-                //            }
             }
             if ((!schedule.time.dates.locked || !schedule.time.months.locked || !schedule.time.years.locked) && (fullDate = await IsComposedDate.call(schedule, word))) {
-                //            if (fullDate.date >= schedule.minTime.dates && fullDate.month >= schedule.minTime.months && fullDate.year >= schedule.minTime.years) {
                 let fullDateAdditionalPriority = 0;
                 MiscFunctions.AddWordIndex.call(schedule, i);
                 if (typeof (fullDate.year) != 'undefined' && !schedule.time.years.locked) {
@@ -789,9 +817,7 @@ async function ParseDate(text, tsOffset, debug) {
                 if (!schedule.time.dates.locked) schedule.time.dates.values.push({ priority: 20 + fullDateAdditionalPriority, word: i, val: fullDate.date, type: 'composed' });
                 if (!schedule.time.months.locked) schedule.time.months.values.push({ priority: 20 + fullDateAdditionalPriority, word: i, val: fullDate.month, type: 'composed' });
                 dateParserConsole(`Found Full Date ${fullDate.date}.${fullDate.month}.${fullDate.year} in ${word}`);
-                //            }
             } else if (!schedule.time.months.locked && (month = await IsMonth(word)) > -1) {
-                //            if (month >= schedule.minTime.months) {
                 MiscFunctions.AddWordIndex.call(schedule, i);
                 schedule.time.months.values.push({ priority: 10, word: i, val: month, type: 'word' });
                 if (!schedule.time.dates.locked && i > 0) {
@@ -804,7 +830,6 @@ async function ParseDate(text, tsOffset, debug) {
                     }
                 }
                 dateParserConsole(`Found word-Month ${constants.monthsRusRoot[month - 1] + constants.monthsRusEnding[month - 1][0]} in ${word}`);
-                //            }
             } else if (MiscFunctions.IsInteger(word)) {
                 await ParseIntegerWord.call(schedule, i);
             }

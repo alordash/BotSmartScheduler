@@ -25,16 +25,16 @@ exports.Schedule = class {
         this.text = '';
     }
 }
-exports.MAX_WORDS_COUNT = 40
-exports.maxMonthLength = 31
-exports.maxMonthCount = 12
-exports.maxHoursPerDay = 23
-exports.maxMinutesPerHour = 59
-exports.maxYearAddition = 100
-exports.mainSeparators = /[ \r\n]+/
-exports.timeSeparators = [':', '.']
-exports.dateSeparator = '.'
-exports.specialSymbols = ['@']
+exports.MAX_WORDS_COUNT = 40;
+exports.maxMonthLength = 31;
+exports.maxMonthCount = 12;
+exports.maxHoursPerDay = 23;
+exports.maxMinutesPerHour = 59;
+exports.maxYearAddition = 100;
+exports.mainSeparators = /[ \r\n]+/;
+exports.timeSeparators = [':', '.'];
+exports.dateSeparator = '.';
+exports.specialSymbols = ['@'];
 exports.numbersDictionary = [
     { str: ['ноль', 'нулев'], end: false, val: 0, l: 0, n: 0, multiplier: false },
     { str: ['один', 'перв'], end: false, val: 1, l: 0, n: 1, multiplier: false },
@@ -85,33 +85,77 @@ exports.numbersDictionary = [
     { str: ['тысячи'], end: false, val: 1000, l: 3, n: 4, multiply: true, n: 0, multiplier: false },
 ].reverse();
 
-const softSignedEnding = ['ь', 'я', 'е']
-exports.softSignedEnding = softSignedEnding
-exports.monthsRusRoot = ['январ', 'феврал', 'март', 'апрел', 'ма', 'июн', 'июл', 'август', 'сентябр', 'октябр', 'ноябр', 'декабр']
-exports.monthsRusEnding = [softSignedEnding, softSignedEnding, ['', 'а', 'е'], softSignedEnding, ['й', 'я', 'е'], softSignedEnding, softSignedEnding, ['', 'а', 'е'], softSignedEnding, softSignedEnding, softSignedEnding, softSignedEnding]
+const softSignedEnding = ['ь', 'я', 'е'];
+exports.softSignedEnding = softSignedEnding;
+exports.monthsRusRoot = [
+    'январ',
+    'феврал',
+    'март',
+    'апрел',
+    'ма',
+    'июн',
+    'июл',
+    'август',
+    'сентябр',
+    'октябр',
+    'ноябр',
+    'декабр'
+];
+exports.monthsRusEnding = [
+    softSignedEnding,
+    softSignedEnding,
+    ['', 'а', 'е'],
+    softSignedEnding,
+    ['й', 'я', 'е'],
+    softSignedEnding,
+    softSignedEnding,
+    ['', 'а', 'е'],
+    softSignedEnding,
+    softSignedEnding,
+    softSignedEnding,
+    softSignedEnding
+];
 exports.priorityTools = {
     max: 100,
     min: 1,
     increase: 25
-}
+};
 exports.offsetLiterals = {
-    dates: [{ string: 'завтра', offset: 1 }, { string: 'послезавтра', offset: 2 }]
-}
-exports.additiveWord = 'через'
+    dates: [
+        { string: 'завтра', offset: 1 },
+        { string: 'послезавтра', offset: 2 }
+    ]
+};
+exports.additiveWord = 'через';
 
-const numModes = { "use": 0, "require": 1, "ignore": 2 }
-exports.numModes = numModes
+const numModes = { "use": 0, "require": 1, "ignore": 2 };
+exports.numModes = numModes;
 exports.additiveLiterals = {
-    years: [{ string: 'лет', multiplyer: 1, mode: numModes.require }, { string: 'год', multiplyer: 1, mode: numModes.use }],
-    months: [{ string: 'месяц', multiplyer: 1, mode: numModes.use }],
-    dates: [{ string: 'дне', multiplyer: 1, mode: numModes.require }, { string: 'дня', multiplyer: 1, mode: numModes.require }, { string: 'ден', multiplyer: 1, mode: numModes.use }, { string: 'недел', multiplyer: 7, mode: numModes.use }],
-    hours: [{ string: 'час', multiplyer: 1, mode: numModes.use }],
-    minutes: [{ string: 'мин', multiplyer: 1, mode: numModes.use }, { string: 'полчаса', multiplyer: 30, mode: numModes.ignore }]
-}
+    years: [
+        { string: 'лет', multiplyer: 1, mode: numModes.require },
+        { string: 'год', multiplyer: 1, mode: numModes.use }
+    ],
+    months: [
+        { string: 'месяц', multiplyer: 1, mode: numModes.use }
+    ],
+    dates: [
+        { string: 'дне', multiplyer: 1, mode: numModes.require },
+        { string: 'дня', multiplyer: 1, mode: numModes.require },
+        { string: 'ден', multiplyer: 1, mode: numModes.use },
+        { string: 'недел', multiplyer: 7, mode: numModes.use }
+    ],
+    hours: [
+        { string: 'час', multiplyer: 1, mode: numModes.use }
+    ],
+    minutes: [
+        { string: 'мин', multiplyer: 1, mode: numModes.use },
+        { string: 'полчаса', multiplyer: 30, mode: numModes.ignore }
+    ]
+};
 exports.hourTimeOfDayDefiners = [
     { strings: ['дня', 'вечер', 'обед'], lesser: false },
     { strings: ['ноч', 'утр'], lesser: true }
-]
+];
 exports.daysOfWeak = [
     { names: ['воскр'], number: 0 },
     { names: ['понед'], number: 1 },
@@ -120,23 +164,36 @@ exports.daysOfWeak = [
     { names: ['четверг'], number: 4 },
     { names: ['пятниц'], number: 5 },
     { names: ['суббот'], number: 6 },
-]
+];
 exports.integerWordsTypeDefiners = {
     years: [{ string: 'год' }],
     months: [{ string: 'месяц' }],
     dates: [{ string: 'числ' }],
     hours: [{ string: 'час' }],
     minutes: [{ string: 'мин' }]
-}
+};
 exports.integerWordsDefaultValues = {
     years: 0,
     months: 1,
     dates: 1,
     hours: 0,
     minutes: 0
-}
+};
 exports.integerHoursAdditionalDefiners = [
-    { strings: ['пол', 'половин'], needNum: false, val: 30, },
-    { strings: ['четверть'], needNum: false, val: 15 },
-    { strings: ['без'], needNum: true }
-]
+    {
+        strings: [
+            'пол',
+            'половин'
+        ], needNum: false, val: 30,
+    },
+    {
+        strings: [
+            'четверть'
+        ], needNum: false, val: 15
+    },
+    {
+        strings: [
+            'без'
+        ], needNum: true
+    }
+];
