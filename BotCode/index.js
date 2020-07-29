@@ -307,6 +307,7 @@ async function ServiceMsgs(ctxs) {
         let isScheduled = await db.GetScheduleByText(servicedMessage.chatID, servicedMessage.parsedMessage.text);
         let tz = await db.GetUserTZ(servicedMessage.userID);
         let schedulesCount = (await db.GetSchedules(servicedMessage.chatID)).length;
+        if (typeof (schedulesCount) == 'undefined') { schedulesCount = 0 }
         console.log(`schedulesCount = ${schedulesCount}`);
         let count = 0
         if (isScheduled !== false) {
