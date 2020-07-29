@@ -297,7 +297,7 @@ async function ServiceMsgs(ctxs) {
             }
         } else {
             let tz = await db.GetUserTZ(ctx.from.id);
-            let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'true');
+            let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'false');
             servicedMessages.push({ parsedMessage: parsedMessage, chatID: chatID, username: ctx.from.username, userID: ctx.from.id });
         }
     }
