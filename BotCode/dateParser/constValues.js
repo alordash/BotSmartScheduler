@@ -9,7 +9,7 @@ exports.Schedule = class {
         }
         this.minTime = {
             years: 0,
-            months: 1,
+            months: 0,
             dates: 0,
             hours: 0,
             minutes: 0

@@ -25,7 +25,7 @@ exports.GetCurrentTime = function (timeType, date) {
     if (timeType == 'years') {
         return date.getFullYear();
     } else if (timeType == 'months') {
-        return date.getMonth();
+        return date.getMonth() + 1;
     } else if (timeType == 'dates') {
         return date.getDate();
     } else if (timeType == 'hours') {
