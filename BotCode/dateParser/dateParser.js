@@ -712,7 +712,7 @@ function FormText() {
         let index = this.usedWords[i];
         let foundIndex = this.originalWords.indexOf(this.words[index]);
         if(foundIndex >= 0) {
-            this.originalWords.splice(foundIndex);
+            this.originalWords.splice(foundIndex, 1);
         }
     }
     for (let word of this.originalWords) {
