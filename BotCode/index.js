@@ -139,7 +139,7 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
         setInterval(CheckExpiredSchedules, 60000);
         await CheckExpiredSchedules();
     }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
-    if (process.env.IS_HEROKU == 'true') console.log = function () { };
+    if (process.env.ENABLE_LOGS == 'true') console.log = function () { };
 })();
 
 bot.start(ctx => {
@@ -291,7 +291,7 @@ async function ServiceMsgs(ctxs) {
             }
         } else {
             let tz = await db.GetUserTZ(ctx.from.id);
-            let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.IS_HEROKU != 'true');
+            let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'true');
             servicedMessages.push({ parsedMessage: parsedMessage, chatID: chatID, username: ctx.from.username, userID: ctx.from.id });
         }
     }
