@@ -1,5 +1,5 @@
-const { constants } = require('./constValues');
-const { MiscFunctions } = require('./miscFunctions');
+const constants = require('./constValues');
+const MiscFunctions = require('./miscFunctions');
 
 async function DefineMinimumTimeValues() {
     for (let [timeType, timeProperty] of Object.entries(this.minTime)) {
@@ -237,10 +237,10 @@ function FindAdditiveLiterals() {
         for (let timeType of foundTimeTypes) {
             this.time[timeType].locked = true;
         }
-        if (!foundTimeTypes.includes("hours")) {
-            this.time.hours.values.push({ priority: 12, word: i, val: MiscFunctions.GetCurrentTime("hours", this.ComposedDate) });
-        }
-        if(foundTimeTypes.length > 0) {
+        if (foundTimeTypes.length > 0) {
+            if (!foundTimeTypes.includes("hours")) {
+                this.time.hours.values.push({ priority: 12, word: i, val: MiscFunctions.GetCurrentTime("hours", this.ComposedDate) });
+            }
             this['acceptOffset'] = false;
             return true;
         }
@@ -708,15 +708,14 @@ function DetermineTime() {
 
 function FormText() {
     this.text = '';
-    for(let i in this.usedWords) {
+    for (let i in this.usedWords) {
         let index = this.usedWords[i];
-        let foundIndex = this.originalWords.indexOf(this.words[index]);
-        if(foundIndex >= 0) {
-            this.originalWords.splice(foundIndex, 1);
-        }
+        this.originalWords[index] = false;
     }
     for (let word of this.originalWords) {
-        this.text += word + ' ';
+        if (word !== false) {
+            this.text += word + ' ';
+        }
     }
     this.text = this.text.trim();
 }
@@ -728,15 +727,16 @@ async function ParseDate(text, tsOffset, debug) {
     await DefineMinimumTimeValues.call(schedule);
     schedule.text = text;
     schedule.text = SimplifyAllTwoDotE(schedule.text);
-    schedule.originalWords = schedule.words = await schedule.text.split(constants.mainSeparators);
+    schedule.words = await schedule.text.split(constants.mainSeparators);
+    schedule.words = await ReplaceWordNumbers(schedule.words);
 
+    schedule.originalWords = schedule.words;
     dateParserConsole(`schedule.words = ${JSON.stringify(schedule.words)}`);
     //    schedule.originalWords = schedule.words = await SplitNumbersInWords(schedule.words);
     schedule.words = await SplitSpecialSymbols(schedule.words);
     dateParserConsole(`schedule.originalWords = ${JSON.stringify(schedule.originalWords)}`);
 
     //    schedule.words = await WordsToLowerCase(schedule.words);
-    schedule.words = await ReplaceWordNumbers(schedule.words);
     if (schedule.words.length > constants.MAX_WORDS_COUNT) {
         schedule.words.splice(constants.MAX_WORDS_COUNT, schedule.words.length - constants.MAX_WORDS_COUNT);
     }
@@ -797,12 +797,12 @@ async function ParseDate(text, tsOffset, debug) {
 
     let hourOffset = tsOffset / 3600 | 0;
     let minuteOffset = (tsOffset % 3600) / 60;
-    if(schedule.acceptOffset) {
-        for(let i in schedule.time.hours.values) {
+    if (schedule.acceptOffset) {
+        for (let i in schedule.time.hours.values) {
             let hour = schedule.time.hours.values[i];
             hour.val -= hourOffset;
         }
-        for(let i in schedule.time.minutes.values) {
+        for (let i in schedule.time.minutes.values) {
             let minute = schedule.time.minutes.values[i];
             minute.val -= minuteOffset;
         }
@@ -827,4 +827,4 @@ async function ParseDate(text, tsOffset, debug) {
     }
 }
 
-module.exports = { ParseDate };
+exports.ParseDate = ParseDate;

@@ -8,9 +8,8 @@ const MaximumCountOfSchedules = 25
 let incomingMsgTimer = {};
 let incomingMsgCtxs = {};
 const DateParser = require('./dateParser/dateParser');
-const { MiscFunctions } = require('./dateParser/miscFunctions');
-const { Replies } = require('./replies');
-const rp = new Replies();
+const MiscFunctions = require('./dateParser/miscFunctions');
+const rp = require('./replies');
 const dbManagement = require('./scheduling/db');
 let dbUrl;
 if (process.env.IS_HEROKU) {
@@ -140,6 +139,7 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
     await db.InitDB();
     await bot.launch();
     let ts = Date.now();
+    
     setTimeout(async function () {
         console.log(`Timeout expired`);
         setInterval(CheckExpiredSchedules, 60000);
