@@ -8,7 +8,7 @@
 
 Если вам нужно быстро и с удобством планировать свои задачи, бот Smart Scheduler станет незаменимым инструментом в этом деле.
 
-![Пример использования](https://raw.githubusercontent.com/alordash/BotSmartScheduler/master/UsageExample.png)
+![Пример использования](https://habrastorage.org/webt/03/ie/sd/03iesdxbqwrpwrkoxtl3ibmtkfs.png)
 
 ## Как использовать
 

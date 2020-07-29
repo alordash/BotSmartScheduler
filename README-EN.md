@@ -8,6 +8,8 @@
 
 If you need fast and handy tool to schedule your plans, Smart Scheduler Bot is the right choice.
 
+![Usage example](https://habrastorage.org/webt/03/ie/sd/03iesdxbqwrpwrkoxtl3ibmtkfs.png)
+
 ## How to use
 
 [Smart Scheduler Bot works in Telegram.](https://t.me/SmartScheduler_bot)
