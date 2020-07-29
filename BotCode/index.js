@@ -98,7 +98,11 @@ async function CheckExpiredSchedules() {
             if (typeof (incomingMsgTimer[schedule.chatid]) != 'undefined') clearTimeout(incomingMsgTimer[schedule.chatid]);
             let mentionUser = '';
             if (schedule.username != 'none') mentionUser = ' @' + schedule.username;
-            await bot.telegram.sendMessage(+chatID, `⏰${mentionUser} "${schedule.text}"`);
+            try {
+                await bot.telegram.sendMessage(+chatID, `⏰${mentionUser} "${schedule.text}"`);
+            } catch (e) {
+                console.error(e);
+            }
 
             let index = GetDeletingIDsIndex(schedule.chatid, deletingIDs);
             if (index === false) {
@@ -236,7 +240,7 @@ bot.on('text', async ctx => {
                 console.log(`Determining tz from only hour option: offset = ${offset}, hours = ${hours}, minutes = ${minutes}, ts = ${ts}`);
             }
         }
-        if(matches != null) {
+        if (matches != null) {
             let ts = hours * 3600;
             ts += minutes * 60 * (negative ? -1 : 1);
             if (await db.HasUserID(userId)) {
@@ -354,7 +358,6 @@ async function ServiceCommand(ctx) {
             for (let i in nums) {
                 nums[i] = parseInt(nums[i], 10);
             }
-            let count = 0;
             for (let i in ranges) {
                 let range = ranges[i];
                 let index = range.indexOf('-');
@@ -369,12 +372,14 @@ async function ServiceCommand(ctx) {
                     nums.push(j);
                 }
             }
-            nums = nums.filter((item, pos) => {
-                return nums.indexOf(item) == pos;
-            });
-            nums.sort((a, b) => a - b);
-            if (!isNaN(nums[0])) {
-                return nums;
+            if (typeof (nums) != null) {
+                nums = nums.filter((item, pos) => {
+                    return nums.indexOf(item) == pos;
+                });
+                nums.sort((a, b) => a - b);
+                if (!isNaN(nums[0])) {
+                    return nums;
+                }
             }
         }
     } else if (MiscFunctions.IsInteger(msgText[1])) {
