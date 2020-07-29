@@ -716,8 +716,9 @@ function FormText() {
         }
     }
     for (let word of this.originalWords) {
-        this.text += word;
+        this.text += word + ' ';
     }
+    this.text = this.text.trim();
 }
 
 async function ParseDate(text, tsOffset, debug) {
