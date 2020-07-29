@@ -36,7 +36,7 @@ If you need fast and handy tool to schedule your plans, Smart Scheduler Bot is t
 ## How to use
 [Smart Scheduler Bot works in Telegram.](https://t.me/SmartScheduler_bot) 
 Just type task with required expiration time and Smart Scheduler will automatically find scheduling date and what task to schedule in your message. 
-Smart Scheduler will send you notification when particular task&rsquo;s time expires. 
+Smart Scheduler will send you notification when particular task's time expires. 
 
 You do not need to follow specified date format, Smart Scheduler understands most of human date formats (e.g.  «через X минут»,  «без пятнадцати десять»,  «послезавтра пол первого»). 
 <i>Smart Scheduler can store tasks with minute precision.</i> 
