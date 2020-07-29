@@ -216,7 +216,28 @@ function FindAdditiveLiterals() {
                             num = 1;
                             prevWordIsNum = false;
                         }
-                        if (!additiveLiteral.needNum || (additiveLiteral.needNum && prevWordIsNum)) {
+                        let store = false;
+                        switch (additiveLiteral.mode) {
+                            case constants.numModes.use:
+                                store = true
+                                break;
+
+                            case constants.numModes.require:
+                                if(prevWordIsNum) {
+                                    store = true
+                                }
+                                break;
+                                
+                            case constants.numModes.ignore:
+                                num = 1;
+                                store = true
+                                break;
+                            default:
+                                store = false
+                                break;
+                        }
+                        
+                        if (store) {
                             dateParserConsole(`Found additiveLiteral "${additiveLiteral.string}" in "${word}", num = "${+num}"`);
                             lastUsedWordIndex = wordIndex;
                             if (!this.time[timeType].locked) {

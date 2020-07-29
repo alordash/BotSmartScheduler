@@ -85,7 +85,7 @@ exports.numbersDictionary = [
     { str: ['тысячи'], end: false, val: 1000, l: 3, n: 4, multiply: true, n: 0, multiplier: false },
 ].reverse();
 
-let softSignedEnding = ['ь', 'я', 'е']
+const softSignedEnding = ['ь', 'я', 'е']
 exports.softSignedEnding = softSignedEnding
 exports.monthsRusRoot = ['январ', 'феврал', 'март', 'апрел', 'ма', 'июн', 'июл', 'август', 'сентябр', 'октябр', 'ноябр', 'декабр']
 exports.monthsRusEnding = [softSignedEnding, softSignedEnding, ['', 'а', 'е'], softSignedEnding, ['й', 'я', 'е'], softSignedEnding, softSignedEnding, ['', 'а', 'е'], softSignedEnding, softSignedEnding, softSignedEnding, softSignedEnding]
@@ -98,12 +98,15 @@ exports.offsetLiterals = {
     dates: [{ string: 'завтра', offset: 1 }, { string: 'послезавтра', offset: 2 }]
 }
 exports.additiveWord = 'через'
+
+const numModes = { "use": 0, "require": 1, "ignore": 2 }
+exports.numModes = numModes
 exports.additiveLiterals = {
-    years: [{ string: 'лет', multiplyer: 1, needNum: true }, { string: 'год', multiplyer: 1, needNum: false }],
-    months: [{ string: 'месяц', multiplyer: 1, needNum: false }],
-    dates: [{ string: 'дне', multiplyer: 1, needNum: true }, { string: 'дня', multiplyer: 1, needNum: true }, { string: 'ден', multiplyer: 1, needNum: false }, { string: 'недел', multiplyer: 7, needNum: false }],
-    hours: [{ string: 'час', multiplyer: 1, needNum: false }],
-    minutes: [{ string: 'мин', multiplyer: 1, needNum: false }]
+    years: [{ string: 'лет', multiplyer: 1, mode: numModes.require }, { string: 'год', multiplyer: 1, mode: numModes.use }],
+    months: [{ string: 'месяц', multiplyer: 1, mode: numModes.use }],
+    dates: [{ string: 'дне', multiplyer: 1, mode: numModes.require }, { string: 'дня', multiplyer: 1, mode: numModes.require }, { string: 'ден', multiplyer: 1, mode: numModes.use }, { string: 'недел', multiplyer: 7, mode: numModes.use }],
+    hours: [{ string: 'час', multiplyer: 1, mode: numModes.use }],
+    minutes: [{ string: 'мин', multiplyer: 1, mode: numModes.use }, { string: 'полчаса', multiplyer: 30, mode: numModes.ignore }]
 }
 exports.hourTimeOfDayDefiners = [
     { strings: ['дня', 'вечер', 'обед'], lesser: false },
