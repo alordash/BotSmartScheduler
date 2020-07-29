@@ -1,5 +1,7 @@
 # Bot Smart Scheduler
 
+### На данный момент бот распознает только время, написанное на русском языке.
+
 Если вам нужно быстро и с удобством планировать свои задачи, бот Smart Scheduler станет незаменимым инструментом в этом деле.
 
 ![Пример использования](https://raw.githubusercontent.com/alordash/BotSmartScheduler/master/UsageExample.png)
@@ -31,9 +33,9 @@ Smart Scheduler хранит для каждого чата задачи раз�
 
 и конечно же /start и /help.
 
-### На данный момент бот распознает написанное только на русском языке время.
-
 # English
+
+### Currently bot recognizes the time written only in Russian.
 
 If you need fast and handy tool to schedule your plans, Smart Scheduler Bot is the right choice.
 
@@ -63,5 +65,3 @@ Supported commands:
 - 🌐 **_/tz_** - Configures time zone.
 
 and /start with /help of course.
-
-### Currently bot recognizes the time written only in Russian.
