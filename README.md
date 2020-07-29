@@ -23,19 +23,19 @@ Smart Scheduler хранит для каждого чата задачи раз�
 
       Показывает активные задачи для данного чата.
 
-#### 2. 🗑 **/del** <i>1, 2, ...N</i>
+#### 2. 🗑 **/del** _1, 2, ...N_
 
       Удаляет задачи по id.
 
-#### 3. 🗑 **/del** <i>1-10, A-B</i>
+#### 3. 🗑 **/del** _1-10, A-B_
 
       Удаляет задачи в введенном диапазоне.
 
-#### 4. #️⃣ **/<i>N**</i>
+#### 4. #️⃣ **_/N_**
 
       Удаляет N-ную задачу.
 
-#### 5. 🌐 **/<i>tz**</i>
+#### 5. 🌐 **_/tz_**
 
       Настройка часового пояса.
 
@@ -54,7 +54,7 @@ Just type task with required expiration time and Smart Scheduler will automatica
 Smart Scheduler will send you notification when particular task's time expires.
 
 You do not need to follow specified date format, Smart Scheduler understands most of human date formats (e.g. «через X минут», «без пятнадцати десять», «послезавтра пол первого»).
-<i>Smart Scheduler can store tasks with minute precision.</i>
+_Smart Scheduler can store tasks with minute precision._
 
 ## Features
 
@@ -66,19 +66,19 @@ Supported commands:
 
       Shows active tasks for current chat.
 
-#### 2. 🗑 **/del** <i>1, 2, ...N</i>
+#### 2. 🗑 **/del** _1, 2, ...N_
 
       Deletes tasks by id.
 
-#### 3. 🗑 **/del** <i>1-10, A-B</i>
+#### 3. 🗑 **/del** _1-10, A-B_
 
       Deletes all tasks within range.
 
-#### 4. #️⃣ **/<i>N**</i>
+#### 4. #️⃣ **_/N_**
 
       Deletes N-th task.
 
-#### 5. 🌐 **/<i>tz**</i>
+#### 5. 🌐 **_/tz_**
 
       Configures time zone.
 
