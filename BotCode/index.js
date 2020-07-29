@@ -383,7 +383,7 @@ async function ServiceCommand(ctx) {
                     nums.push(j);
                 }
             }
-            if (typeof (nums) != null) {
+            if (nums != null) {
                 nums = nums.filter((item, pos) => {
                     return nums.indexOf(item) == pos;
                 });
