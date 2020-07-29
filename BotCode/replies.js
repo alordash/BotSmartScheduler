@@ -24,12 +24,16 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
         ]).oneTime().removeKeyboard().resize().extra();
         this.scheduled = function (text, myFormattedDate) {
             return `"${text}" already scheduled at: <b>${myFormattedDate}</b>\r\n`;
-        };
+        }
         this.cleared = `Cleared all schedules.\r\nShow list: /list`;
         this.deleted = function (str, end, newline) {
             return `Deleted ${str} schedule${end}.${newline === false ? `\r\nShow list: /list` : ``}`;
-        };
+        }
         this.listIsEmpty = `List of plans is empty.`;
+        this.exceededLimit = function (maximum) {
+            return `⚠️ Please remove some of your schedules.
+Maximum count of schedules: <b>${maximum}</b>`;
+        }
 
         //#region TZ config
         this.tzWarning = `⚠️ Please select your time zone by typing <b>/tz</b>\r\n`;
@@ -53,7 +57,7 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
             if (minutes >= 10) t = '';
             s += t + minutes;
             return `🌐 Your time zone: GMT <b>${s}</b>.`;
-        };
+        }
         this.tzCancel = `❌ Cancel`;
         this.tzCancelReponse = `🚫 Cancelled.`;
         this.tzCancelWarning = `❗️ Please note that defining time zone increases time accuracy.`;
@@ -67,7 +71,7 @@ It is an open source project and is <a href="http://github.com/alordash/BotSmart
             else t = '+' + t;
             return `🌐 Your time zone: GMT <b>${t}${tz}:00</b>.`
         }
-        this.tzCurrent = function(tz) {
+        this.tzCurrent = function (tz) {
             let negative = tz < 0;
             let hour = tz / 3600 | 0;
             let minutes = Math.abs(tz % 3600 / 60);

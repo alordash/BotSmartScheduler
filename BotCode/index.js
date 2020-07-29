@@ -3,6 +3,8 @@ const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
 let telegraf = require('telegraf');
 
+const MaximumCountOfSchedules = 25
+
 let incomingMsgTimer = {};
 let incomingMsgCtxs = {};
 const DateParser = require('./dateParser/dateParser');
@@ -143,7 +145,7 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
         setInterval(CheckExpiredSchedules, 60000);
         await CheckExpiredSchedules();
     }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
-    if (process.env.ENABLE_LOGS == 'true') console.log = function () { };
+    if (process.env.ENABLE_LOGS == 'false') console.log = function () { };
 })();
 
 bot.start(ctx => {
@@ -304,18 +306,27 @@ async function ServiceMsgs(ctxs) {
     for (let servicedMessage of servicedMessages) {
         let isScheduled = await db.GetScheduleByText(servicedMessage.chatID, servicedMessage.parsedMessage.text);
         let tz = await db.GetUserTZ(servicedMessage.userID);
+        let schedulesCount = (await db.GetSchedules(servicedMessage.chatID)).length;
+        console.log(`schedulesCount = ${schedulesCount}`);
+        let count = 0
         if (isScheduled !== false) {
             isScheduled = +isScheduled;
             reply += rp.scheduled(servicedMessage.parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(isScheduled + tz * 1000)));
         } else {
-            if (typeof (servicedMessage.parsedMessage.date) != 'undefined') {
-                schedules.push({ chatID: servicedMessage.chatID, text: servicedMessage.parsedMessage.text, timestamp: servicedMessage.parsedMessage.date.getTime(), username: servicedMessage.username });
-                reply += servicedMessage.parsedMessage.answer + `\r\n`;
+            if (count + schedulesCount <= MaximumCountOfSchedules) {
+                if (typeof (servicedMessage.parsedMessage.date) != 'undefined') {
+                    schedules.push({ chatID: servicedMessage.chatID, text: servicedMessage.parsedMessage.text, timestamp: servicedMessage.parsedMessage.date.getTime(), username: servicedMessage.username });
+                    reply += servicedMessage.parsedMessage.answer + `\r\n`;
+                    count++;
+                } else {
+                    if (servicedMessage.chatID[0] !== '_') reply += servicedMessage.parsedMessage.answer + `\r\n`;
+                }
+                if (servicedMessage.chatID[0] !== '_' && !(await db.HasUserID(servicedMessage.userID))) {
+                    reply += rp.tzWarning;
+                }
             } else {
-                if (servicedMessage.chatID[0] !== '_') reply += servicedMessage.parsedMessage.answer + `\r\n`;
-            }
-            if (servicedMessage.chatID[0] !== '_' && !(await db.HasUserID(servicedMessage.userID))) {
-                reply += rp.tzWarning;
+                reply += rp.exceededLimit(MaximumCountOfSchedules);
+                break;
             }
         }
     }
