@@ -708,16 +708,16 @@ function DetermineTime() {
 
 function FormText() {
     this.text = '';
-    for (let i in this.originalWords) {
-        i = +i;
-        let word = this.originalWords[i];
-        if (!this.usedWords.includes(i)) {
-            if (!(MiscFunctions.IsInteger(word) || MiscFunctions.IsLetter(word)))
-                this.text += word;
-            else this.text += " " + word;
+    for(let i in this.usedWords) {
+        let index = this.usedWords[i];
+        let foundIndex = this.originalWords.indexOf(this.words[index]);
+        if(foundIndex >= 0) {
+            this.originalWords.splice(foundIndex);
         }
     }
-    this.text = this.text.trim();
+    for (let word of this.originalWords) {
+        this.text += word;
+    }
 }
 
 async function ParseDate(text, tsOffset, debug) {
@@ -727,11 +727,11 @@ async function ParseDate(text, tsOffset, debug) {
     await DefineMinimumTimeValues.call(schedule);
     schedule.text = text;
     schedule.text = SimplifyAllTwoDotE(schedule.text);
-    schedule.words = await schedule.text.split(constants.mainSeparators);
+    schedule.originalWords = schedule.words = await schedule.text.split(constants.mainSeparators);
 
     dateParserConsole(`schedule.words = ${JSON.stringify(schedule.words)}`);
     //    schedule.originalWords = schedule.words = await SplitNumbersInWords(schedule.words);
-    schedule.originalWords = schedule.words = await SplitSpecialSymbols(schedule.words);
+    schedule.words = await SplitSpecialSymbols(schedule.words);
     dateParserConsole(`schedule.originalWords = ${JSON.stringify(schedule.originalWords)}`);
 
     //    schedule.words = await WordsToLowerCase(schedule.words);
