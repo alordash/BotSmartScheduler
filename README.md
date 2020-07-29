@@ -19,23 +19,23 @@ Smart Scheduler хранит для каждого чата задачи раз�
 
 ### Поддерживаемые комманды:
 
-#### 1. 🗓 <b>/list</b>
+#### 1. 🗓 **/list**
 
       Показывает активные задачи для данного чата.
 
-#### 2. 🗑 <b>/del</b> <i>1, 2, ...N</i>
+#### 2. 🗑 **/del** <i>1, 2, ...N</i>
 
       Удаляет задачи по id.
 
-#### 3. 🗑 <b>/del</b> <i>1-10, A-B</i>
+#### 3. 🗑 **/del** <i>1-10, A-B</i>
 
       Удаляет задачи в введенном диапазоне.
 
-#### 4. #️⃣ <b>/<i>N</b></i>
+#### 4. #️⃣ **/<i>N**</i>
 
       Удаляет N-ную задачу.
 
-#### 5. 🌐 <b>/<i>tz</b></i>
+#### 5. 🌐 **/<i>tz**</i>
 
       Настройка часового пояса.
 
@@ -58,27 +58,27 @@ You do not need to follow specified date format, Smart Scheduler understands mos
 
 ## Features
 
-Smart Scheduler stores tasks <b>separately</b> for every chat and can work in conversations.
+Smart Scheduler stores tasks **separately** for every chat and can work in conversations.
 
 Supported commands:
 
-#### 1. 🗓 <b>/list</b>
+#### 1. 🗓 **/list**
 
       Shows active tasks for current chat.
 
-#### 2. 🗑 <b>/del</b> <i>1, 2, ...N</i>
+#### 2. 🗑 **/del** <i>1, 2, ...N</i>
 
       Deletes tasks by id.
 
-#### 3. 🗑 <b>/del</b> <i>1-10, A-B</i>
+#### 3. 🗑 **/del** <i>1-10, A-B</i>
 
       Deletes all tasks within range.
 
-#### 4. #️⃣ <b>/<i>N</b></i>
+#### 4. #️⃣ **/<i>N**</i>
 
       Deletes N-th task.
 
-#### 5. 🌐 <b>/<i>tz</b></i>
+#### 5. 🌐 **/<i>tz**</i>
 
       Configures time zone.
 
