@@ -864,6 +864,7 @@ async function ParseDate(text, tsOffset, debug) {
     let newDate = new Date(schedule.time.years, schedule.time.months - 1, schedule.time.dates, schedule.time.hours, schedule.time.minutes);
     if (newDate.getTime() > schedule.ComposedDate.getTime() && schedule.text.length) {
         schedule.ComposedDate = newDate;
+        schedule.text = schedule.text.substring(0,1).toUpperCase() + schedule.text.substring(1);
         answer = `"${schedule.text}": <b>${MiscFunctions.FormDateStringFormat(new Date(schedule.ComposedDate.getTime() + tsOffset * 1000))}</b>`;
         dateParserConsole(`\r\nDetermined schedule: ${JSON.stringify(schedule)}`);
         return { answer: answer, text: schedule.text, date: schedule.ComposedDate };
