@@ -32,6 +32,7 @@ let db = new dbManagement.dbManagment(dbOptions);
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
+//#region functions
 function GetDeletingIDsIndex(chatID, deletingIDs) {
     if (deletingIDs.length) {
         for (let i in deletingIDs) {
@@ -150,9 +151,10 @@ async function CheckExpiredSchedules() {
     db.sending = false;
     console.log(`Done checking expired schedules`);
 };
-
+//#endregion
 var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
 
+//#region initialization
 (async function Init() {
     await db.InitDB();
     await bot.launch();
@@ -166,6 +168,7 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
         console.log = function () { };
     }
 })();
+//#endregion
 
 bot.start(ctx => {
     let options = rp.mainKeyboard;
