@@ -18,12 +18,12 @@ describe('Date Parser', function () {
 
     it('17 апреля в 15.30 к ортодонту', async function () {
         let result = await DateParser.ParseDate('17 апреля в 15.30 к ортодонту', false);
-        expect(result.answer).toBe(`"к ортодонту": <b>17 апреля 15:30 2021 г.</b>`);
+        expect(result.answer).toBe(`"К ортодонту": <b>17 апреля 15:30 2021 г.</b>`);
     });
 
     it('купить в без двадцати десять вечера тринадцатого декабря две тысячи тридцатого года', async function () {
         let result = await DateParser.ParseDate('купить в без двадцати десять вечера тринадцатого декабря две тысячи тридцатого года', false);
-        expect(result.answer).toBe(`"купить": <b>13 декабря 21:40 2030 г.</b>`);
+        expect(result.answer).toBe(`"Купить": <b>13 декабря 21:40 2030 г.</b>`);
     });
 
     it('@viordash  32 декабря в 12 часов утра напомни позвонить в центр эл подписи', async function () {
