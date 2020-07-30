@@ -58,7 +58,8 @@ function ReplaceWordNumbers(words) {
     let result = [];
     let composing = false,
         num = 0,
-        prevFoundWord;
+        prevFoundWord,
+        wordNum = 0;
     for (let word of words) {
         let found = false,
             i = 0,
