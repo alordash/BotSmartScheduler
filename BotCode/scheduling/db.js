@@ -42,6 +42,7 @@ class dbManagment {
             id++;
         }
         queryString = queryString.substring(0, queryString.length - 2);
+        await this.Query(queryString);
         console.log(`Added multiple schedules = ${JSON.stringify(newSchedules)}`);
     }
 
