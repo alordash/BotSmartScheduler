@@ -1,16 +1,20 @@
-const request = require('async-request');
+const request = require('request-promise');
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
-let telegraf = require('telegraf');
+const telegraf = require('telegraf');
+
+const DateParser = require('./dateParser/dateParser');
+const MiscFunctions = require('./dateParser/miscFunctions');
+const rp = require('./replies');
+const dbManagement = require('./dataBase/db');
+
+const { speachToText } = require('./stt/stt');
+const stt = new speachToText(process.env.YC_IAM_TOKEN, process.env.YC_FOLDER_ID);
 
 const MaximumCountOfSchedules = 25
 
 let incomingMsgTimer = {};
 let incomingMsgCtxs = {};
-const DateParser = require('./dateParser/dateParser');
-const MiscFunctions = require('./dateParser/miscFunctions');
-const rp = require('./replies');
-const dbManagement = require('./dataBase/db');
 let dbUrl;
 if (process.env.IS_HEROKU) {
     dbUrl = new URL(process.env.DATABASE_URL);
@@ -92,6 +96,7 @@ async function StartTimeZoneDetermination(ctx) {
     }
     return ctx.replyWithHTML(rp.tzGroupChat);
 }
+
 async function CheckExpiredSchedules() {
     console.log('Checking expired schedules ' + new Date());
     db.sending = true;
@@ -150,7 +155,63 @@ async function CheckExpiredSchedules() {
     }
     db.sending = false;
     console.log(`Done checking expired schedules`);
-};
+}
+
+async function HandleTextMessage(ctx) {
+    let chatID = FormatChatId(ctx.chat.id)
+    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
+        let userId = ctx.from.id;
+        let matches = ctx.message.text.match(/(\+|-|–|—|)([0-9])+:([0-9])+/g);
+        let hours, minutes, negative, ts;
+        if (matches != null) {
+            //Parse tz from msg;
+            let offset = matches[0];
+            let index = offset.indexOf(':');
+            hours = parseInt(offset.substring(0, index));
+            negative = offset[0].match(/-|–|—/g) != null;
+            minutes = parseInt(offset.substring(index + 1));
+            console.log(`Determining tz: offset = ${offset}, hours = ${hours}, minutes = ${minutes}, ts = ${ts}`);
+        } else {
+            matches = ctx.message.text.match(/(\+|-|–|—|)([0-9])+/g);
+            if (matches != null) {
+                let offset = matches[0];
+                hours = parseInt(offset);
+                minutes = 0;
+                negative = offset[0].match(/-|–|—/g) != null;
+                console.log(`Determining tz from only hour option: offset = ${offset}, hours = ${hours}, minutes = ${minutes}, ts = ${ts}`);
+            }
+        }
+        if (matches != null) {
+            let ts = hours * 3600;
+            ts += minutes * 60 * (negative ? -1 : 1);
+            if (await db.HasUserID(userId)) {
+                await db.RemoveUserTZ(userId);
+            }
+            await db.AddUserTZ(userId, ts);
+            tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
+            ctx.replyWithHTML(rp.tzCurrent(ts), rp.mainKeyboard);
+        } else {
+            console.log(`Can't determine tz in "${ctx.message.text}"`);
+            return ctx.replyWithHTML(rp.tzInvalidInput, Extra.markup((m) =>
+                m.inlineKeyboard([
+                    m.callbackButton(rp.tzCancel, 'tz cancel')
+                ]).oneTime()
+            ));
+        }
+    } else {
+        if (typeof (incomingMsgCtxs[chatID]) == 'undefined') {
+            incomingMsgCtxs[chatID] = [];
+        }
+        incomingMsgCtxs[chatID].push(ctx);
+        if (typeof (incomingMsgTimer[chatID]) != 'undefined') {
+            clearTimeout(incomingMsgTimer[chatID]);
+        }
+        incomingMsgTimer[chatID] = setTimeout(() => {
+            ServiceMsgs(incomingMsgCtxs[chatID]);
+            incomingMsgCtxs[chatID] = [];
+        }, 1000);
+    }
+}
 //#endregion
 var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
 
@@ -158,12 +219,12 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
 (async function Init() {
     await db.InitDB();
     await bot.launch();
-    let ts = Date.now();
+    let ts = Date.now();/*
     setTimeout(async function () {
         console.log(`Timeout expired`);
         setInterval(CheckExpiredSchedules, 60000);
         await CheckExpiredSchedules();
-    }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
+    }, (Math.floor(ts / 60000) + 1) * 60000 - ts);*/
     if (process.env.ENABLE_LOGS == 'false') {
         console.log = function () { };
     }
@@ -221,7 +282,6 @@ bot.action('tz cancel', async (ctx) => {
     await ctx.deleteMessage();
 });
 
-
 bot.on('location', async ctx => {
     let location = ctx.message.location;
     try {
@@ -242,64 +302,27 @@ bot.on('location', async ctx => {
     }
 });
 
-bot.on('text', async ctx => {
-    let chatID = FormatChatId(ctx.chat.id)
-    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
-        let userId = ctx.from.id;
-        let matches = ctx.message.text.match(/(\+|-|–|—|)([0-9])+:([0-9])+/g);
-        let hours, minutes, negative, ts;
-        if (matches != null) {
-            //Parse tz from msg;
-            let offset = matches[0];
-            let index = offset.indexOf(':');
-            hours = parseInt(offset.substring(0, index));
-            negative = offset[0].match(/-|–|—/g) != null;
-            minutes = parseInt(offset.substring(index + 1));
-            console.log(`Determining tz: offset = ${offset}, hours = ${hours}, minutes = ${minutes}, ts = ${ts}`);
-        } else {
-            matches = ctx.message.text.match(/(\+|-|–|—|)([0-9])+/g);
-            if (matches != null) {
-                let offset = matches[0];
-                hours = parseInt(offset);
-                minutes = 0;
-                negative = offset[0].match(/-|–|—/g) != null;
-                console.log(`Determining tz from only hour option: offset = ${offset}, hours = ${hours}, minutes = ${minutes}, ts = ${ts}`);
-            }
-        }
-        if (matches != null) {
-            let ts = hours * 3600;
-            ts += minutes * 60 * (negative ? -1 : 1);
-            if (await db.HasUserID(userId)) {
-                await db.RemoveUserTZ(userId);
-            }
-            await db.AddUserTZ(userId, ts);
-            tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-            ctx.replyWithHTML(rp.tzCurrent(ts), rp.mainKeyboard);
-        } else {
-            console.log(`Can't determine tz in "${ctx.message.text}"`);
-            return ctx.replyWithHTML(rp.tzInvalidInput, Extra.markup((m) =>
-                m.inlineKeyboard([
-                    m.callbackButton(rp.tzCancel, 'tz cancel')
-                ]).oneTime()
-            ));
-        }
-    } else {
-        if (typeof (incomingMsgCtxs[chatID]) == 'undefined') {
-            incomingMsgCtxs[chatID] = [];
-        }
-        incomingMsgCtxs[chatID].push(ctx);
-        if (typeof (incomingMsgTimer[chatID]) != 'undefined') {
-            clearTimeout(incomingMsgTimer[chatID]);
-        }
-        incomingMsgTimer[chatID] = setTimeout(() => {
-            ServiceMsgs(incomingMsgCtxs[chatID]);
-            incomingMsgCtxs[chatID] = [];
-        }, 1000);
+bot.on('voice', async ctx => {
+    let fileInfo = await ctx.telegram.getFile(ctx.message.voice.file_id);
+    let voiceMessage
+    let text
+    console.log(`Received Voice msg`);
+    try {
+        let uri = `https://api.telegram.org/file/bot${process.env.SMART_SCHEDULER_TLGRM_API_TOKEN}/${fileInfo.file_path}`;
+        voiceMessage = await request.get({ uri, encoding: null });
+        text = await stt.recognize(voiceMessage);
+    } catch (e) {
+        console.error(e);
     }
+    if(!!text) {
+        ctx.message.text = text;
+        HandleTextMessage(ctx);
+    }
+});
+
+bot.on('text', async ctx => {
     console.log(`Received msg`);
-    /*
-        if (!db.sending) await ServiceMsg(ctx);
-        else db.waitingForServiceMsgs.push({ func: ServiceMsg, ctx: ctx });*/
+    await HandleTextMessage(ctx);
 });
 
 async function ServiceMsgs(ctxs) {
