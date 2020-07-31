@@ -11,7 +11,8 @@ const dbManagement = require('./dataBase/db');
 const { speachToText } = require('./stt/stt');
 const stt = new speachToText(process.env.YC_IAM_TOKEN, process.env.YC_FOLDER_ID);
 
-const MaximumCountOfSchedules = 25
+const MaximumCountOfSchedules = 25;
+const MaximumVoiceMessageDuration = 30;
 
 let incomingMsgTimer = {};
 let incomingMsgCtxs = {};
@@ -307,16 +308,20 @@ bot.on('voice', async ctx => {
     let voiceMessage
     let text
     console.log(`Received Voice msg`);
-    try {
-        let uri = `https://api.telegram.org/file/bot${process.env.SMART_SCHEDULER_TLGRM_API_TOKEN}/${fileInfo.file_path}`;
-        voiceMessage = await request.get({ uri, encoding: null });
-        text = await stt.recognize(voiceMessage);
-    } catch (e) {
-        console.error(e);
-    }
-    if(!!text) {
-        ctx.message.text = text;
-        HandleTextMessage(ctx);
+    if (ctx.message.voice.duration < MaximumVoiceMessageDuration) {
+        try {
+            let uri = `https://api.telegram.org/file/bot${process.env.SMART_SCHEDULER_TLGRM_API_TOKEN}/${fileInfo.file_path}`;
+            voiceMessage = await request.get({ uri, encoding: null });
+            text = await stt.recognize(voiceMessage);
+        } catch (e) {
+            console.error(e);
+        }
+        if (!!text) {
+            ctx.message.text = text;
+            HandleTextMessage(ctx);
+        }
+    } else {
+        ctx.replyWithHTML(rp.voiceMessageTooBig);
     }
 });
 

@@ -15,6 +15,7 @@ exports.commands = `<b>Available commands:</b>
         Deletes N-th task.
 🌐 /tz
         Configures time zone.`;
+exports.voiceMessageTooBig = `⚠️ Voice message duration should be less than 30 seconds.`;
 exports.showListAction = `🗓 Show list`;
 exports.changeTimeZoneAction = `🌐 Change time zone`;
 exports.mainKeyboard = Markup.keyboard([
