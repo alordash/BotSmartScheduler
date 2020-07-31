@@ -9,9 +9,8 @@ exports.speachToText = class {
 
 	async recognize(body) {
 		try {
-			this.url += this.FOLDER_ID;
 			const response = await request.post({
-				url: this.url,
+				url: this.url + this.FOLDER_ID,
 				headers: {
 					'Authorization': `Bearer ` + this.IAM_TOKEN,
 				},
