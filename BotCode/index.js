@@ -220,12 +220,12 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
 (async function Init() {
     await db.InitDB();
     await bot.launch();
-    let ts = Date.now();/*
+    let ts = Date.now();
     setTimeout(async function () {
         console.log(`Timeout expired`);
         setInterval(CheckExpiredSchedules, 60000);
         await CheckExpiredSchedules();
-    }, (Math.floor(ts / 60000) + 1) * 60000 - ts);*/
+    }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
     if (process.env.ENABLE_LOGS == 'false') {
         console.log = function () { };
     }
@@ -303,27 +303,29 @@ bot.on('location', async ctx => {
     }
 });
 
-bot.on('voice', async ctx => {
-    let fileInfo = await ctx.telegram.getFile(ctx.message.voice.file_id);
-    let voiceMessage
-    let text
-    console.log(`Received Voice msg`);
-    if (ctx.message.voice.duration < MaximumVoiceMessageDuration) {
-        try {
-            let uri = `https://api.telegram.org/file/bot${process.env.SMART_SCHEDULER_TLGRM_API_TOKEN}/${fileInfo.file_path}`;
-            voiceMessage = await request.get({ uri, encoding: null });
-            text = await stt.recognize(voiceMessage);
-        } catch (e) {
-            console.error(e);
+if (!!process.env.YC_FOLDER_ID && !!process.env.YC_IAM_TOKEN) {
+    bot.on('voice', async ctx => {
+        let fileInfo = await ctx.telegram.getFile(ctx.message.voice.file_id);
+        let voiceMessage
+        let text
+        console.log(`Received Voice msg`);
+        if (ctx.message.voice.duration < MaximumVoiceMessageDuration) {
+            try {
+                let uri = `https://api.telegram.org/file/bot${process.env.SMART_SCHEDULER_TLGRM_API_TOKEN}/${fileInfo.file_path}`;
+                voiceMessage = await request.get({ uri, encoding: null });
+                text = await stt.recognize(voiceMessage);
+            } catch (e) {
+                console.error(e);
+            }
+            if (!!text) {
+                ctx.message.text = text;
+                HandleTextMessage(ctx);
+            }
+        } else {
+            ctx.replyWithHTML(rp.voiceMessageTooBig);
         }
-        if (!!text) {
-            ctx.message.text = text;
-            HandleTextMessage(ctx);
-        }
-    } else {
-        ctx.replyWithHTML(rp.voiceMessageTooBig);
-    }
-});
+    });
+}
 
 bot.on('text', async ctx => {
     console.log(`Received msg`);
