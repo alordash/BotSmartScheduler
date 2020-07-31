@@ -10,7 +10,7 @@ let incomingMsgCtxs = {};
 const DateParser = require('./dateParser/dateParser');
 const MiscFunctions = require('./dateParser/miscFunctions');
 const rp = require('./replies');
-const dbManagement = require('./scheduling/db');
+const dbManagement = require('./dataBase/db');
 let dbUrl;
 if (process.env.IS_HEROKU) {
     dbUrl = new URL(process.env.DATABASE_URL);
