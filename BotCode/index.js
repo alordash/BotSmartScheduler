@@ -81,21 +81,29 @@ async function StartTimeZoneDetermination(ctx) {
     let isPrivateChat = ctx.chat.id >= 0;
     if (isPrivateChat) {
         reply += rp.tzPrivateChat;
-        return ctx.replyWithHTML(reply, Markup
-            .keyboard([
-                [{ text: rp.tzUseLocation, request_location: true }, { text: rp.tzTypeManually }],
-                [{ text: rp.tzCancel }]
-            ]).oneTime()
-            .removeKeyboard()
-            .resize()
-            .extra()
-        );
+        try {
+            return ctx.replyWithHTML(reply, Markup
+                .keyboard([
+                    [{ text: rp.tzUseLocation, request_location: true }, { text: rp.tzTypeManually }],
+                    [{ text: rp.tzCancel }]
+                ]).oneTime()
+                .removeKeyboard()
+                .resize()
+                .extra()
+            );
+        } catch (e) {
+            console.error(e);
+        }
     }
     reply += rp.tzGroupChat;
     if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
         tzPendingConfirmationUsers.push(ctx.from.id);
     }
-    return ctx.replyWithHTML(rp.tzGroupChat);
+    try {
+        return ctx.replyWithHTML(rp.tzGroupChat);
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 async function CheckExpiredSchedules() {
@@ -190,14 +198,22 @@ async function HandleTextMessage(ctx) {
             }
             await db.AddUserTZ(userId, ts);
             tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-            ctx.replyWithHTML(rp.tzCurrent(ts), rp.mainKeyboard);
+            try {
+                ctx.replyWithHTML(rp.tzCurrent(ts), rp.mainKeyboard);
+            } catch (e) {
+                console.error(e);
+            }
         } else {
             console.log(`Can't determine tz in "${ctx.message.text}"`);
-            return ctx.replyWithHTML(rp.tzInvalidInput, Extra.markup((m) =>
-                m.inlineKeyboard([
-                    m.callbackButton(rp.tzCancel, 'tz cancel')
-                ]).oneTime()
-            ));
+            try {
+                return ctx.replyWithHTML(rp.tzInvalidInput, Extra.markup((m) =>
+                    m.inlineKeyboard([
+                        m.callbackButton(rp.tzCancel, 'tz cancel')
+                    ]).oneTime()
+                ));
+            } catch (e) {
+                console.error(e);
+            }
         }
     } else {
         if (typeof (incomingMsgCtxs[chatID]) == 'undefined') {
@@ -235,23 +251,45 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
 bot.start(ctx => {
     let options = rp.mainKeyboard;
     options['disable_web_page_preview'] = true;
-    ctx.replyWithHTML(rp.welcome + rp.commands, options);
+    try {
+        ctx.replyWithHTML(rp.welcome + rp.commands, options);
+    } catch (e) {
+        console.error(e);
+    }
 });
-bot.help(ctx => ctx.replyWithHTML(rp.commands, rp.mainKeyboard));
+bot.help(ctx => {
+    try {
+        ctx.replyWithHTML(rp.commands, rp.mainKeyboard)
+    } catch (e) {
+        console.error(e);
+    }
+});
 
 var tzPendingConfirmationUsers = [];
 bot.command('tz', async (ctx) => {
-    await StartTimeZoneDetermination(ctx);
+    try {
+        await StartTimeZoneDetermination(ctx);
+    } catch (e) {
+        console.error(e);
+    }
 });
 
 bot.hears(rp.tzUseLocation, ctx => {
-    ctx.replyWithHTML(rp.tzUseLocationResponse);
+    try {
+        ctx.replyWithHTML(rp.tzUseLocationResponse);
+    } catch (e) {
+        console.error(e);
+    }
 });
 bot.hears(rp.tzTypeManually, ctx => {
     if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
         tzPendingConfirmationUsers.push(ctx.from.id);
     }
-    ctx.replyWithHTML(rp.tzTypeManuallyReponse);
+    try {
+        ctx.replyWithHTML(rp.tzTypeManuallyReponse);
+    } catch (e) {
+        console.error(e);
+    }
 });
 bot.hears(rp.tzCancel, async ctx => {
     tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
@@ -259,12 +297,20 @@ bot.hears(rp.tzCancel, async ctx => {
     if (!await db.HasUserID(ctx.from.id)) {
         reply += '\r\n' + rp.tzCancelWarning;
     }
-    ctx.replyWithHTML(reply, rp.mainKeyboard);
+    try {
+        ctx.replyWithHTML(reply, rp.mainKeyboard);
+    } catch (e) {
+        console.error(e);
+    }
 });
 bot.hears(rp.showListAction, async (ctx) => {
     let chatID = FormatChatId(ctx.chat.id);
     let tz = await db.GetUserTZ(ctx.from.id);
-    return await ctx.replyWithHTML(await LoadSchedulesList(chatID, tz));
+    try {
+        return await ctx.replyWithHTML(await LoadSchedulesList(chatID, tz));
+    } catch (e) {
+        console.error(e);
+    }
 });
 
 bot.hears(rp.changeTimeZoneAction, async (ctx) => {
@@ -279,8 +325,13 @@ bot.action('tz cancel', async (ctx) => {
         text += '\r\n' + rp.tzCancelWarning;
     }
     ctx.editMessageText('...');
-    await ctx.replyWithHTML(text, rp.mainKeyboard);
-    await ctx.deleteMessage();
+    try {
+        await ctx.replyWithHTML(text, rp.mainKeyboard);
+        await ctx.deleteMessage();
+
+    } catch (e) {
+        console.error(e);
+    }
 });
 
 bot.on('location', async ctx => {
@@ -297,7 +348,11 @@ bot.on('location', async ctx => {
             await db.RemoveUserTZ(userId);
         }
         await db.AddUserTZ(userId, ts);
-        ctx.replyWithHTML(rp.tzLocation(rawOffset), rp.mainKeyboard);
+        try {
+            ctx.replyWithHTML(rp.tzLocation(rawOffset), rp.mainKeyboard);
+        } catch (e) {
+            console.error(e);
+        }
     } catch (e) {
         console.error(e);
     }
@@ -322,7 +377,11 @@ if (!!process.env.YC_FOLDER_ID && !!process.env.YC_IAM_TOKEN) {
                 HandleTextMessage(ctx);
             }
         } else {
-            ctx.replyWithHTML(rp.voiceMessageTooBig);
+            try {
+                ctx.replyWithHTML(rp.voiceMessageTooBig);
+            } catch (e) {
+                console.error(e);
+            }
         }
     });
 }
@@ -419,7 +478,11 @@ async function ServiceMsgs(ctxs) {
         await db.AddNewSchedules(schedules);
     }
     if (reply.length) {
-        await ctxs[0].replyWithHTML(reply);
+        try {
+            await ctxs[0].replyWithHTML(reply);
+        } catch (e) {
+            console.error(e);
+        }
     }
 }
 
