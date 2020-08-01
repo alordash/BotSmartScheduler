@@ -3,6 +3,7 @@ const Markup = require('telegraf/markup');
 exports.welcome = `Welcome.
 This is <b>Bot-Scheduler</b>. He can help you to schedule your tasks fast and accurate.
 Just type your plans and he will automatically find scheduling date and what's to schedule ⏰
+This bot also can recognize voice messages 🎤
 It is an open source project and is <a href="http://github.com/alordash/BotSmartScheduler">available here</a>.\r\n`;
 exports.commands = `<b>Available commands:</b>
 🗓 /list
