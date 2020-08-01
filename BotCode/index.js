@@ -9,7 +9,7 @@ const rp = require('./replies');
 const dbManagement = require('./dataBase/db');
 
 const { speachToText } = require('./stt/stt');
-const stt = new speachToText(process.env.YC_IAM_TOKEN, process.env.YC_FOLDER_ID);
+const stt = new speachToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 
 const MaximumCountOfSchedules = 25;
 const MaximumVoiceMessageDuration = 30;
@@ -358,7 +358,7 @@ bot.on('location', async ctx => {
     }
 });
 
-if (!!process.env.YC_FOLDER_ID && !!process.env.YC_IAM_TOKEN) {
+if (!!process.env.YC_FOLDER_ID && !!process.env.YC_API_KEY) {
     bot.on('voice', async ctx => {
         let fileInfo = await ctx.telegram.getFile(ctx.message.voice.file_id);
         let voiceMessage
