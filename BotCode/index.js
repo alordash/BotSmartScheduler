@@ -261,7 +261,7 @@ bot.start(ctx => {
 });
 bot.help(ctx => {
     try {
-        ctx.replyWithHTML(rp.commands, rp.mainKeyboard)
+        ctx.replyWithHTML(rp.commands, rp.mainKeyboard);
     } catch (e) {
         console.error(e);
     }
@@ -271,6 +271,13 @@ var tzPendingConfirmationUsers = [];
 bot.command('tz', async (ctx) => {
     try {
         await StartTimeZoneDetermination(ctx);
+    } catch (e) {
+        console.error(e);
+    }
+});
+bot.command('kb', async (ctx) => {
+    try {
+        ctx.replyWithHTML(rp.showKeyboard, rp.mainKeyboard);
     } catch (e) {
         console.error(e);
     }

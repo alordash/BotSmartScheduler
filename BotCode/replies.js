@@ -15,7 +15,9 @@ exports.commands = `<b>Available commands:</b>
 #️⃣ /N
         Deletes N-th task.
 🌐 /tz
-        Configures time zone.`;
+        Configures time zone.
+🎛 /kb
+        Open menu.`;
 exports.voiceMessageTooBig = `⚠️ Voice message duration should be less than 30 seconds.`;
 exports.showListAction = `🗓 Show list`;
 exports.changeTimeZoneAction = `🌐 Change time zone`;
@@ -34,6 +36,7 @@ exports.exceededLimit = function (maximum) {
     return `⚠️ Please remove some of your schedules.
 Maximum count of schedules: <b>${maximum}</b>`;
 }
+exports.showKeyboard = `Opened menu.`
 
 //#region TZ config
 exports.tzWarning = `⚠️ Please select your time zone by typing <b>/tz</b>\r\n`;
