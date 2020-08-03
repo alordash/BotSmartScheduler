@@ -29,7 +29,7 @@ let db = new dbManagement.dbManagment(dbOptions);
     await db.InitDB();
     await botConfig.InitBot(SmartSchedulerBot, db);
     let ts = Date.now();
-    if (process.env.ENABLE_SCHEDULES_CHEKING == 'true') {
+    if (process.env.ENABLE_SCHEDULES_CHEKING == 'false') {
         setTimeout(async function () {
             console.log(`Timeout expired`);
             setInterval(function () { botActions.CheckExpiredSchedules(SmartSchedulerBot, db) }, 60000);

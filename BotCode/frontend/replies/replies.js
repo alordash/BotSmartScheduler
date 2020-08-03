@@ -36,7 +36,9 @@ exports.exceededLimit = function (maximum) {
     return `⚠️ Please remove some of your schedules.
 Maximum count of schedules: <b>${maximum}</b>`;
 }
-exports.showKeyboard = `Opened menu.`
+exports.showKeyboard = `Opened menu.`;
+exports.repeatSchedule = `🔔 Remind in 5 minutes`;
+exports.remindSchedule = `🔔 Remind set to `;
 
 //#region TZ config
 exports.tzWarning = `⚠️ Please select your time zone by typing <b>/tz</b>\r\n`;

@@ -1,9 +1,12 @@
 const request = require('request-promise');
 const rp = require('../replies/replies');
 const botActions = require('./botActions');
+const MiscFunctions = require('../../backend/dateParser/miscFunctions');
 const { speechToText } = require('../../backend/stt/stt');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
+
 const MaximumVoiceMessageDuration = 30;
+const repeatScheduleTime = 5 * 60 * 1000;
 
 let tzPendingConfirmationUsers = [];
 
@@ -25,14 +28,14 @@ exports.InitActions = function (bot, db) {
         }
     });
 
-    bot.command('tz', async (ctx) => {
+    bot.command('tz', async ctx => {
         try {
             await botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
         } catch (e) {
             console.error(e);
         }
     });
-    bot.command('kb', async (ctx) => {
+    bot.command('kb', async ctx => {
         try {
             ctx.replyWithHTML(rp.showKeyboard, rp.mainKeyboard);
         } catch (e) {
@@ -69,7 +72,7 @@ exports.InitActions = function (bot, db) {
             console.error(e);
         }
     });
-    bot.hears(rp.showListAction, async (ctx) => {
+    bot.hears(rp.showListAction, async ctx => {
         let chatID = FormatChatId(ctx.chat.id);
         let tz = await db.GetUserTZ(ctx.from.id);
         try {
@@ -78,12 +81,11 @@ exports.InitActions = function (bot, db) {
             console.error(e);
         }
     });
-
-    bot.hears(rp.changeTimeZoneAction, async (ctx) => {
+    bot.hears(rp.changeTimeZoneAction, async ctx => {
         return await botActions.StartTimeZoneDetermination(ctx, db);
     });
 
-    bot.action('tz cancel', async (ctx) => {
+    bot.action('tz cancel', async ctx => {
         await ctx.answerCbQuery();
         tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
         let text = rp.tzCancelReponse;
@@ -95,6 +97,27 @@ exports.InitActions = function (bot, db) {
             await ctx.replyWithHTML(text, rp.mainKeyboard);
             await ctx.deleteMessage();
 
+        } catch (e) {
+            console.error(e);
+        }
+    });
+    bot.action('repeat', async ctx => {
+        let text = ctx.callbackQuery.message.text;
+        let scheduleText = text.match(/"[\s\S]+"/g)[0];
+        scheduleText = scheduleText.substring(1, scheduleText.length - 2);
+        let chatID = botActions.FormatChatId(ctx.callbackQuery.message.chat.id);
+        let username = 'none';
+        if (chatID[0] == '_') {
+            username = ctx.from.username;
+        }
+        let tz = await db.GetUserTZ(ctx.from.id);
+        let ts = Math.floor(((Date.now() + repeatScheduleTime) / 1000) + tz) * 1000;
+        let schedule = [{ chatID: chatID, text: scheduleText, timestamp: ts, username: username }];
+
+        try {
+            await db.AddNewSchedules(schedule);
+            ctx.answerCbQuery();
+            ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + MiscFunctions.FormDateStringFormat(new Date(ts)) + '</b>', { parse_mode: 'HTML' });
         } catch (e) {
             console.error(e);
         }
@@ -150,7 +173,7 @@ exports.InitActions = function (bot, db) {
             }
         });
     }
-    
+
     bot.on('text', async ctx => {
         console.log(`Received msg`);
         await botActions.HandleTextMessage(ctx, db, tzPendingConfirmationUsers);
