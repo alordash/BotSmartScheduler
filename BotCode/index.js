@@ -8,8 +8,8 @@ const MiscFunctions = require('./dateParser/miscFunctions');
 const rp = require('./replies');
 const dbManagement = require('./dataBase/db');
 
-const { speachToText } = require('./stt/stt');
-const stt = new speachToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
+const { speechToText } = require('./stt/stt');
+const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 
 const MaximumCountOfSchedules = 25;
 const MaximumVoiceMessageDuration = 30;

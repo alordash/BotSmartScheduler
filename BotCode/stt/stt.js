@@ -1,6 +1,6 @@
 const request = require('request-promise');
 
-exports.speachToText = class {
+exports.speechToText = class {
 	constructor(API_KEY, FOLDER_ID) {
 		this.API_KEY = API_KEY;
 		this.FOLDER_ID = FOLDER_ID;
