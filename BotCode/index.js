@@ -237,11 +237,13 @@ var bot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
     await db.InitDB();
     await bot.launch();
     let ts = Date.now();
-    setTimeout(async function () {
-        console.log(`Timeout expired`);
-        setInterval(CheckExpiredSchedules, 60000);
-        await CheckExpiredSchedules();
-    }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
+    if (process.env.ENABLE_SCHEDULES_CHEKING == 'true') {
+        setTimeout(async function () {
+            console.log(`Timeout expired`);
+            setInterval(CheckExpiredSchedules, 60000);
+            await CheckExpiredSchedules();
+        }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
+    }
     if (process.env.ENABLE_LOGS == 'false') {
         console.log = function () { };
     }
