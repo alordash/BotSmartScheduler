@@ -17,13 +17,14 @@ Just type task with required expiration time and Smart Scheduler will automatica
 Smart Scheduler will send you notification when particular task's time expires.
 
 You do not need to follow specified date format, Smart Scheduler understands most of human date formats (e.g. «через X минут», «без пятнадцати десять», «послезавтра пол первого»).
-_Smart Scheduler can store tasks with minute precision._
 
 ## Features
 
-Smart Scheduler stores tasks **separately** for every chat and can work in conversations.
+Smart Scheduler can store tasks with _minute precision_.  
+Smart Scheduler stores tasks **separately** for every chat and can work in conversations.  
+Smart Scheduler can generate schedules from voice messages.  
 
-Supported commands:
+### Supported commands:
 
 - 🗓 **/list** - Shows active tasks for current chat.
 
@@ -34,5 +35,7 @@ Supported commands:
 - #️⃣ **_/N_** - Deletes N-th task.
 
 - 🌐 **_/tz_** - Configures time zone.
+
+- 🎛 **_/kb_** - Open menu.
 
 and /start with /help of course.
