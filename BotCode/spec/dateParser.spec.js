@@ -1,4 +1,4 @@
-const DateParser = require('../dateParser/dateParser');
+const DateParser = require('../backend/dateParser/dateParser');
 
 describe('Date Parser', function () {
     it('Сходить на улицу в воскресенье без 59 двадцать утра', async function () {
