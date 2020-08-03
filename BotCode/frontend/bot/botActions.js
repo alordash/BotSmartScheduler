@@ -1,12 +1,10 @@
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
-
 const DateParser = require('../../backend/dateParser/dateParser');
 const MiscFunctions = require('../../backend/dateParser/miscFunctions');
-const rp = require('./replies');
+const rp = require('../replies/replies');
 
 const MaximumCountOfSchedules = 25;
-
 let incomingMsgTimer = []
 let incomingMsgCtxs = []
 

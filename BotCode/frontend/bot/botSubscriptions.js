@@ -1,5 +1,5 @@
 const request = require('request-promise');
-const rp = require('./replies');
+const rp = require('../replies/replies');
 const botActions = require('./botActions');
 const { speechToText } = require('../../backend/stt/stt');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
