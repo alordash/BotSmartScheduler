@@ -339,11 +339,10 @@ bot.action('tz cancel', async (ctx) => {
 bot.on('location', async ctx => {
     let location = ctx.message.location;
     try {
-        let tz = await request(`http://api.geonames.org/timezoneJSON?lat=${location.latitude}&lng=${location.longitude}&username=alordash`);
-        tz.body = JSON.parse(tz.body);
+        let tz = JSON.parse(await request(`http://api.geonames.org/timezoneJSON?lat=${location.latitude}&lng=${location.longitude}&username=alordash`));
         console.log(`Received location: ${JSON.stringify(location)}`);
         console.log(`tz = ${JSON.stringify(tz)}`);
-        let rawOffset = tz.body.rawOffset;
+        let rawOffset = tz.rawOffset;
         let userId = ctx.from.id;
         let ts = rawOffset * 3600;
         if (await db.HasUserID(userId)) {
