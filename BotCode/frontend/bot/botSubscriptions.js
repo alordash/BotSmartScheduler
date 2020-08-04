@@ -103,7 +103,7 @@ exports.InitActions = function (bot, db) {
     bot.action('repeat', async ctx => {
         let text = ctx.callbackQuery.message.text;
         let scheduleText = text.match(/"[\s\S]+"/g)[0];
-        scheduleText = scheduleText.substring(1, scheduleText.length - 2);
+        scheduleText = scheduleText.substring(1, scheduleText.length - 1);
         let chatID = botActions.FormatChatId(ctx.callbackQuery.message.chat.id);
         let username = 'none';
         if (chatID[0] == '_') {
