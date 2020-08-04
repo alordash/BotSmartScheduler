@@ -5,6 +5,7 @@ const MiscFunctions = require('../../backend/dateParser/miscFunctions');
 const rp = require('../replies/replies');
 
 const MaximumCountOfSchedules = 25;
+const repeatScheduleTime = 5 * 60 * 1000;
 let incomingMsgTimer = []
 let incomingMsgCtxs = []
 
@@ -107,7 +108,11 @@ async function CheckExpiredSchedules (bot, db) {
                         m.callbackButton(rp.repeatSchedule, 'repeat')
                     ]).oneTime()
                 ));
-                console.log(`Replied msg : ${JSON.stringify(msg)}`);
+                setTimeout(function (msg) {
+                    bot.telegram.editMessageReplyMarkup(msg.chat.id, msg.message_id, Extra.markup((m) =>
+                        m.inlineKeyboard([]).removeKeyboard()
+                    ));
+                }, repeatScheduleTime, msg);
             } catch (e) {
                 console.error(e);
             }

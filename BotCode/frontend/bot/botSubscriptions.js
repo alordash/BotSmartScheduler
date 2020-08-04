@@ -73,7 +73,7 @@ exports.InitActions = function (bot, db) {
         }
     });
     bot.hears(rp.showListAction, async ctx => {
-        let chatID = FormatChatId(ctx.chat.id);
+        let chatID = botActions.FormatChatId(ctx.chat.id);
         let tz = await db.GetUserTZ(ctx.from.id);
         try {
             return await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db));
