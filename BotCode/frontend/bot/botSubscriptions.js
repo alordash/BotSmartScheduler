@@ -110,8 +110,7 @@ exports.InitActions = function (bot, db) {
         if (chatID[0] == '_') {
             username = ctx.from.username;
         }
-        let tz = await db.GetUserTZ(ctx.from.id);
-        let ts = Math.floor(((Date.now() + repeatScheduleTime) / 1000) + tz) * 1000;
+        let ts = Math.floor((Date.now() + repeatScheduleTime) / 1000) * 1000;
         let schedule = [{ chatID: chatID, text: scheduleText, timestamp: ts, username: username }];
 
         try {
