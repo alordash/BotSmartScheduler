@@ -26,8 +26,14 @@ const dbOptions = {
 let db = new dbManagement.dbManagment(dbOptions);
 
 (async function Initialization() {
+    let constants = require('./constants.json');
+    for (let [key, value] of Object.entries(constants)) {
+        global[key] = value;
+    }
+
     await db.InitDB();
     await botConfig.InitBot(SmartSchedulerBot, db);
+    
     let ts = Date.now();
     if (process.env.ENABLE_SCHEDULES_CHEKING == 'true') {
         setTimeout(async function () {
@@ -36,6 +42,7 @@ let db = new dbManagement.dbManagment(dbOptions);
             await botActions.CheckExpiredSchedules(SmartSchedulerBot, db);
         }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
     }
+
     if (process.env.ENABLE_LOGS == 'false') {
         console.log = function () { };
     }

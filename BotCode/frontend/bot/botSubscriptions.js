@@ -5,9 +5,6 @@ const MiscFunctions = require('../../backend/dateParser/miscFunctions');
 const { speechToText } = require('../../backend/stt/stt');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 
-const MaximumVoiceMessageDuration = 30;
-const repeatScheduleTime = 5 * 60 * 1000;
-
 let tzPendingConfirmationUsers = [];
 
 exports.InitActions = function (bot, db) {
@@ -110,7 +107,7 @@ exports.InitActions = function (bot, db) {
             username = ctx.from.username;
         }
         let tz = await db.GetUserTZ(ctx.from.id);
-        let ts = Math.floor((Date.now() + repeatScheduleTime) / 1000) * 1000;
+        let ts = Math.floor((Date.now() + global.repeatScheduleTime) / 1000) * 1000;
         let schedule = [{ chatID: chatID, text: scheduleText, timestamp: ts, username: username }];
 
         try {
@@ -151,7 +148,7 @@ exports.InitActions = function (bot, db) {
             let voiceMessage
             let text
             console.log(`Received Voice msg`);
-            if (ctx.message.voice.duration < MaximumVoiceMessageDuration) {
+            if (ctx.message.voice.duration < global.MaximumVoiceMessageDuration) {
                 try {
                     let uri = `https://api.telegram.org/file/bot${process.env.SMART_SCHEDULER_TLGRM_API_TOKEN}/${fileInfo.file_path}`;
                     voiceMessage = await request.get({ uri, encoding: null });

@@ -4,8 +4,6 @@ const DateParser = require('../../backend/dateParser/dateParser');
 const MiscFunctions = require('../../backend/dateParser/miscFunctions');
 const rp = require('../replies/replies');
 
-const MaximumCountOfSchedules = 25;
-const repeatScheduleTime = 5 * 60 * 1000;
 let incomingMsgTimer = []
 let incomingMsgCtxs = []
 
@@ -253,7 +251,7 @@ async function ServiceMsgs (ctxs, db) {
             isScheduled = +isScheduled;
             reply += rp.scheduled(servicedMessage.parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(isScheduled + tz * 1000)));
         } else {
-            if (count + schedulesCount <= MaximumCountOfSchedules) {
+            if (count + schedulesCount < global.MaximumCountOfSchedules) {
                 if (typeof (servicedMessage.parsedMessage.date) != 'undefined') {
                     schedules.push({ chatID: servicedMessage.chatID, text: servicedMessage.parsedMessage.text, timestamp: servicedMessage.parsedMessage.date.getTime(), username: servicedMessage.username });
                     reply += servicedMessage.parsedMessage.answer + `\r\n`;
@@ -267,7 +265,7 @@ async function ServiceMsgs (ctxs, db) {
                     reply += rp.tzWarning;
                 }
             } else {
-                reply += rp.exceededLimit(MaximumCountOfSchedules);
+                reply += rp.exceededLimit(global.MaximumCountOfSchedules);
                 break;
             }
         }
