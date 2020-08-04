@@ -86,17 +86,16 @@ exports.InitActions = function (bot, db) {
     });
 
     bot.action('tz cancel', async ctx => {
-        await ctx.answerCbQuery();
         tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
         let text = rp.tzCancelReponse;
         if (!await db.HasUserID(ctx.from.id)) {
             text += '\r\n' + rp.tzCancelWarning;
         }
-        ctx.editMessageText('...');
         try {
+            ctx.editMessageText('...');
+            await ctx.answerCbQuery();
             await ctx.replyWithHTML(text, rp.mainKeyboard);
             await ctx.deleteMessage();
-
         } catch (e) {
             console.error(e);
         }
@@ -110,13 +109,14 @@ exports.InitActions = function (bot, db) {
         if (chatID[0] == '_') {
             username = ctx.from.username;
         }
+        let tz = await db.GetUserTZ(ctx.from.id);
         let ts = Math.floor((Date.now() + repeatScheduleTime) / 1000) * 1000;
         let schedule = [{ chatID: chatID, text: scheduleText, timestamp: ts, username: username }];
 
         try {
             await db.AddNewSchedules(schedule);
             ctx.answerCbQuery();
-            ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + MiscFunctions.FormDateStringFormat(new Date(ts)) + '</b>', { parse_mode: 'HTML' });
+            ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + MiscFunctions.FormDateStringFormat(new Date(ts + tz * 1000)) + '</b>', { parse_mode: 'HTML' });
         } catch (e) {
             console.error(e);
         }
