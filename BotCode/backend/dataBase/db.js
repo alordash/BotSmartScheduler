@@ -79,6 +79,7 @@ class dbManagment {
 
     async ReorderSchedules(chatID) {
         let schedules = await this.GetSchedules(chatID);
+        schedules.sort((a, b) => a.id - b.id);
         if (schedules !== false) {
             await this.Query(`DELETE FROM Schedules WHERE id >= 0 AND ChatID = '${chatID}'`);
             let i;
