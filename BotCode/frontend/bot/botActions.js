@@ -5,11 +5,12 @@ const MiscFunctions = require('../../backend/dateParser/miscFunctions');
 const rp = require('../replies/replies');
 
 const MaximumCountOfSchedules = 25;
+const repeatScheduleTime = 5 * 60 * 1000;
 let incomingMsgTimer = []
 let incomingMsgCtxs = []
 
 //#region functions
-GetDeletingIDsIndex = function (chatID, deletingIDs) {
+function GetDeletingIDsIndex (chatID, deletingIDs) {
     if (deletingIDs.length) {
         for (let i in deletingIDs) {
             if (deletingIDs[i].chatID == chatID) {
@@ -19,14 +20,14 @@ GetDeletingIDsIndex = function (chatID, deletingIDs) {
     }
     return false;
 }
-FormatChatId = function (id) {
+function FormatChatId (id) {
     id = id.toString(10);
     if (id[0] == '-') {
         id = '_' + id.substring(1);
     }
     return id;
 }
-LoadSchedulesList = async function (chatID, tsOffset, db) {
+async function LoadSchedulesList (chatID, tsOffset, db) {
     let schedules = await db.ListSchedules(chatID);
     if (schedules !== false) {
         let answer = ``;
@@ -43,7 +44,7 @@ LoadSchedulesList = async function (chatID, tsOffset, db) {
         return rp.listIsEmpty;
     }
 }
-StartTimeZoneDetermination = async function (ctx, db, tzPendingConfirmationUsers) {
+async function StartTimeZoneDetermination (ctx, db, tzPendingConfirmationUsers) {
     let curTZ = await db.GetUserTZ(ctx.from.id);
     let reply = '';
     if (curTZ !== 0) {
@@ -77,7 +78,7 @@ StartTimeZoneDetermination = async function (ctx, db, tzPendingConfirmationUsers
     }
 }
 
-CheckExpiredSchedules = async function (bot, db) {
+async function CheckExpiredSchedules (bot, db) {
     console.log('Checking expired schedules ' + new Date());
     db.sending = true;
     let expiredSchedules = await db.CheckActiveSchedules(Date.now());
@@ -102,7 +103,16 @@ CheckExpiredSchedules = async function (bot, db) {
                 mentionUser = ' @' + schedule.username;
             }
             try {
-                await bot.telegram.sendMessage(+chatID, `⏰${mentionUser} "${schedule.text}"`);
+                let msg = await bot.telegram.sendMessage(+chatID, `⏰${mentionUser} "${schedule.text}"`, Extra.markup((m) =>
+                    m.inlineKeyboard([
+                        m.callbackButton(rp.repeatSchedule, 'repeat')
+                    ]).oneTime()
+                ));
+                setTimeout(function (msg) {
+                    bot.telegram.editMessageReplyMarkup(msg.chat.id, msg.message_id, Extra.markup((m) =>
+                        m.inlineKeyboard([]).removeKeyboard()
+                    ));
+                }, repeatScheduleTime, msg);
             } catch (e) {
                 console.error(e);
             }
@@ -137,7 +147,7 @@ CheckExpiredSchedules = async function (bot, db) {
     console.log(`Done checking expired schedules`);
 }
 
-HandleTextMessage = async function (ctx, db, tzPendingConfirmationUsers) {
+async function HandleTextMessage (ctx, db, tzPendingConfirmationUsers) {
     let chatID = FormatChatId(ctx.chat.id)
     if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
         let userId = ctx.from.id;
@@ -200,7 +210,8 @@ HandleTextMessage = async function (ctx, db, tzPendingConfirmationUsers) {
         }, 1000);
     }
 }
-ServiceMsgs = async function (ctxs, db) {
+
+async function ServiceMsgs (ctxs, db) {
     let servicedMessages = [];
     let deletingSchedulesIDs = [];
     let chatID = ctxs[0].chat.id.toString();
@@ -295,7 +306,7 @@ ServiceMsgs = async function (ctxs, db) {
     }
 }
 
-ServiceCommand = async function (ctx, db) {
+async function ServiceCommand (ctx, db) {
     let chatID = FormatChatId(ctx.chat.id)
     let msgText = ctx.message.text
     if (msgText.indexOf('/list') == 0) {
