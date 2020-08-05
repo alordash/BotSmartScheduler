@@ -150,9 +150,6 @@ async function CheckExpiredSchedules(bot, db) {
             if (!ChatIDs.includes(schedule.chatid)) {
                 ChatIDs.push(schedule.chatid);
             }
-            if (typeof (incomingMsgTimer[schedule.chatid]) != 'undefined') {
-                clearTimeout(incomingMsgTimer[schedule.chatid]);
-            }
             let mentionUser = '';
             if (schedule.username != 'none') {
                 mentionUser = ' @' + schedule.username;
