@@ -186,14 +186,7 @@ async function CheckExpiredSchedules(bot, db) {
             }
             await db.ReorderSchedules(chatID);
         }
-        console.log('Removed and reordered, Servicing incoming msgs');
-        for (let chatID of ChatIDs) {
-            let ctxs = incomingMsgCtxs[chatID];
-            if (typeof (ctxs) != 'undefined' && ctxs.length) {
-                await ServiceMsgs(incomingMsgCtxs[chatID], db);
-            }
-        }
-        console.log(`Serviced incoming msgs`);
+        console.log('Removed and reordered.');
     }
     db.sending = false;
     console.log(`Done checking expired schedules`);
