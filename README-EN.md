@@ -39,3 +39,57 @@ Smart Scheduler can generate schedules from voice messages.
 - 🎛 **_/kb_** - Open menu.
 
 and /start with /help of course.
+
+
+## Installation
+
+This bot requires PostgreSQL data base.  
+
+### Environment variables
+
+Make sure you set following environment variables before starting the bot:  
+1. **ENABLE_LOGS**: "true" or "false", enables or disables logging.  
+2. **ENABLE_SCHEDULES_CHEKING**: "true" or "false", enables or disables checking and sending notifications.  
+3. **TZ**: only "GMT".  
+4. **DATABASE_URL** (optional): URL of your PostgreSQL data base.  
+5. **SMART_SCHEDULER_DB_URL** (optional): URL of your PostgreSQL data base.  
+6. **IS_HEROKU**: "true" or "false". If **true**, then use **DATABASE_URL** for data base URL, else **SMART_SCHEDULER_DB_URL**.  
+7. **SMART_SCHEDULER_TLGRM_API_TOKEN**: telegram bot token.  
+  
+For voice messages (optional):  
+
+8. **YC_API_KEY**: Yandex api key.  
+9. **YC_FOLDER_ID**: Yandex catalog id.  
+
+Without these variables the bot will not respond to voice messages.  
+
+### On local server
+
+```
+$ git clone https://github.com/alordash/BotSmartScheduler
+$ cd BotSmartScheduler
+$ npm install
+$ node ./BotCode/index.js
+```
+
+### Deploying on heroku
+
+1. Create [github](https://github.com/join) account.  
+2. Add [this](https://github.com/alordash/BotSmartScheduler) repository to yourself.  
+3. Create [heroku](https://signup.heroku.com/) account.  
+4. Create new [heroku application](https://dashboard.heroku.com/new-app).  
+5. Open created application.  
+6. Follow [this link](https://elements.heroku.com/addons/heroku-postgresql).  
+7. Press **Install Heroku Postgres**.  
+8. In the appeared line type your application name and press **Provision add-on**.  
+9. Go to the tab **Settings** of your application.  
+10. Press **Reveal Config Vars**.  
+11. Fill all necessary enviromental variables.  
+12. Go to the tab **Deploy**.  
+13. In the field **Deployment method** choose **GitHub**.  
+14. Connect your github account to heroku by pressing **Connect to GitHub**.  
+15. In appeared window choose *your* respository, press **connect**.  
+16. Press **Deploy Branch**.  
+17. Once loaded, go to the tab **Resources**.  
+18. Disable **web**, enable **worker**.  
+Your bot is ready to work.
