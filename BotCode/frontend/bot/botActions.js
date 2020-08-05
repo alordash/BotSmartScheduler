@@ -271,7 +271,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
         } else {
             //#region PARSE SCHEDULE
             let tz = await db.GetUserTZ(ctx.from.id);
-            let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS);
+            let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'false');
 
             let isScheduled = await db.GetScheduleByText(chatID, parsedMessage.text);
 
