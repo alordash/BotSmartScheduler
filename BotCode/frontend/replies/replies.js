@@ -31,6 +31,7 @@ exports.cleared = `Cleared all schedules.\r\nShow list: /list`;
 exports.deleted = function (str, end, newline) {
     return `Deleted ${str} schedule${end}.${newline === false ? `\r\nShow list: /list` : ``}`;
 }
+exports.notDeleted = `Invalid use of command.`;
 exports.listIsEmpty = `List of plans is empty.`;
 exports.exceededLimit = function (maximum) {
     return `⚠️ Please remove some of your schedules.

@@ -63,6 +63,14 @@ class dbManagment {
         console.log(`Added "${text}" to ${timestamp} from chat "${chatID}"`);
     }
 
+    async RemoveScheduleById(chatID, id) {
+        console.log(`Removing schedule s = ${"s"}\r\ChatID = "${chatID}" typeof(ChatID) = ${typeof (chatID)}`);
+        let query = `DELETE FROM Schedules WHERE ChatID = '${chatID}' AND id = ${id}`;
+        console.log(`QUERY = "${query}"`);
+        let res = await this.Query(query);
+        console.log(`res = ${JSON.stringify(res.rows)}`);
+    }
+
     async RemoveSchedules(chatID, s) {
         console.log(`Removing schedule s = ${"s"}\r\ChatID = "${chatID}" typeof(ChatID) = ${typeof (chatID)}`);
         let query = `DELETE FROM Schedules WHERE ChatID = '${chatID}' AND (${s})`;
@@ -79,7 +87,9 @@ class dbManagment {
 
     async ReorderSchedules(chatID) {
         let schedules = await this.GetSchedules(chatID);
-        schedules.sort((a, b) => a.id - b.id);
+        if (!!schedules) {
+            schedules.sort((a, b) => a.id - b.id);
+        }
         if (schedules !== false) {
             await this.Query(`DELETE FROM Schedules WHERE id >= 0 AND ChatID = '${chatID}'`);
             let i;

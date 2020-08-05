@@ -25,6 +25,14 @@ exports.InitActions = function (bot, db) {
         }
     });
 
+    bot.command('list', async ctx => {
+        let tz = await db.GetUserTZ(ctx.from.id);
+        let chatID = botActions.FormatChatId(ctx.chat.id);
+        await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db));
+    });
+    bot.command('del', async ctx => {
+        await botActions.DeleteSchedules(ctx, db);
+    });
     bot.command('tz', async ctx => {
         try {
             await botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
