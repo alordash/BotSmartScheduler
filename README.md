@@ -47,17 +47,19 @@ Smart Scheduler может формировать напоминания из г
 ### Переменные среды
 
 Прежде чем запускать бота, убедитесь что вы установили следующие переменные среды:  
-**ENABLE_LOGS**: "true" или "false", включает или отключает логирование.  
-**ENABLE_SCHEDULES_CHEKING**: "true" или "false", включает или отключает проверку и отправление уведомлений.  
-**TZ**: только "GMT".  
-**DATABASE_URL** (опционально): URL базы данных PostgreSQL.  
-**SMART_SCHEDULER_DB_URL** (опционально): URL базы данных PostreSQL.  
-**IS_HEROKU**: "true" или "false". Если **true**, то для базы данных используется **DATABASE_URL**, иначе **SMART_SCHEDULER_DB_URL**.  
-**SMART_SCHEDULER_TLGRM_API_TOKEN**: токен бота в телеграмме.  
+1. **ENABLE_LOGS**: "true" или "false", включает или отключает логирование.  
+2. **ENABLE_SCHEDULES_CHEKING**: "true" или "false", включает или отключает проверку и отправление уведомлений.  
+3. **TZ**: только "GMT".  
+4. **DATABASE_URL** (опционально): URL базы данных PostgreSQL.  
+5. **SMART_SCHEDULER_DB_URL** (опционально): URL базы данных PostreSQL.  
+6. **IS_HEROKU**: "true" или "false". Если **true**, то для базы данных используется **DATABASE_URL**, иначе **SMART_SCHEDULER_DB_URL**.  
+7. **SMART_SCHEDULER_TLGRM_API_TOKEN**: токен бота в телеграмме.  
   
 Для голосовых сообщений (опционально):  
-**YC_API_KEY**: Yandex api key.  
-**YC_FOLDER_ID**: Yandex catalog id.  
+
+8. **YC_API_KEY**: Yandex api key.  
+9. **YC_FOLDER_ID**: Yandex catalog id.  
+
 Если не укзаать эти переменные, то бот не будет отвечать на голосовые сообщения.  
 
 ### На локальном сервере
@@ -84,9 +86,9 @@ $ node ./BotCode/index.js
 11. Заполните все необходимые переменные среды.  
 12. Перейдите во вкладку **Deploy**.  
 13. В поле **Deployment method** выберите **GitHub**.  
-14. Подключите свой github аккоунт к хероку нажав **Connect to GitHub**.  
+14. Подключите свой github аккаунт к хероку нажав **Connect to GitHub**.  
 15. В появившемся окне выберите *ваш* репозиторий, нажмите **connect**.  
 16. Нажмите **Deploy Branch**.  
 17. После окончания загрузки перейдите во вкладку **Resources**.  
 18. Отключите **web**, включите **worker**.  
-Теперь вы можете попробовать написать вашему боту.
+Ваш бот готов к работе.
