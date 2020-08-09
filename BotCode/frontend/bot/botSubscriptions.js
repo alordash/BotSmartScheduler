@@ -87,7 +87,7 @@ exports.InitActions = function (bot, db) {
         }
     });
     bot.hears(rp.changeTimeZoneAction, async ctx => {
-        return await botActions.StartTimeZoneDetermination(ctx, db);
+        return await botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
     });
 
     bot.action('tz cancel', async ctx => {
