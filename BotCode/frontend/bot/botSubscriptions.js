@@ -127,35 +127,7 @@ exports.InitActions = function (bot, db) {
             console.error(e);
         }
     });
-    bot.on('callback_query', async ctx => {
-        console.log("got callback_query");
-        const cbData = ctx.callbackQuery.data.split('|');
-        if (cbData[0] == 'repeat') {
-            let text = ctx.callbackQuery.message.text;
-            let scheduleText = text.match(/"[\s\S]+"/g)[0];
-            scheduleText = scheduleText.substring(1, scheduleText.length - 1);
-            let chatID = botActions.FormatChatId(ctx.callbackQuery.message.chat.id);
-            let username = 'none';
-            if (chatID[0] == '_') {
-                username = ctx.from.username;
-            }
-            let tz = await db.GetUserTZ(ctx.from.id);
-            let ts = Math.floor((Date.now() + global.repeatScheduleTime) / 1000) * 1000;
-            let schedule = [{ chatID: chatID, text: scheduleText, timestamp: ts, username: username }];
-
-            try {
-                await db.AddNewSchedules(schedule);
-                ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + MiscFunctions.FormDateStringFormat(new Date(ts + tz * 1000)) + '</b>', { parse_mode: 'HTML' });
-            } catch (e) {
-                console.error(e);
-            }
-        }
-        try {
-            ctx.answerCbQuery();
-        } catch (e) {
-            console.error(e);
-        }
-    });
+    bot.on('callback_query', async (ctx) => await botActions.HandleCallbackQuery(ctx, db));
 
     if (!!process.env.YC_FOLDER_ID && !!process.env.YC_API_KEY) {
         bot.on('voice', async ctx => {
