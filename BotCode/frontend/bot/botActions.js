@@ -157,7 +157,7 @@ async function CheckExpiredSchedules(bot, db) {
             try {
                 let msg = await bot.telegram.sendMessage(+chatID, `⏰${mentionUser} "${schedule.text}"`, Extra.markup((m) =>
                     m.inlineKeyboard([
-                        m.callbackButton(rp.repeatSchedule, 'repeat')
+                        m.callbackButton(rp.repeatSchedule, `repeat|0|${schedule.text}`)
                     ]).oneTime()
                 ));
                 setTimeout(function (msg) {
