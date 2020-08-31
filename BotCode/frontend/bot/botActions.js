@@ -157,7 +157,7 @@ async function CheckExpiredSchedules(bot, db) {
             try {
                 let msg = await bot.telegram.sendMessage(+chatID, `⏰${mentionUser} "${schedule.text}"`, Extra.markup((m) =>
                     m.inlineKeyboard([
-                        m.callbackButton(rp.repeatSchedule, `repeat|0|${schedule.text}`)
+                        m.callbackButton(rp.repeatSchedule, `repeat|0|-|${schedule.text}`)
                     ]).oneTime()
                 ));
                 setTimeout(function (msg) {
@@ -243,26 +243,55 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
 
 async function HandleCallbackQuery(ctx, db) {
     console.log("got callback_query");
-    const cbData = ctx.callbackQuery.data.split('|');
-    if (cbData[0] == 'repeat') {
-        let text = ctx.callbackQuery.message.text;
-        let scheduleText = text.match(/"[\s\S]+"/g)[0];
-        scheduleText = scheduleText.substring(1, scheduleText.length - 1);
-        let chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
-        let username = 'none';
-        if (chatID[0] == '_') {
-            username = ctx.from.username;
-        }
-        let tz = await db.GetUserTZ(ctx.from.id);
-        let ts = Math.floor((Date.now() + global.repeatScheduleTime) / 1000) * 1000;
-        let schedule = [{ chatID: chatID, text: scheduleText, timestamp: ts, username: username }];
+    const data = ctx.callbackQuery.data;
+    const cbData = data.split('|');
+    let username;
+    let scheduleText;
+    let schedule;
+    let chatID;
+    switch (cbData[0]) {
+        case 'repeat':
+            let text = ctx.callbackQuery.message.text;
+            scheduleText = text.match(/"[\s\S]+"/g)[0];
+            scheduleText = scheduleText.substring(1, scheduleText.length - 1);
+            chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
+            username = 'none';
+            if (chatID[0] == '_') {
+                username = ctx.from.username;
+            }
+            let tz = await db.GetUserTZ(ctx.from.id);
+            let ts = Math.floor((Date.now() + global.repeatScheduleTime) / 1000) * 1000;
+            schedule = [{ chatID: chatID, text: scheduleText, timestamp: ts, username: username }];
 
-        try {
-            await db.AddNewSchedules(schedule);
-            ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + MiscFunctions.FormDateStringFormat(new Date(ts + tz * 1000)) + '</b>', { parse_mode: 'HTML' });
-        } catch (e) {
-            console.error(e);
-        }
+            try {
+                await db.AddNewSchedules(schedule);
+                ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + MiscFunctions.FormDateStringFormat(new Date(ts + tz * 1000)) + '</b>', { parse_mode: 'HTML' });
+            } catch (e) {
+                console.error(e);
+            }
+            break;
+        case 'confirm':
+            const time = +cbData[2];
+            chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
+            username = cbData[1];
+            scheduleText = data.substring(data.indexOf(cbData[2]) + cbData[2].length + 1);
+            schedule = [{ chatID: chatID, text: scheduleText, timestamp: time, username: username }];
+            try {
+                await db.AddNewSchedules(schedule);
+                ctx.editMessageReplyMarkup(Extra.markup((m) =>
+                    m.inlineKeyboard([]).removeKeyboard()
+                ));
+            } catch(e) {
+                console.error(e);
+            }
+
+            break;
+        case 'delete':
+            ctx.deleteMessage();
+            break;
+
+        default:
+            break;
     }
     try {
         ctx.answerCbQuery();
@@ -303,20 +332,21 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                 schedulesCount = 0;
             }
             console.log(`schedulesCount = ${schedulesCount}`);
-            let count = 0
+            let count = 0;
+            let username = 'none';
             if (isScheduled !== false) {
                 isScheduled = +isScheduled;
                 reply += rp.scheduled(parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(isScheduled + tz * 1000)));
             } else {
                 if (count + schedulesCount < global.MaximumCountOfSchedules) {
                     if (typeof (parsedMessage.date) != 'undefined') {
-                        let username = 'none';
                         if (chatID[0] == '_') {
                             username = ctx.from.username;
+                        } else {
+                            await db.AddNewSchedule(chatID, parsedMessage.text, parsedMessage.date.getTime(), username);
+                            count++;
                         }
-                        await db.AddNewSchedule(chatID, parsedMessage.text, parsedMessage.date.getTime(), username);
                         reply += parsedMessage.answer + `\r\n`;
-                        count++;
                     } else {
                         if (chatID[0] !== '_') {
                             reply += parsedMessage.answer + `\r\n`;
@@ -331,7 +361,19 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
             }
             //#endregion
             try {
-                ctx.replyWithHTML(reply);
+                if (chatID[0] == '_' && isScheduled === false) {
+                    let msg = await ctx.replyWithHTML(reply, Extra.markup((m) =>
+                        m.inlineKeyboard([
+                            m.callbackButton(rp.confirmSchedule, `confirm|${username}|${parsedMessage.date.getTime()}|${parsedMessage.text}`),
+                            m.callbackButton(rp.declineSchedule, `delete`)
+                        ]).oneTime()
+                    ));
+                    setTimeout(function (ctx, msg) {
+                        ctx.deleteMessage(msg.chat.id, msg.message.id);
+                    }, repeatScheduleTime, ctx, msg);
+                } else {
+                    ctx.replyWithHTML(reply);
+                }
             } catch (e) {
                 console.error(e);
             }
