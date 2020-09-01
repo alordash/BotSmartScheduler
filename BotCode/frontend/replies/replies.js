@@ -22,19 +22,19 @@ exports.voiceMessageTooBig = `⚠️ Voice message duration should be less than 
 exports.showListAction = `🗓 Show list`;
 exports.changeTimeZoneAction = `🌐 Change time zone`;
 exports.mainKeyboard = Markup.keyboard([
-    [{ text: exports.showListAction }, { text: exports.changeTimeZoneAction }]
+   [{ text: exports.showListAction }, { text: exports.changeTimeZoneAction }]
 ]).oneTime().removeKeyboard().resize().extra();
 exports.scheduled = function (text, myFormattedDate) {
-    return `"${text}" already scheduled at: <b>${myFormattedDate}</b>\r\n`;
+   return `"${text}" already scheduled at: <b>${myFormattedDate}</b>\r\n`;
 }
 exports.cleared = `Cleared all schedules.\r\nShow list: /list`;
 exports.deleted = function (str, end, newline) {
-    return `Deleted ${str} schedule${end}.${newline === false ? `\r\nShow list: /list` : ``}`;
+   return `Deleted ${str} schedule${end}.${newline === false ? `\r\nShow list: /list` : ``}`;
 }
 exports.notDeleted = `Invalid use of command.`;
 exports.listIsEmpty = `List of plans is empty.`;
 exports.exceededLimit = function (maximum) {
-    return `⚠️ Please remove some of your schedules.
+   return `⚠️ Please remove some of your schedules.
 Maximum count of schedules: <b>${maximum}</b>`;
 }
 exports.showKeyboard = `Opened menu.`;
@@ -53,37 +53,37 @@ exports.tzTypeManually = `⌨️ Type manually`;
 exports.tzTypeManuallyReponse = `Type your GMT offset in <b>±HH</b>:<b>MM</b> format.`;
 exports.tzInvalidInput = `🚫 Please enter valid GMT offset in <b>±HH</b>:<b>MM</b> format,\r\nwhere ± — plus or minus, HH - hours, MM - minutes.`;
 exports.tzDetermined = function (hours, minutes, isNegative) {
-    let s = '+'
-    let t = '';
-    if (isNegative) {
-        s = '-';
-        hours *= -1;
-    }
-    if (hours < 10)
-        t = '0';
-    s += t + hours + ':';
-    if (minutes >= 10) t = '';
-    s += t + minutes;
-    return `🌐 Your time zone: GMT <b>${s}</b>.`;
+   let s = '+'
+   let t = '';
+   if (isNegative) {
+      s = '-';
+      hours *= -1;
+   }
+   if (hours < 10)
+      t = '0';
+   s += t + hours + ':';
+   if (minutes >= 10) t = '';
+   s += t + minutes;
+   return `🌐 Your time zone: GMT <b>${s}</b>.`;
 }
 exports.tzCancel = `❌ Cancel`;
 exports.tzCancelReponse = `🚫 Cancelled.`;
 exports.tzCancelWarning = `❗️ Please note that defining time zone increases time accuracy.`;
 exports.tzLocation = function (tz) {
-    let t = '';
-    if (Math.abs(tz) < 10) t = '0';
-    if (tz < 0) {
-        t = '-' + t;
-        tz *= -1;
-    }
-    else t = '+' + t;
-    return `🌐 Your time zone: GMT <b>${t}${tz}:00</b>.`
+   let t = '';
+   if (Math.abs(tz) < 10) t = '0';
+   if (tz < 0) {
+      t = '-' + t;
+      tz *= -1;
+   }
+   else t = '+' + t;
+   return `🌐 Your time zone: GMT <b>${t}${tz}:00</b>.`
 }
 exports.tzCurrent = function (tz) {
-    let negative = tz < 0;
-    let hour = tz / 3600 | 0;
-    let minutes = Math.abs(tz % 3600 / 60);
-    return exports.tzDetermined(hour, minutes, negative);
+   let negative = tz < 0;
+   let hour = tz / 3600 | 0;
+   let minutes = Math.abs(tz % 3600 / 60);
+   return exports.tzDetermined(hour, minutes, negative);
 }
 //#endregion TZ config
 
