@@ -1,12 +1,32 @@
 const { Composer } = require('telegraf');
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
-const DateParser = require('../../backend/dateParser/dateParser');
-const MiscFunctions = require('../../backend/dateParser/miscFunctions');
 const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
+const { parseString } = require('@alordash/parse-word-to-number');
+const { parseDate } = require('@alordash/date-parser');
 
 //#region functions
+/**@param {Date} date
+ * @returns {String}
+ */
+function FormDateStringFormat(date) {
+   let month = date.getMonth();
+   let hour = date.getHours().toString(10),
+      minute = date.getMinutes().toString(10);
+   if (hour.length <= 1) {
+      hour = '0' + hour;
+   }
+   if (minute.length <= 1) {
+      minute = '0' + minute;
+   }
+   let year = '';
+   if (date.getFullYear() != new Date().getFullYear()) {
+      year = ` ${date.getFullYear()} г.`;
+   }
+   return `${date.getDate()} ${constants.monthsRusRoot[month]}${constants.monthsRusEnding[month][1]} ${hour}:${minute}${year}`;
+}
+
 function GetDeletingIDsIndex(chatID, deletingIDs) {
    if (deletingIDs.length) {
       for (let i in deletingIDs) {
@@ -44,7 +64,7 @@ async function LoadSchedulesList(chatID, tsOffset, db) {
          if (schedule.username != 'none') {
             scheduledBy = ` by <b>${schedule.username}</b>`;
          }
-         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${MiscFunctions.FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000))}</b>\r\n`;
+         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000))}</b>\r\n`;
       }
       return answer;
    } else {
@@ -303,7 +323,7 @@ async function HandleCallbackQuery(ctx, db) {
 
          try {
             await db.AddNewSchedule(schedule);
-            ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + MiscFunctions.FormDateStringFormat(new Date(target_date + tz * 1000)) + '</b>', { parse_mode: 'HTML' });
+            ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + FormDateStringFormat(new Date(target_date + tz * 1000)) + '</b>', { parse_mode: 'HTML' });
          } catch (e) {
             console.error(e);
          }
@@ -366,36 +386,65 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
       } else {
          //#region PARSE SCHEDULE
          let tz = await db.GetUserTZ(ctx.from.id);
-         let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'false');
-
-         let schedule = await db.GetScheduleByText(chatID, parsedMessage.text);
-
-         let schedulesCount = (await db.GetSchedules(chatID)).length;
-         console.log(`schedulesCount = ${schedulesCount}`);
-         let count = 0;
+         let prevalence = 50;
          let username = 'none';
-         if (typeof (schedule) != 'undefined') {
-            reply += rp.scheduled(parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(schedule.target_date + tz * 1000)));
+         if (chatID[0] == '_') {
+            username = ctx.from.username;
+            prevalence = 70;
+         }
+         let parsedDates = parseDate(parseString(msgText, 1), 1, prevalence);
+         //         let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'false');
+         if (parsedDates.length == 0) {
+            reply += rp.errorScheduling;
          } else {
-            if (count + schedulesCount < global.MaximumCountOfSchedules) {
-               if (typeof (parsedMessage.date) != 'undefined') {
-                  if (chatID[0] == '_') {
-                     username = ctx.from.username;
-                  } else {
-                     await db.AddNewSchedule(new Schedule(chatID, 0, parsedMessage.text, username, parsedMessage.date.getTime(), 0, 0));
-                     count++;
-                  }
-                  reply += parsedMessage.answer + `\r\n`;
+            for (let parsedDate of parsedDates) {
+               let dateValues = parsedDate.valueOf();
+               let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
+
+               let schedulesCount = (await db.GetSchedules(chatID)).length;
+               console.log(`schedulesCount = ${schedulesCount}`);
+               let count = 0;
+               if (typeof (schedule) != 'undefined') {
+                  reply += rp.scheduled(schedule.text, FormDateStringFormat(new Date(schedule.target_date + tz * 1000)));
                } else {
-                  if (chatID[0] !== '_') {
-                     reply += parsedMessage.answer + `\r\n`;
+                  if (count + schedulesCount < global.MaximumCountOfSchedules) {
+                     let target_date = dateValues.target_date.getTime();
+                     let period_time = dateValues.period_time.getTime();
+                     let max_date = dateValues.max_date.getTime();
+                     if (!parsedDate.target_date.isOffset) {
+                        target_date -= tz * 1000;
+                     }
+                     if (!parsedDate.period_time.isOffset) {
+                        period_time -= tz * 1000;
+                     }
+                     if (!parsedDate.max_date.isOffset) {
+                        max_date -= tz * 1000;
+                     }
+                     if (target_date > Date.now()) {
+                        if (chatID[0] != '_') {
+                           await db.AddNewSchedule(new Schedule(chatID,
+                              0,
+                              parsedDate.string,
+                              username,
+                              target_date,
+                              period_time,
+                              max_date
+                           ));
+                           count++;
+                        }
+                        reply += parsedMessage.answer + `\r\n`;
+                     } else {
+                        if (chatID[0] !== '_') {
+                           reply += parsedMessage.answer + `\r\n`;
+                        }
+                     }
+                     if (chatID[0] !== '_' && !(await db.HasUserID(ctx.from.id))) {
+                        reply += rp.tzWarning;
+                     }
+                  } else {
+                     reply += rp.exceededLimit(global.MaximumCountOfSchedules);
                   }
                }
-               if (chatID[0] !== '_' && !(await db.HasUserID(ctx.from.id))) {
-                  reply += rp.tzWarning;
-               }
-            } else {
-               reply += rp.exceededLimit(global.MaximumCountOfSchedules);
             }
          }
          //#endregion

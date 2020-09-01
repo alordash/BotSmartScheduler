@@ -37,6 +37,7 @@ exports.exceededLimit = function (maximum) {
    return `⚠️ Please remove some of your schedules.
 Maximum count of schedules: <b>${maximum}</b>`;
 }
+exports.errorScheduling = `Can not schedule for this date.`;
 exports.showKeyboard = `Opened menu.`;
 exports.repeatSchedule = `🔔 Remind in 5 minutes`;
 exports.remindSchedule = `🔔 Remind set to `;
