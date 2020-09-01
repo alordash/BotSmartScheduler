@@ -24,7 +24,7 @@ function FormDateStringFormat(date) {
    if (date.getFullYear() != new Date().getFullYear()) {
       year = ` ${date.getFullYear()} г.`;
    }
-   return `${date.getDate()} ${constants.monthsRusRoot[month]}${constants.monthsRusEnding[month][1]} ${hour}:${minute}${year}`;
+   return `${date.getDate()} ${/*constants.monthsRusRoot[month]*/0}${/*constants.monthsRusEnding[month][1]*/0} ${hour}:${minute}${year}`;
 }
 
 function GetDeletingIDsIndex(chatID, deletingIDs) {
@@ -408,19 +408,19 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                   reply += rp.scheduled(schedule.text, FormDateStringFormat(new Date(schedule.target_date + tz * 1000)));
                } else {
                   if (count + schedulesCount < global.MaximumCountOfSchedules) {
-                     let target_date = dateValues.target_date.getTime();
-                     let period_time = dateValues.period_time.getTime();
-                     let max_date = dateValues.max_date.getTime();
+                     let target_date = Math.floor(dateValues.target_date.getTime() / 1000);
+                     let period_time = Math.floor(dateValues.period_time.getTime() / 1000);
+                     let max_date = Math.floor(dateValues.max_date.getTime() / 100);
                      if (!parsedDate.target_date.isOffset) {
-                        target_date -= tz * 1000;
+                        target_date -= tz;
                      }
                      if (!parsedDate.period_time.isOffset) {
-                        period_time -= tz * 1000;
+                        period_time -= tz;
                      }
                      if (!parsedDate.max_date.isOffset) {
-                        max_date -= tz * 1000;
+                        max_date -= tz;
                      }
-                     if (target_date > Date.now()) {
+                     if (target_date > Math.floor(Date.now() / 1000)) {
                         if (chatID[0] != '_') {
                            await db.AddNewSchedule(new Schedule(chatID,
                               0,
@@ -432,10 +432,10 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                            ));
                            count++;
                         }
-                        reply += parsedMessage.answer + `\r\n`;
+//                        reply += parsedMessage.answer + `\r\n`;
                      } else {
                         if (chatID[0] !== '_') {
-                           reply += parsedMessage.answer + `\r\n`;
+                           reply += rp.errorScheduling + `\r\n`;
                         }
                      }
                      if (chatID[0] !== '_' && !(await db.HasUserID(ctx.from.id))) {
@@ -450,10 +450,10 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
          //#endregion
          if (reply != '') {
             try {
-               if (chatID[0] == '_' && typeof (schedule) === 'undefined' && typeof (parsedMessage.date) != 'undefined') {
+               if (chatID[0] == '_' && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
                   let msg = await ctx.replyWithHTML(reply, Extra.markup((m) =>
                      m.inlineKeyboard([
-                        m.callbackButton(rp.confirmSchedule, `confirm|${username}|${parsedMessage.date.getTime()}|${parsedMessage.text}`),
+                        m.callbackButton(rp.confirmSchedule, `confirm|${username}|${0}|${parsedMessage.text}`),
                         m.callbackButton(rp.declineSchedule, `delete`)
                      ]).oneTime()
                   ));
