@@ -2,11 +2,17 @@ const request = require('request-promise');
 const rp = require('../replies/replies');
 const botActions = require('./botActions');
 const MiscFunctions = require('../../backend/dateParser/miscFunctions');
+const { Composer } = require('telegraf');
+const { dbManagement, User } = require('../../backend/dataBase/db');
 const { speechToText } = require('../../backend/stt/stt');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 
 let tzPendingConfirmationUsers = [];
 
+/**
+ * @param {Composer} bot 
+ * @param {dbManagement} db 
+ */
 exports.InitActions = function (bot, db) {
    bot.start(ctx => {
       let options = rp.mainKeyboard;
@@ -114,10 +120,11 @@ exports.InitActions = function (bot, db) {
          let rawOffset = tz.rawOffset;
          let userId = ctx.from.id;
          let ts = rawOffset * 3600;
-         if (await db.HasUserID(userId)) {
-            await db.RemoveUserTZ(userId);
+         if (!await db.HasUserID(userId)) {
+            await db.AddUser(new User(userId, ts, db.defaultUserLanguage));
+         } else {
+            await db.AddUserTZ(userId, ts);
          }
-         await db.AddUserTZ(userId, ts);
          try {
             ctx.replyWithHTML(rp.tzLocation(rawOffset), rp.mainKeyboard);
          } catch (e) {

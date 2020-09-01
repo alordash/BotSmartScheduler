@@ -1,8 +1,10 @@
+const { Composer } = require('telegraf');
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
 const DateParser = require('../../backend/dateParser/dateParser');
 const MiscFunctions = require('../../backend/dateParser/miscFunctions');
 const rp = require('../replies/replies');
+const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 
 //#region functions
 function GetDeletingIDsIndex(chatID, deletingIDs) {
@@ -15,6 +17,10 @@ function GetDeletingIDsIndex(chatID, deletingIDs) {
    }
    return false;
 }
+/**
+ * @param {Number} id 
+ * @returns {String} 
+ */
 function FormatChatId(id) {
    id = id.toString(10);
    if (id[0] == '-') {
@@ -22,17 +28,23 @@ function FormatChatId(id) {
    }
    return id;
 }
+
+/**
+ * @param {String} chatID 
+ * @param {Number} tsOffset 
+ * @param {dbManagement} db 
+ */
 async function LoadSchedulesList(chatID, tsOffset, db) {
    let schedules = await db.ListSchedules(chatID);
-   if (schedules !== false) {
+   if (schedules.length > 0) {
       let answer = ``;
-      schedules.sort((a, b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
+      schedules.sort((a, b) => a.id - b.id);
       for (let schedule of schedules) {
          let scheduledBy = '';
          if (schedule.username != 'none') {
             scheduledBy = ` by <b>${schedule.username}</b>`;
          }
-         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${MiscFunctions.FormDateStringFormat(new Date(+schedule.ts + tsOffset * 1000))}</b>\r\n`;
+         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${MiscFunctions.FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000))}</b>\r\n`;
       }
       return answer;
    } else {
@@ -40,6 +52,10 @@ async function LoadSchedulesList(chatID, tsOffset, db) {
    }
 }
 
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ */
 async function DeleteSchedules(ctx, db) {
    let chatID = FormatChatId(ctx.chat.id)
    let msgText = ctx.message.text;
@@ -99,6 +115,11 @@ async function DeleteSchedules(ctx, db) {
    }
 }
 
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ * @param {Array.<Number>} tzPendingConfirmationUsers 
+ */
 async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
    let curTZ = await db.GetUserTZ(ctx.from.id);
    let reply = '';
@@ -133,11 +154,15 @@ async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
    }
 }
 
+/**
+ * @param {Composer} bot 
+ * @param {dbManagement} db 
+ */
 async function CheckExpiredSchedules(bot, db) {
    console.log('Checking expired schedules ' + new Date());
    db.sending = true;
    let expiredSchedules = await db.CheckActiveSchedules(Date.now());
-   if (expiredSchedules.length) {
+   if (expiredSchedules.length > 0) {
       console.log(`expiredSchedules = ${JSON.stringify(expiredSchedules)}`);
       let ChatIDs = [];
       let deletingIDs = [];
@@ -192,6 +217,11 @@ async function CheckExpiredSchedules(bot, db) {
    console.log(`Done checking expired schedules`);
 }
 
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ * @param {Array.<Number>} tzPendingConfirmationUsers 
+ */
 async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
    let userId = ctx.from.id;
    let matches = ctx.message.text.match(/(\+|-|–|—|)([0-9])+:([0-9])+/g);
@@ -217,10 +247,11 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
    if (matches != null) {
       let ts = hours * 3600;
       ts += minutes * 60 * (negative ? -1 : 1);
-      if (await db.HasUserID(userId)) {
-         await db.RemoveUserTZ(userId);
+      if (!await db.HasUserID(userId)) {
+         await db.AddUser(new User(userId, ts, db.defaultUserLanguage));
+      } else {
+         await db.AddUserTZ(userId, ts);
       }
-      await db.AddUserTZ(userId, ts);
       tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
       try {
          ctx.replyWithHTML(rp.tzCurrent(ts), rp.mainKeyboard);
@@ -241,6 +272,10 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
    }
 }
 
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ */
 async function HandleCallbackQuery(ctx, db) {
    console.log("got callback_query");
    const data = ctx.callbackQuery.data;
@@ -249,6 +284,9 @@ async function HandleCallbackQuery(ctx, db) {
    let scheduleText;
    let schedule;
    let chatID;
+   let target_date = 0;
+   let period_time = 0;
+   let max_date = 0;
    switch (cbData[0]) {
       case 'repeat':
          let text = ctx.callbackQuery.message.text;
@@ -260,24 +298,24 @@ async function HandleCallbackQuery(ctx, db) {
             username = ctx.from.username;
          }
          let tz = await db.GetUserTZ(ctx.from.id);
-         let ts = Math.floor((Date.now() + global.repeatScheduleTime) / 1000) * 1000;
-         schedule = [{ chatID: chatID, text: scheduleText, timestamp: ts, username: username }];
+         target_date = Math.floor((Date.now() + global.repeatScheduleTime) / 1000) * 1000;
+         schedule = new Schedule(chatID, 0, scheduleText, username, target_date, period_time, max_date);
 
          try {
-            await db.AddNewSchedules(schedule);
-            ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + MiscFunctions.FormDateStringFormat(new Date(ts + tz * 1000)) + '</b>', { parse_mode: 'HTML' });
+            await db.AddNewSchedule(schedule);
+            ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + MiscFunctions.FormDateStringFormat(new Date(target_date + tz * 1000)) + '</b>', { parse_mode: 'HTML' });
          } catch (e) {
             console.error(e);
          }
          break;
       case 'confirm':
-         const time = +cbData[2];
+         target_date = +cbData[2];
          chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
          username = cbData[1];
          scheduleText = data.substring(data.indexOf(cbData[2]) + cbData[2].length + 1);
-         schedule = [{ chatID: chatID, text: scheduleText, timestamp: time, username: username }];
+         schedule = new Schedule(chatID, 0, scheduleText, username, target_date, period_time, max_date);
          try {
-            await db.AddNewSchedules(schedule);
+            await db.AddNewSchedule(schedule);
             ctx.editMessageReplyMarkup(Extra.markup((m) =>
                m.inlineKeyboard([]).removeKeyboard()
             ));
@@ -300,6 +338,11 @@ async function HandleCallbackQuery(ctx, db) {
    }
 }
 
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ * @param {Array.<Number>} tzPendingConfirmationUsers 
+ */
 async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
    let chatID = FormatChatId(ctx.chat.id)
    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
@@ -325,25 +368,21 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
          let tz = await db.GetUserTZ(ctx.from.id);
          let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'false');
 
-         let isScheduled = await db.GetScheduleByText(chatID, parsedMessage.text);
+         let schedule = await db.GetScheduleByText(chatID, parsedMessage.text);
 
          let schedulesCount = (await db.GetSchedules(chatID)).length;
-         if (typeof (schedulesCount) == 'undefined') {
-            schedulesCount = 0;
-         }
          console.log(`schedulesCount = ${schedulesCount}`);
          let count = 0;
          let username = 'none';
-         if (isScheduled !== false) {
-            isScheduled = +isScheduled;
-            reply += rp.scheduled(parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(isScheduled + tz * 1000)));
+         if (typeof (schedule) != 'undefined') {
+            reply += rp.scheduled(parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(schedule.target_date + tz * 1000)));
          } else {
             if (count + schedulesCount < global.MaximumCountOfSchedules) {
                if (typeof (parsedMessage.date) != 'undefined') {
                   if (chatID[0] == '_') {
                      username = ctx.from.username;
                   } else {
-                     await db.AddNewSchedule(chatID, parsedMessage.text, parsedMessage.date.getTime(), username);
+                     await db.AddNewSchedule(new Schedule(chatID, 0, parsedMessage.text, username, parsedMessage.date.getTime(), 0, 0));
                      count++;
                   }
                   reply += parsedMessage.answer + `\r\n`;
@@ -360,22 +399,24 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
             }
          }
          //#endregion
-         try {
-            if (chatID[0] == '_' && isScheduled === false) {
-               let msg = await ctx.replyWithHTML(reply, Extra.markup((m) =>
-                  m.inlineKeyboard([
-                     m.callbackButton(rp.confirmSchedule, `confirm|${username}|${parsedMessage.date.getTime()}|${parsedMessage.text}`),
-                     m.callbackButton(rp.declineSchedule, `delete`)
-                  ]).oneTime()
-               ));
-               setTimeout(function (ctx, msg) {
-                  ctx.deleteMessage(msg.chat.id, msg.message.id);
-               }, repeatScheduleTime, ctx, msg);
-            } else {
-               ctx.replyWithHTML(reply);
+         if (reply != '') {
+            try {
+               if (chatID[0] == '_' && typeof (schedule) === 'undefined' && typeof (parsedMessage.date) != 'undefined') {
+                  let msg = await ctx.replyWithHTML(reply, Extra.markup((m) =>
+                     m.inlineKeyboard([
+                        m.callbackButton(rp.confirmSchedule, `confirm|${username}|${parsedMessage.date.getTime()}|${parsedMessage.text}`),
+                        m.callbackButton(rp.declineSchedule, `delete`)
+                     ]).oneTime()
+                  ));
+                  setTimeout(function (ctx, msg) {
+                     ctx.deleteMessage(msg.chat.id, msg.message.id);
+                  }, repeatScheduleTime, ctx, msg);
+               } else {
+                  ctx.replyWithHTML(reply);
+               }
+            } catch (e) {
+               console.error(e);
             }
-         } catch (e) {
-            console.error(e);
          }
       }
    }
