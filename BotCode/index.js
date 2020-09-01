@@ -1,5 +1,5 @@
 const telegraf = require('telegraf');
-const dbManagement = require('./backend/dataBase/db');
+const { dbManagement } = require('./backend/dataBase/db');
 const botConfig = require('./frontend/bot/bot');
 const botActions = require('./frontend/bot/botActions');
 
@@ -23,7 +23,7 @@ const dbOptions = {
       rejectUnauthorized: false
    }
 }
-let db = new dbManagement.dbManagment(dbOptions);
+let db = new dbManagement(dbOptions);
 
 (async function Initialization() {
    let constants = require('./constants.json');
