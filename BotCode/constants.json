@@ -1,5 +1,5 @@
 {
-	"MaximumVoiceMessageDuration": 30,
-	"repeatScheduleTime" : 300000,
-	"MaximumCountOfSchedules" : 25
+   "MaximumVoiceMessageDuration": 30,
+   "repeatScheduleTime": 300000,
+   "MaximumCountOfSchedules": 25
 }
