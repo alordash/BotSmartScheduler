@@ -76,10 +76,12 @@ class dbManagement {
       }
    }
 
-   /**@param {Array.<Schedule>} newSchedules */
-   async AddNewSchedules(newSchedules) {
+   /**@param {Array.<Schedule>} newSchedules
+    * @param {String} chatID
+    */
+   async AddNewSchedules(chatID, newSchedules) {
       let queryString = `INSERT INTO schedules VALUES `;
-      let schedules = await this.GetSchedules(newSchedules[0].chatID);
+      let schedules = await this.GetSchedules(chatID);
       let id = schedules.length + 1;
       for (let schedule of newSchedules) {
          if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') {

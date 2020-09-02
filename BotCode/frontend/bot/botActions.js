@@ -4,9 +4,153 @@ const Extra = require('telegraf/extra');
 const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { parseString } = require('@alordash/parse-word-to-number');
-const { parseDate } = require('@alordash/date-parser');
+const { parseDate, ParsedDate, TimeList } = require('@alordash/date-parser');
+
+let pendingSchedules = [];
 
 //#region functions
+/**
+ * @param {Number} number 
+ * @returns {Number}
+ */
+function Div1000(number) {
+   return Math.floor(number / 1000);
+}
+
+/**
+ * @param {TimeList} timeList 
+ * @returns {Boolean} 
+ */
+function TimeListIsEmpty(timeList) {
+   return typeof (timeList.years) == 'undefined'
+      && typeof (timeList.months) == 'undefined'
+      && typeof (timeList.dates) == 'undefined'
+      && typeof (timeList.hours) == 'undefined'
+      && typeof (timeList.minutes) == 'undefined';
+}
+
+/**
+ * @param {TimeList} timeList 
+ * @param {Number} timeListDate 
+ * @returns {TimeList} 
+ */
+function UpdateTime(timeList, timeListDate) {
+   const now = new Date();
+   const tsNow = Div1000(now.getTime());
+   if (timeListDate < tsNow) {
+      let dif = tsNow - timeListDate;
+      let difInDate = new Date(dif);
+      if (difInDate.getFullYear() > 1970) {
+         if (typeof (timeList.years) == 'undefined') {
+            timeList.years = now.getFullYear() + difInDate.getFullYear() + 1;
+            return timeList;
+         } else {
+            return undefined;
+         }
+      } else if (difInDate.getMonth() > 0) {
+         if (typeof (timeList.months) == 'undefined') {
+            timeList.months = now.getMonth() + difInDate.getMonth() + 1;
+            return timeList;
+         } else {
+            if (typeof (timeList.years) == 'undefined') {
+               timeList.years = now.getFullYear() + 1;
+            }
+            return undefined;
+         }
+      } else if (difInDate.getDate() > 1) {
+         if (typeof (timeList.dates) == 'undefined') {
+            timeList.dates = now.getDate() + difInDate.getDate() + 1;
+            return timeList;
+         } else {
+            if (typeof (timeList.months) == 'undefined') {
+               timeList.months = now.getMonth() + 1;
+            } else if (typeof (timeList.years) == 'undefined') {
+               timeList.years = now.getFullYear() + 1;
+            } else {
+               return undefined;
+            }
+         }
+      } else if (difInDate.getHours() > 0) {
+         if (typeof (timeList.hours) == 'undefined') {
+            timeList.hours = now.getHours() + difInDate.getHours() + 1;
+            return timeList;
+         } else {
+            if (typeof (timeList.dates) == 'undefined') {
+               timeList.dates = now.getDate() + 1;
+            } else if (typeof (timeList.months) == 'undefined') {
+               timeList.months = now.getMonth() + 1;
+            } else if (typeof (timeList.years) == 'undefined') {
+               timeList.years = now.getFullYear() + 1;
+            } else {
+               return undefined;
+            }
+         }
+      } else if (difInDate.getMinutes() > 0) {
+         if (typeof (timeList.minutes) == 'undefined') {
+            timeList.minutes = now.getMinutes() + difInDate.getMinutes() + 1;
+            return timeList;
+         } else {
+            if (typeof (timeList.hours) == 'undefined') {
+               timeList.hours = now.getHours() + 1;
+            } else if (typeof (timeList.dates) == 'undefined') {
+               timeList.dates = now.getDate() + 1;
+            } else if (typeof (timeList.months) == 'undefined') {
+               timeList.months = now.getMonth() + 1;
+            } else if (typeof (timeList.years) == 'undefined') {
+               timeList.years = now.getFullYear() + 1;
+            } else {
+               return undefined;
+            }
+         }
+      }
+   }
+   return timeList;
+}
+
+/**
+ * @param {ParsedDate} parsedDate 
+ * @param {Number} tz 
+ * @returns {{target_date: Number, period_time: Number, max_date: Number}}
+ */
+function ProcessParsedDate(parsedDate, tz) {
+   let dateValues = parsedDate.valueOf();
+   let target_date = Div1000(dateValues.target_date.getTime());
+   let period_time = Div1000(dateValues.period_time.getTime());
+   let max_date = Div1000(dateValues.max_date.getTime());
+   if (!parsedDate.target_date.isOffset) {
+      target_date -= tz;
+   }
+   if (!parsedDate.max_date.isOffset) {
+      max_date -= tz;
+   }
+   parsedDate.target_date = UpdateTime(parsedDate.target_date, target_date);
+   if (!TimeListIsEmpty(parsedDate.max_date)) {
+      parsedDate.max_date = UpdateTime(parsedDate.max_date, max_date);
+   } else {
+      let zeroDate = new Date(0);
+      parsedDate.max_date.years = zeroDate.getFullYear();
+      parsedDate.max_date.months = zeroDate.getMonth();
+      parsedDate.max_date.dates = zeroDate.getDate();
+      parsedDate.max_date.hours = zeroDate.getHours();
+      parsedDate.max_date.minutes = zeroDate.getMinutes();
+   }
+   if (typeof (parsedDate.target_date) == 'undefined') {
+      return undefined;
+   }
+   dateValues = parsedDate.valueOf();
+   dateValues.target_date.setSeconds(0, 0);
+   dateValues.period_time.setSeconds(0, 0);
+   dateValues.max_date.setSeconds(0, 0);
+   target_date = dateValues.target_date.getTime();
+   period_time = dateValues.period_time.getTime();
+   max_date = dateValues.max_date.getTime();
+   return {
+      target_date,
+      period_time,
+      max_date
+   }
+}
+
 /**@param {Date} date
  * @returns {String}
  */
@@ -299,50 +443,39 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
 async function HandleCallbackQuery(ctx, db) {
    console.log("got callback_query");
    const data = ctx.callbackQuery.data;
-   const cbData = data.split('|');
-   let username;
-   let scheduleText;
-   let schedule;
-   let chatID;
-   let target_date = 0;
-   let period_time = 0;
-   let max_date = 0;
-   switch (cbData[0]) {
+   let chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
+   switch (data) {
       case 'repeat':
          let text = ctx.callbackQuery.message.text;
-         scheduleText = text.match(/"[\s\S]+"/g)[0];
-         scheduleText = scheduleText.substring(1, scheduleText.length - 1);
-         chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
-         username = 'none';
+         let schedule = await db.GetScheduleByText(chatID, text);
+         let username = 'none';
          if (chatID[0] == '_') {
             username = ctx.from.username;
          }
          let tz = await db.GetUserTZ(ctx.from.id);
-         target_date = Math.floor((Date.now() + global.repeatScheduleTime) / 1000) * 1000;
-         schedule = new Schedule(chatID, 0, scheduleText, username, target_date, period_time, max_date);
+         let target_date = Div1000(Date.now() + global.repeatScheduleTime);
+         schedule.target_date = target_date;
 
          try {
             await db.AddNewSchedule(schedule);
-            ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + FormDateStringFormat(new Date(target_date + tz * 1000)) + '</b>', { parse_mode: 'HTML' });
+            ctx.editMessageText(text + '\r\n' + rp.remindSchedule + '<b>' + FormDateStringFormat(new Date((target_date + tz) * 1000)) + '</b>', { parse_mode: 'HTML' });
          } catch (e) {
             console.error(e);
          }
          break;
       case 'confirm':
-         target_date = +cbData[2];
-         chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
-         username = cbData[1];
-         scheduleText = data.substring(data.indexOf(cbData[2]) + cbData[2].length + 1);
-         schedule = new Schedule(chatID, 0, scheduleText, username, target_date, period_time, max_date);
          try {
-            await db.AddNewSchedule(schedule);
+            if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
+               await db.AddNewSchedules(chatID, pendingSchedules[chatID]);
+            }
+         } catch (e) {
+            console.error(e);
+         } finally {
+            pendingSchedules[chatID] = [];
             ctx.editMessageReplyMarkup(Extra.markup((m) =>
                m.inlineKeyboard([]).removeKeyboard()
             ));
-         } catch (e) {
-            console.error(e);
          }
-
          break;
       case 'delete':
          ctx.deleteMessage();
@@ -365,6 +498,7 @@ async function HandleCallbackQuery(ctx, db) {
  */
 async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
    let chatID = FormatChatId(ctx.chat.id)
+   let inGroup = chatID[0] === '_';
    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
       ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers);
    } else {
@@ -388,58 +522,49 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
          let tz = await db.GetUserTZ(ctx.from.id);
          let prevalence = 50;
          let username = 'none';
-         if (chatID[0] == '_') {
+         if (inGroup) {
             username = ctx.from.username;
             prevalence = 70;
          }
          let parsedDates = parseDate(parseString(msgText, 1), 1, prevalence);
+         let count = 1;
+         let shouldWarn = false;
          //         let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'false');
          if (parsedDates.length == 0) {
-            reply += rp.errorScheduling;
+            if (!inGroup) {
+               reply += rp.errorScheduling;
+            }
          } else {
+            let schedulesCount = (await db.GetSchedules(chatID)).length;
+            console.log(`schedulesCount = ${schedulesCount}`);
             for (let parsedDate of parsedDates) {
-               let dateValues = parsedDate.valueOf();
                let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
-
-               let schedulesCount = (await db.GetSchedules(chatID)).length;
-               console.log(`schedulesCount = ${schedulesCount}`);
-               let count = 0;
                if (typeof (schedule) != 'undefined') {
                   reply += rp.scheduled(schedule.text, FormDateStringFormat(new Date(schedule.target_date + tz * 1000)));
                } else {
                   if (count + schedulesCount < global.MaximumCountOfSchedules) {
-                     let target_date = Math.floor(dateValues.target_date.getTime() / 1000);
-                     let period_time = Math.floor(dateValues.period_time.getTime() / 1000);
-                     let max_date = Math.floor(dateValues.max_date.getTime() / 100);
-                     if (!parsedDate.target_date.isOffset) {
-                        target_date -= tz;
-                     }
-                     if (!parsedDate.period_time.isOffset) {
-                        period_time -= tz;
-                     }
-                     if (!parsedDate.max_date.isOffset) {
-                        max_date -= tz;
-                     }
-                     if (target_date > Math.floor(Date.now() / 1000)) {
-                        if (chatID[0] != '_') {
-                           await db.AddNewSchedule(new Schedule(chatID,
-                              0,
-                              parsedDate.string,
-                              username,
-                              target_date,
-                              period_time,
-                              max_date
-                           ));
-                           count++;
+                     let dateParams = ProcessParsedDate(parsedDate, tz);
+                     if (typeof (dateParams) != 'undefined') {
+                        if (typeof (pendingSchedules[chatID]) == 'undefined') {
+                           pendingSchedules[chatID] = [];
                         }
-//                        reply += parsedMessage.answer + `\r\n`;
+                        pendingSchedules[chatID].push(new Schedule(
+                           chatID,
+                           0,
+                           parsedDate.string,
+                           username,
+                           dateParams.target_date,
+                           dateParams.period_time,
+                           dateParams.max_date));
+                        count++;
+                        //reply += parsedMessage.answer + `\r\n`;
                      } else {
-                        if (chatID[0] !== '_') {
+                        if (!inGroup) {
                            reply += rp.errorScheduling + `\r\n`;
                         }
                      }
-                     if (chatID[0] !== '_' && !(await db.HasUserID(ctx.from.id))) {
-                        reply += rp.tzWarning;
+                     if (!inGroup && !(await db.HasUserID(ctx.from.id))) {
+                        shouldWarn = true;
                      }
                   } else {
                      reply += rp.exceededLimit(global.MaximumCountOfSchedules);
@@ -447,18 +572,28 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                }
             }
          }
+         if (!inGroup && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
+            await db.AddNewSchedules(chatID, pendingSchedules[chatID]);
+            pendingSchedules[chatID] = [];
+         }
          //#endregion
+         reply = 'test';
          if (reply != '') {
+            if (shouldWarn) {
+               reply += rp.tzWarning;
+            }
             try {
-               if (chatID[0] == '_' && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
+               if (inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
                   let msg = await ctx.replyWithHTML(reply, Extra.markup((m) =>
                      m.inlineKeyboard([
-                        m.callbackButton(rp.confirmSchedule, `confirm|${username}|${0}|${parsedMessage.text}`),
+                        m.callbackButton(rp.confirmSchedule, `confirm`),
                         m.callbackButton(rp.declineSchedule, `delete`)
                      ]).oneTime()
                   ));
                   setTimeout(function (ctx, msg) {
+                     let chatID = FormatChatId(msg.chat.id);
                      ctx.deleteMessage(msg.chat.id, msg.message.id);
+                     pendingSchedules[chatID] = [];
                   }, repeatScheduleTime, ctx, msg);
                } else {
                   ctx.replyWithHTML(reply);
