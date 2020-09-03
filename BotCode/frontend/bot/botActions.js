@@ -40,65 +40,64 @@ function UpdateTime(timeList, timeListDate) {
    if (timeListDate < tsNow) {
       let dif = tsNow - timeListDate;
       let difInDate = new Date(dif * 1000);
-      difInDate.setTime(difInDate.getTime() + difInDate.getTimezoneOffset() * 60 * 1000);
       if (difInDate.getFullYear() > 1970) {
          if (typeof (timeList.years) == 'undefined') {
-            timeList.years = now.getFullYear() + difInDate.getFullYear() + 1;
+            timeList.years = now.getUTCFullYear() + difInDate.getUTCFullYear() + 1;
             return timeList;
          } else {
             return undefined;
          }
-      } else if (difInDate.getMonth() > 0) {
+      } else if (difInDate.getUTCMonth() > 0) {
          if (typeof (timeList.months) == 'undefined') {
-            timeList.months = now.getMonth() + difInDate.getMonth() + 1;
+            timeList.months = now.getUTCMonth() + difInDate.getUTCMonth() + 1;
             return timeList;
          } else {
             if (typeof (timeList.years) == 'undefined') {
-               timeList.years = now.getFullYear() + 1;
+               timeList.years = now.getUTCFullYear() + 1;
             }
             return undefined;
          }
-      } else if (difInDate.getDate() > 1) {
+      } else if (difInDate.getUTCDate() > 1) {
          if (typeof (timeList.dates) == 'undefined') {
-            timeList.dates = now.getDate() + difInDate.getDate() + 1;
+            timeList.dates = now.getUTCDate() + difInDate.getUTCDate() + 1;
             return timeList;
          } else {
             if (typeof (timeList.months) == 'undefined') {
-               timeList.months = now.getMonth() + 1;
+               timeList.months = now.getUTCMonth() + 1;
             } else if (typeof (timeList.years) == 'undefined') {
-               timeList.years = now.getFullYear() + 1;
+               timeList.years = now.getUTCFullYear() + 1;
             } else {
                return undefined;
             }
          }
-      } else if (difInDate.getHours() > 0) {
+      } else if (difInDate.getUTCHours() > 0) {
          if (typeof (timeList.hours) == 'undefined') {
-            timeList.hours = now.getHours() + difInDate.getHours() + 1;
+            timeList.hours = now.getUTCHours() + difInDate.getUTCHours() + 1;
             return timeList;
          } else {
             if (typeof (timeList.dates) == 'undefined') {
-               timeList.dates = now.getDate() + 1;
+               timeList.dates = now.getUTCDate() + 1;
             } else if (typeof (timeList.months) == 'undefined') {
-               timeList.months = now.getMonth() + 1;
+               timeList.months = now.getUTCMonth() + 1;
             } else if (typeof (timeList.years) == 'undefined') {
-               timeList.years = now.getFullYear() + 1;
+               timeList.years = now.getUTCFullYear() + 1;
             } else {
                return undefined;
             }
          }
-      } else if (difInDate.getMinutes() > 0) {
+      } else if (difInDate.getUTCMinutes() > 0) {
          if (typeof (timeList.minutes) == 'undefined') {
-            timeList.minutes = now.getMinutes() + difInDate.getMinutes() + 1;
+            timeList.minutes = now.getUTCMinutes() + difInDate.getUTCMinutes() + 1;
             return timeList;
          } else {
             if (typeof (timeList.hours) == 'undefined') {
-               timeList.hours = now.getHours() + 1;
+               timeList.hours = now.getUTCHours() + 1;
             } else if (typeof (timeList.dates) == 'undefined') {
-               timeList.dates = now.getDate() + 1;
+               timeList.dates = now.getUTCDate() + 1;
             } else if (typeof (timeList.months) == 'undefined') {
-               timeList.months = now.getMonth() + 1;
+               timeList.months = now.getUTCMonth() + 1;
             } else if (typeof (timeList.years) == 'undefined') {
-               timeList.years = now.getFullYear() + 1;
+               timeList.years = now.getUTCFullYear() + 1;
             } else {
                return undefined;
             }
