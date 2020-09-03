@@ -39,7 +39,8 @@ function UpdateTime(timeList, timeListDate) {
    const tsNow = Div1000(now.getTime());
    if (timeListDate < tsNow) {
       let dif = tsNow - timeListDate;
-      let difInDate = new Date(dif);
+      let difInDate = new Date(dif * 1000);
+      difInDate.setTime(difInDate.getTime() + difInDate.getTimezoneOffset() * 60 * 1000);
       if (difInDate.getFullYear() > 1970) {
          if (typeof (timeList.years) == 'undefined') {
             timeList.years = now.getFullYear() + difInDate.getFullYear() + 1;
