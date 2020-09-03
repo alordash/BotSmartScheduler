@@ -8,13 +8,12 @@ const { parseDate, ParsedDate, TimeList } = require('@alordash/date-parser');
 
 let pendingSchedules = [];
 
-//#region functions
 /**
- * @param {Number} number 
- * @returns {Number}
+ * @param {Number} x 
+ * @returns {Number} 
  */
-function Div1000(number) {
-   return Math.floor(number / 1000);
+Number.prototype.div = function (x) {
+   return Math.floor(this / x);
 }
 
 /**
@@ -36,7 +35,7 @@ function TimeListIsEmpty(timeList) {
  */
 function UpdateTime(timeList, timeListDate) {
    const now = new Date();
-   const tsNow = Div1000(now.getTime());
+   const tsNow = now.getTime().div(1000);
    if (timeListDate < tsNow) {
       let dif = tsNow - timeListDate;
       let difInDate = new Date(dif * 1000);
@@ -114,9 +113,9 @@ function UpdateTime(timeList, timeListDate) {
  */
 function ProcessParsedDate(parsedDate, tz) {
    let dateValues = parsedDate.valueOf();
-   let target_date = Div1000(dateValues.target_date.getTime());
-   let period_time = Div1000(dateValues.period_time.getTime());
-   let max_date = Div1000(dateValues.max_date.getTime());
+   let target_date = dateValues.target_date.getTime().div(1000);
+   let period_time = dateValues.period_time.getTime().div(1000);
+   let max_date = dateValues.max_date.getTime().div(1000);
    if (!parsedDate.target_date.isOffset) {
       target_date -= tz;
    }
@@ -128,11 +127,11 @@ function ProcessParsedDate(parsedDate, tz) {
       parsedDate.max_date = UpdateTime(parsedDate.max_date, max_date);
    } else {
       let zeroDate = new Date(0);
-      parsedDate.max_date.years = zeroDate.getFullYear();
-      parsedDate.max_date.months = zeroDate.getMonth();
-      parsedDate.max_date.dates = zeroDate.getDate();
-      parsedDate.max_date.hours = zeroDate.getHours();
-      parsedDate.max_date.minutes = zeroDate.getMinutes();
+      parsedDate.max_date.years = zeroDate.getUTCFullYear();
+      parsedDate.max_date.months = zeroDate.getUTCMonth();
+      parsedDate.max_date.dates = zeroDate.getUTCDate();
+      parsedDate.max_date.hours = zeroDate.getUTCHours();
+      parsedDate.max_date.minutes = zeroDate.getUTCMinutes();
    }
    if (typeof (parsedDate.target_date) == 'undefined') {
       return undefined;
@@ -151,8 +150,8 @@ function ProcessParsedDate(parsedDate, tz) {
    }
 }
 
-/**@param {Date} date
- * @returns {String}
+/**@param {Date} date 
+ * @returns {String} 
  */
 function FormDateStringFormat(date) {
    let month = date.getMonth();
@@ -168,7 +167,39 @@ function FormDateStringFormat(date) {
    if (date.getFullYear() != new Date().getFullYear()) {
       year = ` ${date.getFullYear()} г.`;
    }
-   return `${date.getDate()} ${/*constants.monthsRusRoot[month]*/0}${/*constants.monthsRusEnding[month][1]*/0} ${hour}:${minute}${year}`;
+   return `${date.getDate()} ${/*constants.monthsRusRoot[month]*/'month'}${/*constants.monthsRusEnding[month][1]*/'month'} ${hour}:${minute}${year}`;
+}
+
+/**@param {ParsedDate} parsedDate 
+ * @returns {String} 
+ */
+function FormPeriodStringFormat(parsedDate) {
+   let result = '';
+   for(const timeType in parsedDate.period_time) {
+      if(typeof(parsedDate.period_time[timeType]) != 'undefined' && timeType != 'isOffset') {
+         result = parsedDate.period_time[timeType] + ' ' + timeType + ' ' + result;
+      }
+   }
+   return result.trim();
+}
+
+/**@param {Schedule} schedule
+ * @param {ParsedDate} parsedDate 
+ * @returns {String}
+ */
+function FormStringFormatSchedule(schedule, parsedDate) {
+   let target_date = new Date(schedule.target_date);
+   let max_date = new Date(schedule.max_date);
+
+   let until = '';
+   let period = '';
+   if (max_date.getTime() >= Date.now()) {
+      until = '\r\nдо <b>' + FormDateStringFormat(max_date) + '</b>';
+   }
+   if (!TimeListIsEmpty(parsedDate.period_time)) {
+      period = '\r\nкаждые <b>' + FormPeriodStringFormat(parsedDate) + '</b>';
+   }
+   return `"${schedule.text}" <b>${FormDateStringFormat(target_date)}</b>${until}${period}`;
 }
 
 function GetDeletingIDsIndex(chatID, deletingIDs) {
@@ -453,7 +484,7 @@ async function HandleCallbackQuery(ctx, db) {
             username = ctx.from.username;
          }
          let tz = await db.GetUserTZ(ctx.from.id);
-         let target_date = Div1000(Date.now() + global.repeatScheduleTime);
+         let target_date = (Date.now() + global.repeatScheduleTime).div(1000);
          schedule.target_date = target_date;
 
          try {
@@ -548,16 +579,17 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                         if (typeof (pendingSchedules[chatID]) == 'undefined') {
                            pendingSchedules[chatID] = [];
                         }
-                        pendingSchedules[chatID].push(new Schedule(
+                        let newSchedule = new Schedule(
                            chatID,
                            0,
                            parsedDate.string,
                            username,
                            dateParams.target_date,
                            dateParams.period_time,
-                           dateParams.max_date));
+                           dateParams.max_date);
+                        pendingSchedules[chatID].push(newSchedule);
                         count++;
-                        //reply += parsedMessage.answer + `\r\n`;
+                        reply += FormStringFormatSchedule(newSchedule, parsedDate) + `\r\n`;
                      } else {
                         if (!inGroup) {
                            reply += rp.errorScheduling + `\r\n`;
@@ -577,7 +609,6 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
             pendingSchedules[chatID] = [];
          }
          //#endregion
-         reply = 'test';
          if (reply != '') {
             if (shouldWarn) {
                reply += rp.tzWarning;
