@@ -364,61 +364,66 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
          }
          //#endregion
       } else {
-         //#region PARSE SCHEDULE
-         let tz = await db.GetUserTZ(ctx.from.id);
-         let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'false');
+         try {
+            //#region PARSE SCHEDULE
+            let tz = await db.GetUserTZ(ctx.from.id);
+            let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'false');
 
-         let schedule = await db.GetScheduleByText(chatID, parsedMessage.text);
+            let schedule = await db.GetScheduleByText(chatID, parsedMessage.text);
 
-         let schedulesCount = (await db.GetSchedules(chatID)).length;
-         console.log(`schedulesCount = ${schedulesCount}`);
-         let count = 0;
-         let username = 'none';
-         if (typeof (schedule) != 'undefined') {
-            reply += rp.scheduled(parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(schedule.target_date + tz * 1000)));
-         } else {
-            if (count + schedulesCount < global.MaximumCountOfSchedules) {
-               if (typeof (parsedMessage.date) != 'undefined') {
-                  if (chatID[0] == '_') {
-                     username = ctx.from.username;
-                  } else {
-                     await db.AddNewSchedule(new Schedule(chatID, 0, parsedMessage.text, username, parsedMessage.date.getTime(), 0, 0));
-                     count++;
-                  }
-                  reply += parsedMessage.answer + `\r\n`;
-               } else {
-                  if (chatID[0] !== '_') {
-                     reply += parsedMessage.answer + `\r\n`;
-                  }
-               }
-               if (chatID[0] !== '_' && !(await db.HasUserID(ctx.from.id))) {
-                  reply += rp.tzWarning;
-               }
+            let schedulesCount = (await db.GetSchedules(chatID)).length;
+            console.log(`schedulesCount = ${schedulesCount}`);
+            let count = 0;
+            let username = 'none';
+            if (typeof (schedule) != 'undefined') {
+               console.log(`Forming date string with date: ${schedule.target_date}, tz: ${tz} and text :"${schedule.text}"`);
+               reply += rp.scheduled(parsedMessage.text, MiscFunctions.FormDateStringFormat(new Date(schedule.target_date + tz * 1000)));
             } else {
-               reply += rp.exceededLimit(global.MaximumCountOfSchedules);
-            }
-         }
-         //#endregion
-         if (reply != '') {
-            try {
-               if (chatID[0] == '_' && typeof (schedule) === 'undefined' && typeof (parsedMessage.date) != 'undefined') {
-                  if (parsedMessage.text.length < 20) {
-                     let msg = await ctx.replyWithHTML(reply, Extra.markup((m) =>
-                        m.inlineKeyboard([
-                           m.callbackButton(rp.confirmSchedule, `confirm|${username}|${parsedMessage.date.getTime()}|${parsedMessage.text}`),
-                           m.callbackButton(rp.declineSchedule, `delete`)
-                        ]).oneTime()
-                     ));
-                     setTimeout(function (ctx, msg) {
-                        ctx.deleteMessage(msg.chat.id, msg.message.id);
-                     }, repeatScheduleTime, ctx, msg);
+               if (count + schedulesCount < global.MaximumCountOfSchedules) {
+                  if (typeof (parsedMessage.date) != 'undefined') {
+                     if (chatID[0] == '_') {
+                        username = ctx.from.username;
+                     } else {
+                        await db.AddNewSchedule(new Schedule(chatID, 0, parsedMessage.text, username, parsedMessage.date.getTime(), 0, 0));
+                        count++;
+                     }
+                     reply += parsedMessage.answer + `\r\n`;
+                  } else {
+                     if (chatID[0] !== '_') {
+                        reply += parsedMessage.answer + `\r\n`;
+                     }
+                  }
+                  if (chatID[0] !== '_' && !(await db.HasUserID(ctx.from.id))) {
+                     reply += rp.tzWarning;
                   }
                } else {
-                  ctx.replyWithHTML(reply);
+                  reply += rp.exceededLimit(global.MaximumCountOfSchedules);
                }
-            } catch (e) {
-               console.error(e);
             }
+            //#endregion
+            if (reply != '') {
+               try {
+                  if (chatID[0] == '_' && typeof (schedule) === 'undefined' && typeof (parsedMessage.date) != 'undefined') {
+                     if (parsedMessage.text.length < 20) {
+                        let msg = await ctx.replyWithHTML(reply, Extra.markup((m) =>
+                           m.inlineKeyboard([
+                              m.callbackButton(rp.confirmSchedule, `confirm|${username}|${parsedMessage.date.getTime()}|${parsedMessage.text}`),
+                              m.callbackButton(rp.declineSchedule, `delete`)
+                           ]).oneTime()
+                        ));
+                        setTimeout(function (ctx, msg) {
+                           ctx.deleteMessage(msg.chat.id, msg.message.id);
+                        }, repeatScheduleTime, ctx, msg);
+                     }
+                  } else {
+                     ctx.replyWithHTML(reply);
+                  }
+               } catch (e) {
+                  console.error(e);
+               }
+            }
+         } catch (e) {
+            console.error(e);
          }
       }
    }
