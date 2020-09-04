@@ -402,15 +402,17 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
          if (reply != '') {
             try {
                if (chatID[0] == '_' && typeof (schedule) === 'undefined' && typeof (parsedMessage.date) != 'undefined') {
-                  let msg = await ctx.replyWithHTML(reply, Extra.markup((m) =>
-                     m.inlineKeyboard([
-                        m.callbackButton(rp.confirmSchedule, `confirm|${username}|${parsedMessage.date.getTime()}|${parsedMessage.text}`),
-                        m.callbackButton(rp.declineSchedule, `delete`)
-                     ]).oneTime()
-                  ));
-                  setTimeout(function (ctx, msg) {
-                     ctx.deleteMessage(msg.chat.id, msg.message.id);
-                  }, repeatScheduleTime, ctx, msg);
+                  if (parsedMessage.text.length < 20) {
+                     let msg = await ctx.replyWithHTML(reply, Extra.markup((m) =>
+                        m.inlineKeyboard([
+                           m.callbackButton(rp.confirmSchedule, `confirm|${username}|${parsedMessage.date.getTime()}|${parsedMessage.text}`),
+                           m.callbackButton(rp.declineSchedule, `delete`)
+                        ]).oneTime()
+                     ));
+                     setTimeout(function (ctx, msg) {
+                        ctx.deleteMessage(msg.chat.id, msg.message.id);
+                     }, repeatScheduleTime, ctx, msg);
+                  }
                } else {
                   ctx.replyWithHTML(reply);
                }
