@@ -53,7 +53,7 @@ function FormStringFormatSchedule(schedule, parsedDate) {
     return `"${schedule.text}" <b>${FormDateStringFormat(target_date)}</b>${until}${period}`;
 }
 
-exports = {
+module.exports = {
     FormDateStringFormat,
     FormPeriodStringFormat,
     FormStringFormatSchedule
