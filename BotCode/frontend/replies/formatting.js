@@ -1,6 +1,18 @@
 const { ParsedDate } = require('@alordash/date-parser');
 const { Schedule } = require('../../backend/dataBase/db');
 
+/**
+ * @param {TimeList} timeList 
+ * @returns {Boolean} 
+ */
+function TimeListIsEmpty(timeList) {
+   return typeof (timeList.years) == 'undefined'
+      && typeof (timeList.months) == 'undefined'
+      && typeof (timeList.dates) == 'undefined'
+      && typeof (timeList.hours) == 'undefined'
+      && typeof (timeList.minutes) == 'undefined';
+}
+
 /**@param {Date} date 
  * @returns {String} 
  */
@@ -54,6 +66,7 @@ function FormStringFormatSchedule(schedule, parsedDate) {
 }
 
 module.exports = {
+    TimeListIsEmpty,
     FormDateStringFormat,
     FormPeriodStringFormat,
     FormStringFormatSchedule

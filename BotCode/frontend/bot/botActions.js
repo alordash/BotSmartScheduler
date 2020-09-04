@@ -19,18 +19,6 @@ Number.prototype.div = function (x) {
 
 /**
  * @param {TimeList} timeList 
- * @returns {Boolean} 
- */
-function TimeListIsEmpty(timeList) {
-   return typeof (timeList.years) == 'undefined'
-      && typeof (timeList.months) == 'undefined'
-      && typeof (timeList.dates) == 'undefined'
-      && typeof (timeList.hours) == 'undefined'
-      && typeof (timeList.minutes) == 'undefined';
-}
-
-/**
- * @param {TimeList} timeList 
  * @param {Number} timeListDate 
  * @returns {TimeList} 
  */
@@ -39,7 +27,19 @@ function UpdateTime(timeList, timeListDate) {
    const tsNow = now.getTime().div(1000);
    if (timeListDate < tsNow) {
       let dif = tsNow - timeListDate;
-      let difInDate = new Date(dif * 1000);
+      let difInDate = new Date(tsNow * 1000 + dif * 1000);
+      dif = dif.div(60);
+      if (dif < 60) {
+         timeList.hours++;
+      } else if (dif < 1440) {
+         timeList.dates++;
+      } else if (now.getUTCMonth() - difInDate.getUTCMonth() < 1) {
+         timeList.months++;
+      } else if (now.getUTCFullYear() - difInDate.getUTCFullYear() < 1) {
+         timeList.years++;
+      } else {
+         timeList.years += 1 + now.getUTCFullYear() - difInDate.getUTCFullYear();
+      }/*
       if (difInDate.getFullYear() > 1970) {
          if (typeof (timeList.years) == 'undefined') {
             timeList.years = now.getUTCFullYear() + difInDate.getUTCFullYear() + 1;
