@@ -1,18 +1,7 @@
 const { ParsedDate } = require('@alordash/date-parser');
 const { Schedule } = require('../../backend/dataBase/db');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
-
-/**
- * @param {TimeList} timeList 
- * @returns {Boolean} 
- */
-function TimeListIsEmpty(timeList) {
-   return typeof (timeList.years) == 'undefined'
-      && typeof (timeList.months) == 'undefined'
-      && typeof (timeList.dates) == 'undefined'
-      && typeof (timeList.hours) == 'undefined'
-      && typeof (timeList.minutes) == 'undefined';
-}
+const { TimeListIsEmpty } = require('../../backend/timeProcessing');
 
 /**@param {Date} date 
  * @returns {String} 
