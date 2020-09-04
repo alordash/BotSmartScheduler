@@ -1,36 +1,37 @@
 const { ParsedDate } = require('@alordash/date-parser');
 const { Schedule } = require('../../backend/dataBase/db');
+const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 
 /**
  * @param {TimeList} timeList 
  * @returns {Boolean} 
  */
 function TimeListIsEmpty(timeList) {
-   return typeof (timeList.years) == 'undefined'
-      && typeof (timeList.months) == 'undefined'
-      && typeof (timeList.dates) == 'undefined'
-      && typeof (timeList.hours) == 'undefined'
-      && typeof (timeList.minutes) == 'undefined';
+    return typeof (timeList.years) == 'undefined'
+        && typeof (timeList.months) == 'undefined'
+        && typeof (timeList.dates) == 'undefined'
+        && typeof (timeList.hours) == 'undefined'
+        && typeof (timeList.minutes) == 'undefined';
 }
 
 /**@param {Date} date 
  * @returns {String} 
  */
 function FormDateStringFormat(date) {
-   let month = date.getMonth();
-   let hour = date.getHours().toString(10),
-      minute = date.getMinutes().toString(10);
-   if (hour.length <= 1) {
-      hour = '0' + hour;
-   }
-   if (minute.length <= 1) {
-      minute = '0' + minute;
-   }
-   let year = '';
-   if (date.getFullYear() != new Date().getFullYear()) {
-      year = ` ${date.getFullYear()} г.`;
-   }
-   return `${date.getDate()} ${/*constants.monthsRusRoot[month]*/'month'}${/*constants.monthsRusEnding[month][1]*/'month'} ${hour}:${minute}${year}`;
+    let month = date.getMonth();
+    let hour = date.getHours().toString(10),
+        minute = date.getMinutes().toString(10);
+    if (hour.length <= 1) {
+        hour = '0' + hour;
+    }
+    if (minute.length <= 1) {
+        minute = '0' + minute;
+    }
+    let year = '';
+    if (date.getFullYear() != new Date().getFullYear()) {
+        year = ` ${date.getFullYear()} г.`;
+    }
+    return `${date.getDate()} ${/*constants.monthsRusRoot[month]*/'month'}${/*constants.monthsRusEnding[month][1]*/'month'} ${hour}:${minute}${year}`;
 }
 
 /**@param {ParsedDate} parsedDate 
@@ -39,7 +40,7 @@ function FormDateStringFormat(date) {
 function FormPeriodStringFormat(parsedDate) {
     let result = '';
     for (const timeType in parsedDate.period_time) {
-        if (typeof (parsedDate.period_time[timeType]) != 'undefined' && timeType != 'isOffset') {
+        if (typeof (parsedDate.period_time[timeType]) != 'undefined' && isTimeType(timeType)) {
             result = parsedDate.period_time[timeType] + ' ' + timeType + ' ' + result;
         }
     }

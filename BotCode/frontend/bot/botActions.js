@@ -5,7 +5,7 @@ const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { parseString } = require('@alordash/parse-word-to-number');
 const { parseDate, ParsedDate, TimeList } = require('@alordash/date-parser');
-const { FormStringFormatSchedule } = require('../replies/formatting');
+const { TimeListIsEmpty, FormStringFormatSchedule, FormDateStringFormat } = require('../replies/formatting');
 
 let pendingSchedules = [];
 
@@ -26,82 +26,25 @@ function UpdateTime(timeList, timeListDate) {
    const now = new Date();
    const tsNow = now.getTime().div(1000);
    if (timeListDate < tsNow) {
+      if(timeList.hours <= 12 && !timeList.isFixed) {
+         timeList.hours = (timeList.hours + 12) % 24;
+         timeListDate += 12 * 60 * 1000;
+      }
       let dif = tsNow - timeListDate;
       let difInDate = new Date(tsNow * 1000 + dif * 1000);
+      let monthDif = now.getUTCMonth() - difInDate.getUTCMonth();
+      let yearDif = now.getUTCFullYear() - difInDate.getUTCFullYear();
       dif = dif.div(60);
-      if (dif < 60) {
-         timeList.hours++;
-      } else if (dif < 1440) {
-         timeList.dates++;
-      } else if (now.getUTCMonth() - difInDate.getUTCMonth() < 1) {
-         timeList.months++;
-      } else if (now.getUTCFullYear() - difInDate.getUTCFullYear() < 1) {
-         timeList.years++;
+      if (dif < 60 && typeof(timeList.hours) == 'undefined') {
+         timeList.hours = now.getUTCHours() + 1;
+      } else if (dif < 1440 && typeof(timeList.dates) == 'undefined') {
+         timeList.dates = now.getUTCDate() + 1;
+      } else if (monthDif < 1 && yearDif == 0 && typeof(timeList.months) == 'undefined') {
+         timeList.months = now.getUTCMonth() + 1;
+      } else if (yearDif < 1 && typeof(timeList.years) == 'undefined') {
+         timeList.years = now.getUTCFullYear() + 1;
       } else {
-         timeList.years += 1 + now.getUTCFullYear() - difInDate.getUTCFullYear();
-      }/*
-      if (difInDate.getFullYear() > 1970) {
-         if (typeof (timeList.years) == 'undefined') {
-            timeList.years = now.getUTCFullYear() + difInDate.getUTCFullYear() + 1;
-            return timeList;
-         } else {
-            return undefined;
-         }
-      } else if (difInDate.getUTCMonth() > 0) {
-         if (typeof (timeList.months) == 'undefined') {
-            timeList.months = now.getUTCMonth() + difInDate.getUTCMonth() + 1;
-            return timeList;
-         } else {
-            if (typeof (timeList.years) == 'undefined') {
-               timeList.years = now.getUTCFullYear() + 1;
-            }
-            return undefined;
-         }
-      } else if (difInDate.getUTCDate() > 1) {
-         if (typeof (timeList.dates) == 'undefined') {
-            timeList.dates = now.getUTCDate() + difInDate.getUTCDate() + 1;
-            return timeList;
-         } else {
-            if (typeof (timeList.months) == 'undefined') {
-               timeList.months = now.getUTCMonth() + 1;
-            } else if (typeof (timeList.years) == 'undefined') {
-               timeList.years = now.getUTCFullYear() + 1;
-            } else {
-               return undefined;
-            }
-         }
-      } else if (difInDate.getUTCHours() > 0) {
-         if (typeof (timeList.hours) == 'undefined') {
-            timeList.hours = now.getUTCHours() + difInDate.getUTCHours() + 1;
-            return timeList;
-         } else {
-            if (typeof (timeList.dates) == 'undefined') {
-               timeList.dates = now.getUTCDate() + 1;
-            } else if (typeof (timeList.months) == 'undefined') {
-               timeList.months = now.getUTCMonth() + 1;
-            } else if (typeof (timeList.years) == 'undefined') {
-               timeList.years = now.getUTCFullYear() + 1;
-            } else {
-               return undefined;
-            }
-         }
-      } else if (difInDate.getUTCMinutes() > 0) {
-         if (typeof (timeList.minutes) == 'undefined') {
-            timeList.minutes = now.getUTCMinutes() + difInDate.getUTCMinutes() + 1;
-            return timeList;
-         } else {
-            if (typeof (timeList.hours) == 'undefined') {
-               timeList.hours = now.getUTCHours() + 1;
-            } else if (typeof (timeList.dates) == 'undefined') {
-               timeList.dates = now.getUTCDate() + 1;
-            } else if (typeof (timeList.months) == 'undefined') {
-               timeList.months = now.getUTCMonth() + 1;
-            } else if (typeof (timeList.years) == 'undefined') {
-               timeList.years = now.getUTCFullYear() + 1;
-            } else {
-               return undefined;
-            }
-         }
+         return undefined;
       }
    }
    return timeList;
@@ -188,7 +131,8 @@ async function LoadSchedulesList(chatID, tsOffset, db) {
          if (schedule.username != 'none') {
             scheduledBy = ` by <b>${schedule.username}</b>`;
          }
-         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000))}</b>\r\n`;
+         const now = new Date();
+         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000 + now.getTimezoneOffset() * 60 * 1000))}</b>\r\n`;
       }
       return answer;
    } else {
