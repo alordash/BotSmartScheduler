@@ -1,7 +1,7 @@
 const { ParsedDate } = require('@alordash/date-parser');
-const { Schedule } = require('../../backend/dataBase/db');
+const { Schedule } = require('../backend/dataBase/db');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
-const { TimeListIsEmpty } = require('../../backend/timeProcessing');
+const { TimeListIsEmpty } = require('../backend/timeProcessing');
 
 /**@param {Date} date 
  * @returns {String} 

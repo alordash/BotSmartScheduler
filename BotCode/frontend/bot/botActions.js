@@ -5,7 +5,7 @@ const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { parseString } = require('@alordash/parse-word-to-number');
 const { parseDate, ParsedDate, TimeList } = require('@alordash/date-parser');
-const { FormStringFormatSchedule, FormDateStringFormat } = require('../replies/formatting');
+const { FormStringFormatSchedule, FormDateStringFormat } = require('../formatting');
 const { ProcessParsedDate } = require('../../backend/timeProcessing');
 
 let pendingSchedules = [];
