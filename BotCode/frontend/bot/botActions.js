@@ -206,7 +206,7 @@ async function CheckExpiredSchedules(bot, db) {
          if (schedule.username != 'none') {
             mentionUser = ' @' + schedule.username;
          }
-         pendingSchedules[chatID] = schedule.text;
+         pendingSchedules[chatID] = schedule;
          let language = await db.GetUserLanguage(+chatID);
          const replies = LoadReplies(language);
          try {
@@ -315,7 +315,7 @@ async function HandleCallbackQuery(ctx, db) {
    const replies = LoadReplies(language);
    switch (data) {
       case 'repeat':
-         let text = pendingSchedules[chatID];
+         let text = pendingSchedules[chatID].text;
          let schedule = await db.GetScheduleByText(chatID, text);
          let tz = await db.GetUserTZ(ctx.from.id);
          let target_date = (Date.now() + global.repeatScheduleTime).div(1000);
