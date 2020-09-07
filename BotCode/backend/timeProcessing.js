@@ -1,4 +1,5 @@
 const { ParsedDate, TimeList } = require('@alordash/date-parser');
+const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 
 /**
  * @param {TimeList} timeList 
@@ -10,6 +11,20 @@ function TimeListIsEmpty(timeList) {
       && typeof (timeList.dates) == 'undefined'
       && typeof (timeList.hours) == 'undefined'
       && typeof (timeList.minutes) == 'undefined';
+}
+
+/**@param {TimeList} source 
+ * @param {TimeList} destination 
+ * @returns {TimeList} 
+ */
+function FillTimeList(source, destination) {
+   for (const timeProperty in source) {
+      if (isTimeType(timeProperty)
+         && typeof (destination[timeProperty]) == 'undefined') {
+         destination[timeProperty] = source[timeProperty];
+      }
+   }
+   return destination;
 }
 
 /**
@@ -54,15 +69,17 @@ function ProcessParsedDate(parsedDate, tz) {
    let dateValues = parsedDate.valueOf();
    let target_date = dateValues.target_date.getTime().div(1000);
    let period_time = dateValues.period_time.getTime().div(1000);
-   let max_date = dateValues.max_date.getTime().div(1000);
+   let max_date;
    if (!parsedDate.target_date.isOffset) {
       target_date -= tz;
    }
-   if (!parsedDate.max_date.isOffset) {
-      max_date -= tz;
-   }
    parsedDate.target_date = UpdateTime(parsedDate.target_date, target_date);
    if (!TimeListIsEmpty(parsedDate.max_date)) {
+      parsedDate.max_date = FillTimeList(parsedDate.target_date, parsedDate.max_date);
+      max_date = parsedDate.valueOf().max_date.getTime().div(1000);
+      if (!parsedDate.max_date.isOffset) {
+         max_date -= tz;
+      }
       parsedDate.max_date = UpdateTime(parsedDate.max_date, max_date);
    } else {
       let zeroDate = new Date(0);
