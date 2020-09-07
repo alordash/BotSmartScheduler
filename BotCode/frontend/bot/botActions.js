@@ -347,7 +347,7 @@ async function HandleCallbackQuery(ctx, db) {
    switch (data) {
       case 'repeat':
          let text = ctx.callbackQuery.message.text.match(/"[\S\s]+"/);
-         text = text.substring(1, text.length - 1);
+         text = text[0].substring(1, text[0].length - 1);
          let username = 'none';
          if (chatID[0] === '_') {
             username = ctx.from.username;
