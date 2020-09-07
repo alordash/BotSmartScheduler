@@ -111,7 +111,7 @@ exports.InitActions = function (bot, db) {
                let chatID = botActions.FormatChatId(ctx.chat.id);
                let tz = await db.GetUserTZ(ctx.from.id);
                try {
-                  return await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db, filename));
+                  return await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db, language));
                } catch (e) {
                   console.error(e);
                }

@@ -5,7 +5,7 @@ const { Languages, LoadReplies } = require('../replies/replies');
 const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { parseString } = require('@alordash/parse-word-to-number');
-const { parseDate, ParsedDate, TimeList } = require('@alordash/date-parser');
+const { parseDate } = require('@alordash/date-parser');
 const { FormStringFormatSchedule, FormDateStringFormat } = require('../formatting');
 const { ProcessParsedDate } = require('../../backend/timeProcessing');
 
@@ -67,7 +67,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
             scheduledBy = ` by <b>${schedule.username}</b>`;
          }
          const now = new Date();
-         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000 + now.getTimezoneOffset() * 60 * 1000))}</b>\r\n`;
+         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000 + now.getTimezoneOffset() * 60 * 1000), language)}</b>\r\n`;
       }
       return answer;
    } else {
@@ -311,22 +311,19 @@ async function HandleCallbackQuery(ctx, db) {
    console.log("got callback_query");
    const data = ctx.callbackQuery.data;
    let chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
-   const replies = LoadReplies(ctx.from.language_code);
+   const language = await db.GetUserLanguage(ctx.from.id);
+   const replies = LoadReplies(language);
    switch (data) {
       case 'repeat':
-         let text = ctx.callbackQuery.message.text;
+         let text = pendingSchedules[chatID];
          let schedule = await db.GetScheduleByText(chatID, text);
-         let username = 'none';
-         if (chatID[0] == '_') {
-            username = ctx.from.username;
-         }
          let tz = await db.GetUserTZ(ctx.from.id);
          let target_date = (Date.now() + global.repeatScheduleTime).div(1000);
          schedule.target_date = target_date;
 
          try {
             await db.AddNewSchedule(schedule);
-            ctx.editMessageText(text + '\r\n' + replies.remindSchedule + '<b>' + FormDateStringFormat(new Date((target_date + tz) * 1000)) + '</b>', { parse_mode: 'HTML' });
+            ctx.editMessageText(text + '\r\n' + replies.remindSchedule + '<b>' + FormDateStringFormat(new Date((target_date + tz) * 1000), language) + '</b>', { parse_mode: 'HTML' });
          } catch (e) {
             console.error(e);
          }
@@ -401,7 +398,6 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
          let parsedDates = parseDate(parseString(msgText, 1), 1, prevalence);
          let count = 1;
          let shouldWarn = false;
-         //         let parsedMessage = await DateParser.ParseDate(msgText, tz, process.env.ENABLE_LOGS != 'false');
          if (parsedDates.length == 0) {
             if (!inGroup) {
                reply += replies.errorScheduling;
@@ -409,10 +405,14 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
          } else {
             let schedulesCount = (await db.GetSchedules(chatID)).length;
             console.log(`schedulesCount = ${schedulesCount}`);
+            let i = 1;
             for (let parsedDate of parsedDates) {
+               if(parsedDates.length > 1) {
+                  reply += `${i}. `;
+               }
                let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
                if (typeof (schedule) != 'undefined') {
-                  reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(schedule.target_date + tz * 1000)), ctx.message.from.language_code);
+                  reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(schedule.target_date + tz * 1000), language), ctx.message.from.language_code);
                } else {
                   if (count + schedulesCount < global.MaximumCountOfSchedules) {
                      let dateParams = ProcessParsedDate(parsedDate, tz);
@@ -430,7 +430,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                            dateParams.max_date);
                         pendingSchedules[chatID].push(newSchedule);
                         count++;
-                        reply += FormStringFormatSchedule(newSchedule, parsedDate) + `\r\n`;
+                        reply += FormStringFormatSchedule(newSchedule, parsedDate, language) + `\r\n`;
                      } else {
                         if (!inGroup) {
                            reply += replies.errorScheduling + `\r\n`;
@@ -443,6 +443,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                      reply += replies.shouldRemove + '\r\n' + replies.maximumSchedulesCount + ` <b>${global.MaximumCountOfSchedules}</b>.`;
                   }
                }
+               i++;
             }
          }
          if (!inGroup && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {

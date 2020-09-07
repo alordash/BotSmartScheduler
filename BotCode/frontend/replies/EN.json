@@ -30,5 +30,19 @@
     "tzDefined": "🌐 Your time zone: GMT",
     "tzCancel": "❌ Cancel",
     "tzCancelReponse": "🚫 Cancelled.",
-    "tzCancelWarning": "❗️ Please note that defining time zone increases time accuracy."
+    "tzCancelWarning": "❗️ Please note that defining time zone increases time accuracy.",
+    "months": [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    ]
 }

@@ -6,9 +6,16 @@ const Languages = Object.freeze({
     EN: "en"
 });
 
-/**@param {Languages} langPack */
-function LoadReplies(langPack) {
-    return require(`${__dirname}\\${langPack}.json`);
+/**@param {Languages} language */
+function LoadReplies(language) {
+    return require(`${__dirname}\\${language}.json`);
+}
+
+/**@param {Languages} language
+ * @returns {Array.<String>}
+ */
+function GetMonthsNames(language) {
+    return LoadReplies(language).months;
 }
 
 /**@param {Languages} language */
@@ -27,7 +34,7 @@ function MainKeyboard(language) {
  */
 function Deleted(str, newline, language) {
     const replies = LoadReplies(language);
-    return `${replies.deleted} ${str}.${newline === false ? replies.showList : ``}`;
+    return `${replies.deleted} ${str}. ${newline === false ? replies.showList : ``}`;
 }
 
 /**
@@ -89,9 +96,10 @@ function Scheduled(text, myFormattedDate, language) {
 }
 
 module.exports = {
-    MainKeyboard,
     Languages,
     LoadReplies,
+    GetMonthsNames,
+    MainKeyboard,
     Deleted,
     TzDetermined,
     TzLocation,
