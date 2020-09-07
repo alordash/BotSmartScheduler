@@ -26,6 +26,8 @@ const dbOptions = {
 let db = new dbManagement(dbOptions);
 
 (async function Initialization() {
+   const now = new Date();
+   console.log('now.getTimezoneOffset() :>> ', now.getTimezoneOffset());
    let constants = require('./constants.json');
    for (let [key, value] of Object.entries(constants)) {
       global[key] = value;

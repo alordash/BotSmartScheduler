@@ -84,18 +84,18 @@ function ProcessParsedDate(parsedDate, tz) {
    let target_date = dateValues.target_date.getTime().div(1000);
    let period_time = dateValues.period_time.getTime().div(1000);
    let max_date;
-   if (!parsedDate.target_date.isOffset) {
+/*   if (!parsedDate.target_date.isOffset) {
       console.log(`target_date is not offset, target_date :>> ${target_date}, will be: ${target_date - tz}, tz: ${tz}`);
       target_date -= tz;
-   }
+   }*/
    parsedDate.target_date = UpdateTime(parsedDate.target_date, target_date);
    if (!TimeListIsEmpty(parsedDate.max_date)) {
       parsedDate.max_date = FillTimeList(parsedDate.target_date, parsedDate.max_date);
       max_date = parsedDate.valueOf().max_date.getTime().div(1000);
-      if (!parsedDate.max_date.isOffset) {
+/*      if (!parsedDate.max_date.isOffset) {
          console.log(`max_date is not offset, max_date :>> ${max_date}, will be: ${max_date - tz}, tz: ${tz}`);
          max_date -= tz;
-      }
+      }*/
       parsedDate.max_date = UpdateTime(parsedDate.max_date, max_date);
    } else {
       let zeroDate = new Date(0);
