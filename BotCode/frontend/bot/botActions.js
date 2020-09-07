@@ -353,13 +353,13 @@ async function HandleCallbackQuery(ctx, db) {
             username = ctx.from.username;
          }
          let schedulesCount = await db.GetSchedules(chatID).length;
-         let target_date = (Date.now() + global.repeatScheduleTime).div(1000);
+         let target_date = Date.now() + global.repeatScheduleTime;
          let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0);
          let tz = await db.GetUserTZ(ctx.from.id);
 
          try {
             await db.AddSchedule(schedule);
-            ctx.editMessageText(text + '\r\n' + replies.remindSchedule + '<b>' + FormDateStringFormat(new Date((target_date + tz) * 1000), language) + '</b>', { parse_mode: 'HTML' });
+            ctx.editMessageText(text + '\r\n' + replies.remindSchedule + ' <b>' + FormDateStringFormat(new Date(target_date + tz * 1000), language) + '</b>', { parse_mode: 'HTML' });
          } catch (e) {
             console.error(e);
          }
