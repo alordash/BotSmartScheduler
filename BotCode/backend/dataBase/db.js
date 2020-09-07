@@ -55,7 +55,7 @@ class User {
 }
 
 class dbManagement {
-   defaultUserLanguage = 'RU';
+   defaultUserLanguage = 'en';
    defaultUserTimezone = 3 * 3600;
    constructor(options) {
       this.pool = new Pool(options);
@@ -243,11 +243,23 @@ class dbManagement {
    /**@param {Number} id
     * @param {Number} tz
     */
-   async AddUserTZ(id, tz) {
+   async SetUserTz(id, tz) {
       return await this.Query(
          `UPDATE userids 
          SET tz = ${tz}
-         WHERE id = ${id};`);
+         WHERE id = ${id};`
+      );
+   }
+
+   /**@param {Number} id 
+    * @param {String} language 
+    */
+   async SetUserLanguage(id, language) {
+      return await this.Query(
+         `UPDATE userids
+         SET lang = '${language}'
+         WHERE id = ${id};`
+      );
    }
 
    /**@param {Number} id
@@ -259,6 +271,18 @@ class dbManagement {
          return parseInt(res.rows[0].tz);
       } else {
          return this.defaultUserTimezone;
+      }
+   }
+
+   /**@param {Number} id 
+    * @returns {String} 
+    */
+   async GetUserLanguage(id) {
+      let res = await this.Query(`SELECT * FROM userids where id = ${id}`);
+      if (typeof (res) != 'undefined' && res.rows.length > 0) {
+         return res.rows[0].lang;
+      } else {
+         return this.defaultUserLanguage;
       }
    }
 
@@ -314,6 +338,7 @@ class dbManagement {
             WHERE id = ${user.id};`);
       }
    }
+
    async InitDB() {
       const checkSchedules = await this.Query(`SELECT table_name 
       FROM information_schema.tables

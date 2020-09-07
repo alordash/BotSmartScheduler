@@ -6,7 +6,7 @@
     "alreadyScheduled": "already scheduled at:",
     "showList": "Show list: /list",
     "cleared": "Cleared all schedules.",
-    "deleted": "Deleted",
+    "deleted": "Deleted schedules",
     "invalidDelete": "Invalid use of command.",
     "listIsEmpty": "List of plans is empty.",
     "shouldRemove": "⚠️ Please remove some of your schedules.",
