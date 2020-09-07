@@ -206,7 +206,6 @@ async function CheckExpiredSchedules(bot, db) {
          if (schedule.username != 'none') {
             mentionUser = ' @' + schedule.username;
          }
-         pendingSchedules[chatID] = schedule;
          let language = await db.GetUserLanguage(+chatID);
          const replies = LoadReplies(language);
          try {
@@ -309,17 +308,27 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
  */
 async function HandleCallbackQuery(ctx, db) {
    console.log("got callback_query");
+   try {
+      ctx.answerCbQuery();
+   } catch (e) {
+      console.error(e);
+   }
    const data = ctx.callbackQuery.data;
    let chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
    const language = await db.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
    switch (data) {
       case 'repeat':
-         let text = pendingSchedules[chatID].text;
-         let schedule = await db.GetScheduleByText(chatID, text);
-         let tz = await db.GetUserTZ(ctx.from.id);
+         let text = ctx.message.text.match(/"[\S\s]+"/);
+         text = text.substring(1, text.length - 1);
+         let username = 'none';
+         if(chatID[0] === '_') {
+            username = ctx.from.username;
+         }
+         let schedulesCount = await db.GetSchedules(chatID).length;
          let target_date = (Date.now() + global.repeatScheduleTime).div(1000);
-         schedule.target_date = target_date;
+         let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0);
+         let tz = await db.GetUserTZ(ctx.from.id);
 
          try {
             await db.AddNewSchedule(schedule);
@@ -348,11 +357,6 @@ async function HandleCallbackQuery(ctx, db) {
 
       default:
          break;
-   }
-   try {
-      ctx.answerCbQuery();
-   } catch (e) {
-      console.error(e);
    }
 }
 
