@@ -1,6 +1,20 @@
 const { ParsedDate, TimeList } = require('@alordash/date-parser');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 
+/**@param {TimeList} tl 
+ * @param {Date} date 
+ * @returns {TimeList} 
+ */
+function TimeListFromDate(tl, date) {
+   tl.dates = date.getUTCDate();
+   tl.hours = date.getUTCHours();
+   tl.minutes = date.getUTCMinutes();
+   tl.months = date.getUTCMonth();
+   tl.seconds = 0;
+   tl.years = date.getUTCFullYear();
+   return tl;
+}
+
 /**
  * @param {TimeList} timeList 
  * @returns {Boolean} 
@@ -107,6 +121,7 @@ function ProcessParsedDate(parsedDate, tz) {
 }
 
 module.exports = {
+   TimeListFromDate,
    TimeListIsEmpty,
    UpdateTime,
    ProcessParsedDate

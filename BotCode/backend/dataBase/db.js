@@ -79,7 +79,7 @@ class dbManagement {
    /**@param {Array.<Schedule>} newSchedules
     * @param {String} chatID
     */
-   async AddNewSchedules(chatID, newSchedules) {
+   async AddSchedules(chatID, newSchedules) {
       let queryString = `INSERT INTO schedules VALUES `;
       let schedules = await this.GetSchedules(chatID);
       let id = schedules.length + 1;
@@ -96,13 +96,24 @@ class dbManagement {
    }
 
    /**@param {Schedule} schedule */
-   async AddNewSchedule(schedule) {
+   async AddSchedule(schedule) {
       if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') schedule.username = 'none';
       let schedules = await this.GetSchedules(schedule.chatid);
       let id = schedules.length + 1;
       console.log(`Target_date = ${schedule.target_date}`);
       await this.Query(`INSERT INTO schedules VALUES ('${schedule.chatid}', ${id}, '${schedule.text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date})`);
       console.log(`Added "${schedule.text}" to ${schedule.target_date} from chat "${schedule.chatid}"`);
+   }
+
+   /**@param {Number} id 
+    * @param {Number} target_date 
+    */
+   async SetScheduleTargetDate(id, target_date) {
+      await this.Query(
+         `UPDATE schedules 
+      SET target_date = ${target_date}
+      WHERE id = ${id};`
+      );
    }
 
    /**@param {String} chatID
@@ -323,7 +334,8 @@ class dbManagement {
             SET target_date = ${+schedule.ts},
             period_time = 0,
             max_date = 0
-            WHERE id = ${schedule.id};`);
+            WHERE id = ${schedule.id};`
+         );
       }
    }
 

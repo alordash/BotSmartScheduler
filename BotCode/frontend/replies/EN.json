@@ -17,6 +17,7 @@
     "remindSchedule": "🔔 Remind set to",
     "confirmSchedule": "Confirm ✅",
     "declineSchedule": "Decline ⛔️",
+    "everyTime": "Repeat period: ",
     "tzWarning": "⚠️ Please select your time zone by typing <b>/tz</b>",
     "tzConfiguration": "🛠 To configure time zone you can either:",
     "tzViaLoc": "1. Let us know your location.",
@@ -44,5 +45,12 @@
         "October",
         "November",
         "December"
-    ]
+    ],
+    "timeTypes": {
+        "minutes": "minutes",
+        "hours": "hours",
+        "dates": "dates",
+        "months": "months",
+        "years": "years"
+    }
 }

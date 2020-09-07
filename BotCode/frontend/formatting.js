@@ -2,7 +2,7 @@ const { ParsedDate } = require('@alordash/date-parser');
 const { Schedule } = require('../backend/dataBase/db');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 const { TimeListIsEmpty } = require('../backend/timeProcessing');
-const { Language, GetMonthsNames } = require('./replies/replies');
+const { Language, GetMonthsNames, LoadReplies } = require('./replies/replies');
 
 /**@param {Date} date 
  * @param {Language} language 
@@ -26,13 +26,23 @@ function FormDateStringFormat(date, language) {
 }
 
 /**@param {ParsedDate} parsedDate 
+ * @param {Language} language 
  * @returns {String} 
  */
-function FormPeriodStringFormat(parsedDate) {
+function FormPeriodStringFormat(parsedDate, language) {
    let result = '';
+   const replies = LoadReplies(language);
    for (const timeType in parsedDate.period_time) {
       if (typeof (parsedDate.period_time[timeType]) != 'undefined' && isTimeType(timeType)) {
-         result = parsedDate.period_time[timeType] + ' ' + timeType + ' ' + result;
+         let num = parsedDate.period_time[timeType];
+         if (timeType == 'years') {
+            num -= 1970;
+         } else if (timeType == 'dates') {
+            num--;
+         }
+         if (num > 0) {
+            result = `${num} (${replies.timeTypes[timeType]}) ${result}`;
+         }
       }
    }
    return result.trim();
@@ -46,6 +56,7 @@ function FormPeriodStringFormat(parsedDate) {
 function FormStringFormatSchedule(schedule, parsedDate, language) {
    let target_date = new Date(schedule.target_date);
    let max_date = new Date(schedule.max_date);
+   const replies = LoadReplies(language);
 
    let until = '';
    let period = '';
@@ -53,9 +64,13 @@ function FormStringFormatSchedule(schedule, parsedDate, language) {
       until = '\r\nдо <b>' + FormDateStringFormat(max_date, language) + '</b>';
    }
    if (!TimeListIsEmpty(parsedDate.period_time)) {
-      period = '\r\nкаждые <b>' + FormPeriodStringFormat(parsedDate) + '</b>';
+      period = `\r\n${replies.everyTime} <b>${FormPeriodStringFormat(parsedDate, language)}</b>`;
    }
-   return `"${schedule.text}" <b>${FormDateStringFormat(target_date, language)}</b>${until}${period}`;
+   let username = '';
+   if (schedule.username != 'none') {
+      username = ` (<b>${schedule.username}</b>)`;
+   }
+   return `"${schedule.text}"${username} <b>${FormDateStringFormat(target_date, language)}</b>${until}${period}`;
 }
 
 module.exports = {

@@ -5,9 +5,9 @@ const { Languages, LoadReplies } = require('../replies/replies');
 const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { parseString } = require('@alordash/parse-word-to-number');
-const { parseDate } = require('@alordash/date-parser');
+const { parseDate, TimeList } = require('@alordash/date-parser');
 const { FormStringFormatSchedule, FormDateStringFormat } = require('../formatting');
-const { ProcessParsedDate } = require('../../backend/timeProcessing');
+const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
 
 let pendingSchedules = [];
 
@@ -66,8 +66,19 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
          if (schedule.username != 'none') {
             scheduledBy = ` by <b>${schedule.username}</b>`;
          }
+         schedule.target_date = +schedule.target_date;
+         schedule.period_time = +schedule.period_time;
+         schedule.max_date = +schedule.max_date;
          const now = new Date();
-         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000 + now.getTimezoneOffset() * 60 * 1000), language)}</b>\r\n`;
+         let period = {
+            period_time: new TimeList()
+         };
+         let period_date = new Date(schedule.period_time);
+         if(period_date.getTime().div(1000) >= 60) {
+            period.period_time = TimeListFromDate(period.period_time, period_date);
+         }
+         answer += `/${schedule.id}. ${FormStringFormatSchedule(schedule, period, language)}\r\n`;
+//         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000 + now.getTimezoneOffset() * 60 * 1000), language)}</b>\r\n`;
       }
       return answer;
    } else {
@@ -222,12 +233,33 @@ async function CheckExpiredSchedules(bot, db) {
          } catch (e) {
             console.error(e);
          }
+         let shouldDelete = true;
+         const nowSeconds = Date.now();
+         schedule.target_date = +schedule.target_date;
+         schedule.period_time = +schedule.period_time;
+         schedule.max_date = +schedule.max_date;
+         if (schedule.period_time >= 60 && schedule.max_date >= 60) {
+            if (nowSeconds < schedule.max_date) {
+               shouldDelete = false;
+               await db.SetScheduleTargetDate(schedule.id, nowSeconds + schedule.period_time);
+            }
+         } else if (schedule.period_time >= 60 && schedule.max_date < 60) {
+            shouldDelete = false;
+            await db.SetScheduleTargetDate(schedule.id, nowSeconds + schedule.period_time);
+         } else if (schedule.period_time < 60 && schedule.max_date >= 60) {
+            if (nowSeconds < schedule.max_date) {
+               shouldDelete = false;
+               await db.SetScheduleTargetDate(schedule.id, schedule.max_date);
+            }
+         }
 
-         let index = GetDeletingIDsIndex(schedule.chatid, deletingIDs);
-         if (index === false) {
-            deletingIDs.push({ s: `id = ${schedule.id} OR `, chatID: schedule.chatid });
-         } else {
-            deletingIDs[index].s += `id = ${schedule.id} OR `;
+         if (shouldDelete) {
+            let index = GetDeletingIDsIndex(schedule.chatid, deletingIDs);
+            if (index === false) {
+               deletingIDs.push({ s: `id = ${schedule.id} OR `, chatID: schedule.chatid });
+            } else {
+               deletingIDs[index].s += `id = ${schedule.id} OR `;
+            }
          }
       }
       console.log('CHECKED, removing and reordering');
@@ -331,7 +363,7 @@ async function HandleCallbackQuery(ctx, db) {
          let tz = await db.GetUserTZ(ctx.from.id);
 
          try {
-            await db.AddNewSchedule(schedule);
+            await db.AddSchedule(schedule);
             ctx.editMessageText(text + '\r\n' + replies.remindSchedule + '<b>' + FormDateStringFormat(new Date((target_date + tz) * 1000), language) + '</b>', { parse_mode: 'HTML' });
          } catch (e) {
             console.error(e);
@@ -340,7 +372,7 @@ async function HandleCallbackQuery(ctx, db) {
       case 'confirm':
          try {
             if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-               await db.AddNewSchedules(chatID, pendingSchedules[chatID]);
+               await db.AddSchedules(chatID, pendingSchedules[chatID]);
             }
          } catch (e) {
             console.error(e);
@@ -453,7 +485,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
             }
          }
          if (!inGroup && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-            await db.AddNewSchedules(chatID, pendingSchedules[chatID]);
+            await db.AddSchedules(chatID, pendingSchedules[chatID]);
             pendingSchedules[chatID] = [];
          }
          //#endregion
