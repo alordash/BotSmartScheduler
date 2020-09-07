@@ -322,7 +322,7 @@ async function HandleCallbackQuery(ctx, db) {
          let text = ctx.message.text.match(/"[\S\s]+"/);
          text = text.substring(1, text.length - 1);
          let username = 'none';
-         if(chatID[0] === '_') {
+         if (chatID[0] === '_') {
             username = ctx.from.username;
          }
          let schedulesCount = await db.GetSchedules(chatID).length;
@@ -402,6 +402,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
          let parsedDates = parseDate(parseString(msgText, 1), 1, prevalence);
          let count = 1;
          let shouldWarn = false;
+         let alreadyScheduled = false;
          if (parsedDates.length == 0) {
             if (!inGroup) {
                reply += replies.errorScheduling;
@@ -411,12 +412,13 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
             console.log(`schedulesCount = ${schedulesCount}`);
             let i = 1;
             for (let parsedDate of parsedDates) {
-               if(parsedDates.length > 1) {
+               if (parsedDates.length > 1) {
                   reply += `${i}. `;
                }
                let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
                if (typeof (schedule) != 'undefined') {
                   reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(schedule.target_date + tz * 1000), language), ctx.message.from.language_code);
+                  alreadyScheduled = true;
                } else {
                   if (count + schedulesCount < global.MaximumCountOfSchedules) {
                      let dateParams = ProcessParsedDate(parsedDate, tz);
@@ -461,12 +463,16 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
             }
             try {
                if (inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
-                  let msg = await ctx.replyWithHTML(reply, Extra.markup((m) =>
-                     m.inlineKeyboard([
-                        m.callbackButton(replies.confirmSchedule, `confirm`),
-                        m.callbackButton(replies.declineSchedule, `delete`)
-                     ]).oneTime()
-                  ));
+                  let keyboard;
+                  if (!alreadyScheduled || parsedDates.length > 1) {
+                     keyboard = Extra.markup((m) =>
+                        m.inlineKeyboard([
+                           m.callbackButton(replies.confirmSchedule, `confirm`),
+                           m.callbackButton(replies.declineSchedule, `delete`)
+                        ]).oneTime()
+                     )
+                  }
+                  let msg = await ctx.replyWithHTML(reply, keyboard);
                   setTimeout(function (ctx, msg) {
                      if (typeof (msg) != 'undefined') {
                         let chatID = FormatChatId(msg.chat.id);
