@@ -56,6 +56,7 @@ function FormPeriodStringFormat(parsedDate, language) {
  */
 function FormStringFormatSchedule(schedule, parsedDate, tz, language) {
    let target_date = new Date(schedule.target_date + tz * 1000);
+   console.log(`FORMATTING target_date: ${schedule.target_date}, tz: ${tz}, will be: ${schedule.target_date + tz * 1000}`);
    let max_date = new Date(schedule.max_date + tz * 1000);
    const replies = LoadReplies(language);
 
