@@ -1,10 +1,13 @@
+const fs = require('fs');
+const path = require('path');
 const request = require('request-promise');
+const { Languages, LoadReplies } = require('../replies/replies');
 const rp = require('../replies/replies');
 const botActions = require('./botActions');
-const MiscFunctions = require('../../backend/dateParser/miscFunctions');
 const { Composer } = require('telegraf');
 const { dbManagement, User } = require('../../backend/dataBase/db');
 const { speechToText } = require('../../backend/stt/stt');
+const { pathToFileURL } = require('url');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 
 let tzPendingConfirmationUsers = [];
@@ -15,17 +18,20 @@ let tzPendingConfirmationUsers = [];
  */
 exports.InitActions = function (bot, db) {
    bot.start(ctx => {
-      let options = rp.mainKeyboard;
+      const replies = LoadReplies(Languages.general);
+      let options = rp.MainKeyboard(Languages.EN);
       options['disable_web_page_preview'] = true;
       try {
-         ctx.replyWithHTML(rp.welcome + rp.commands, options);
+         ctx.replyWithHTML(replies.start, options);
       } catch (e) {
          console.error(e);
       }
    });
-   bot.help(ctx => {
+   bot.help(async ctx => {
+      let language = await db.GetUserLanguage(ctx.from.id);
+      const replies = LoadReplies(language);
       try {
-         ctx.replyWithHTML(rp.commands, rp.mainKeyboard);
+         ctx.replyWithHTML(replies.commands, rp.MainKeyboard(language));
       } catch (e) {
          console.error(e);
       }
@@ -33,85 +39,112 @@ exports.InitActions = function (bot, db) {
 
    bot.command('list', async ctx => {
       let tz = await db.GetUserTZ(ctx.from.id);
+      let language = await db.GetUserLanguage(ctx.from.id);
       let chatID = botActions.FormatChatId(ctx.chat.id);
-      await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db));
+      await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db, language));
    });
    bot.command('del', async ctx => {
+      let language = await db.GetUserLanguage(ctx.from.id);
+      ctx.from.language_code = language;
       await botActions.DeleteSchedules(ctx, db);
    });
    bot.command('tz', async ctx => {
       try {
+         let language = await db.GetUserLanguage(ctx.from.id);
+         ctx.from.language_code = language;
          await botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
       } catch (e) {
          console.error(e);
       }
    });
    bot.command('kb', async ctx => {
+      let language = await db.GetUserLanguage(ctx.from.id);
+      const replies = LoadReplies(language);
       try {
-         ctx.replyWithHTML(rp.showKeyboard, rp.mainKeyboard);
+         ctx.replyWithHTML(replies.showKeyboard, rp.MainKeyboard(language));
       } catch (e) {
          console.error(e);
       }
    });
-
-   bot.hears(rp.tzUseLocation, ctx => {
-      try {
-         ctx.replyWithHTML(rp.tzUseLocationResponse);
-      } catch (e) {
-         console.error(e);
+   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('\\')) + '\\replies');
+   for (filename of repliesFiles) {
+      if (path.extname(filename) == '.json') {
+         const language = path.basename(filename, '.json');
+         const replies = LoadReplies(language);
+         if (typeof (replies.tzUseLocation) != 'undefined') {
+            bot.hears(replies.tzUseLocation, ctx => {
+               try {
+                  ctx.replyWithHTML(replies.tzUseLocationResponse);
+               } catch (e) {
+                  console.error(e);
+               }
+            });
+         }
+         if (typeof (replies.tzTypeManually) != 'undefined') {
+            bot.hears(replies.tzTypeManually, ctx => {
+               if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
+                  tzPendingConfirmationUsers.push(ctx.from.id);
+               }
+               try {
+                  ctx.replyWithHTML(replies.tzTypeManuallyReponse);
+               } catch (e) {
+                  console.error(e);
+               }
+            });
+         }
+         if (typeof (replies.tzCancel) != 'undefined') {
+            bot.hears(replies.tzCancel, async ctx => {
+               tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
+               let reply = replies.tzCancelReponse;
+               if (!await db.HasUserID(ctx.from.id)) {
+                  reply += '\r\n' + replies.tzCancelWarning;
+               }
+               try {
+                  ctx.replyWithHTML(reply, rp.MainKeyboard(language));
+               } catch (e) {
+                  console.error(e);
+               }
+            });
+         }
+         if (typeof (replies.showListAction) != 'undefined') {
+            bot.hears(replies.showListAction, async ctx => {
+               let chatID = botActions.FormatChatId(ctx.chat.id);
+               let tz = await db.GetUserTZ(ctx.from.id);
+               try {
+                  return await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db, language));
+               } catch (e) {
+                  console.error(e);
+               }
+            });
+         }
+         if (typeof (replies.changeTimeZoneAction) != 'undefined') {
+            bot.hears(replies.changeTimeZoneAction, async ctx => {
+               return await botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
+            });
+         }
       }
-   });
-   bot.hears(rp.tzTypeManually, ctx => {
-      if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
-         tzPendingConfirmationUsers.push(ctx.from.id);
-      }
-      try {
-         ctx.replyWithHTML(rp.tzTypeManuallyReponse);
-      } catch (e) {
-         console.error(e);
-      }
-   });
-   bot.hears(rp.tzCancel, async ctx => {
-      tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-      let reply = rp.tzCancelReponse;
-      if (!await db.HasUserID(ctx.from.id)) {
-         reply += '\r\n' + rp.tzCancelWarning;
-      }
-      try {
-         ctx.replyWithHTML(reply, rp.mainKeyboard);
-      } catch (e) {
-         console.error(e);
-      }
-   });
-   bot.hears(rp.showListAction, async ctx => {
-      let chatID = botActions.FormatChatId(ctx.chat.id);
-      let tz = await db.GetUserTZ(ctx.from.id);
-      try {
-         return await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db));
-      } catch (e) {
-         console.error(e);
-      }
-   });
-   bot.hears(rp.changeTimeZoneAction, async ctx => {
-      return await botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
-   });
+   }
 
    bot.action('tz cancel', async ctx => {
+      let language = await db.GetUserLanguage(ctx.from.id);
+      const replies = LoadReplies(language);
       tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-      let text = rp.tzCancelReponse;
+      let text = rpreplies.tzCancelReponse;
       if (!await db.HasUserID(ctx.from.id)) {
-         text += '\r\n' + rp.tzCancelWarning;
+         text += '\r\n' + replies.tzCancelWarning;
       }
       try {
          ctx.editMessageText('...');
          await ctx.answerCbQuery();
-         await ctx.replyWithHTML(text, rp.mainKeyboard);
+         await ctx.replyWithHTML(text, rp.MainKeyboard(language));
          await ctx.deleteMessage();
       } catch (e) {
          console.error(e);
       }
    });
    bot.on('location', async ctx => {
+      let language = await db.GetUserLanguage(ctx.from.id);
+      const replies = LoadReplies(language);
       let location = ctx.message.location;
       try {
          let tz = JSON.parse(await request(`http://api.geonames.org/timezoneJSON?lat=${location.latitude}&lng=${location.longitude}&username=alordash`));
@@ -123,10 +156,10 @@ exports.InitActions = function (bot, db) {
          if (!await db.HasUserID(userId)) {
             await db.AddUser(new User(userId, ts, db.defaultUserLanguage));
          } else {
-            await db.AddUserTZ(userId, ts);
+            await db.SetUserTz(userId, ts);
          }
          try {
-            ctx.replyWithHTML(rp.tzLocation(rawOffset), rp.mainKeyboard);
+            ctx.replyWithHTML(replies.tzDefined + '<b>' + rp.TzLocation(rawOffset) + '</b>', rp.MainKeyboard(language));
          } catch (e) {
             console.error(e);
          }
@@ -134,7 +167,11 @@ exports.InitActions = function (bot, db) {
          console.error(e);
       }
    });
-   bot.on('callback_query', async (ctx) => await botActions.HandleCallbackQuery(ctx, db));
+   bot.on('callback_query', async (ctx) => {
+      let language = await db.GetUserLanguage(ctx.from.id);
+      ctx.from.language_code = language;
+      await botActions.HandleCallbackQuery(ctx, db)
+   });
 
    if (!!process.env.YC_FOLDER_ID && !!process.env.YC_API_KEY) {
       bot.on('voice', async ctx => {
@@ -152,6 +189,8 @@ exports.InitActions = function (bot, db) {
             }
             if (!!text) {
                ctx.message.text = text;
+               let language = await db.GetUserLanguage(ctx.from.id);
+               ctx.from.language_code = language;
                botActions.HandleTextMessage(ctx, db, tzPendingConfirmationUsers);
             }
          } else {

@@ -55,7 +55,7 @@ class User {
 }
 
 class dbManagement {
-   defaultUserLanguage = 'RU';
+   defaultUserLanguage = 'en';
    defaultUserTimezone = 3 * 3600;
    constructor(options) {
       this.pool = new Pool(options);
@@ -76,10 +76,12 @@ class dbManagement {
       }
    }
 
-   /**@param {Array.<Schedule>} newSchedules */
-   async AddNewSchedules(newSchedules) {
+   /**@param {Array.<Schedule>} newSchedules
+    * @param {String} chatID
+    */
+   async AddSchedules(chatID, newSchedules) {
       let queryString = `INSERT INTO schedules VALUES `;
-      let schedules = await this.GetSchedules(newSchedules[0].chatID);
+      let schedules = await this.GetSchedules(chatID);
       let id = schedules.length + 1;
       for (let schedule of newSchedules) {
          if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') {
@@ -94,13 +96,24 @@ class dbManagement {
    }
 
    /**@param {Schedule} schedule */
-   async AddNewSchedule(schedule) {
+   async AddSchedule(schedule) {
       if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') schedule.username = 'none';
       let schedules = await this.GetSchedules(schedule.chatid);
       let id = schedules.length + 1;
       console.log(`Target_date = ${schedule.target_date}`);
       await this.Query(`INSERT INTO schedules VALUES ('${schedule.chatid}', ${id}, '${schedule.text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date})`);
       console.log(`Added "${schedule.text}" to ${schedule.target_date} from chat "${schedule.chatid}"`);
+   }
+
+   /**@param {Number} id 
+    * @param {Number} target_date 
+    */
+   async SetScheduleTargetDate(id, target_date) {
+      await this.Query(
+         `UPDATE schedules 
+      SET target_date = ${target_date}
+      WHERE id = ${id};`
+      );
    }
 
    /**@param {String} chatID
@@ -241,11 +254,23 @@ class dbManagement {
    /**@param {Number} id
     * @param {Number} tz
     */
-   async AddUserTZ(id, tz) {
+   async SetUserTz(id, tz) {
       return await this.Query(
          `UPDATE userids 
          SET tz = ${tz}
-         WHERE id = ${id};`);
+         WHERE id = ${id};`
+      );
+   }
+
+   /**@param {Number} id 
+    * @param {String} language 
+    */
+   async SetUserLanguage(id, language) {
+      return await this.Query(
+         `UPDATE userids
+         SET lang = '${language}'
+         WHERE id = ${id};`
+      );
    }
 
    /**@param {Number} id
@@ -257,6 +282,18 @@ class dbManagement {
          return parseInt(res.rows[0].tz);
       } else {
          return this.defaultUserTimezone;
+      }
+   }
+
+   /**@param {Number} id 
+    * @returns {String} 
+    */
+   async GetUserLanguage(id) {
+      let res = await this.Query(`SELECT * FROM userids where id = ${id}`);
+      if (typeof (res) != 'undefined' && res.rows.length > 0) {
+         return res.rows[0].lang;
+      } else {
+         return this.defaultUserLanguage;
       }
    }
 
@@ -297,7 +334,8 @@ class dbManagement {
             SET target_date = ${+schedule.ts},
             period_time = 0,
             max_date = 0
-            WHERE id = ${schedule.id};`);
+            WHERE id = ${schedule.id};`
+         );
       }
    }
 
@@ -312,6 +350,7 @@ class dbManagement {
             WHERE id = ${user.id};`);
       }
    }
+
    async InitDB() {
       const checkSchedules = await this.Query(`SELECT table_name 
       FROM information_schema.tables
