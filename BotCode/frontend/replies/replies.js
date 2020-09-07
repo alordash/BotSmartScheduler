@@ -8,7 +8,7 @@ const Languages = Object.freeze({
 
 /**@param {Languages} language */
 function LoadReplies(language) {
-    return require(`${__dirname}\\${language}.json`);
+    return require(`${__dirname}/${language}.json`);
 }
 
 /**@param {Languages} language
