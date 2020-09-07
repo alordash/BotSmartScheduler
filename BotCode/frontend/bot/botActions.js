@@ -77,7 +77,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
          if (period_date.getTime().div(1000) >= 60) {
             period.period_time = TimeListFromDate(period.period_time, period_date);
          }
-         answer += `/${schedule.id}. ${FormStringFormatSchedule(schedule, period, language)}\r\n`;
+         answer += `/${schedule.id}. ${FormStringFormatSchedule(schedule, period, tsOffset, language)}\r\n`;
          //         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000 + now.getTimezoneOffset() * 60 * 1000), language)}</b>\r\n`;
       }
       return answer;
@@ -468,7 +468,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                            dateParams.max_date);
                         pendingSchedules[chatID].push(newSchedule);
                         count++;
-                        reply += FormStringFormatSchedule(newSchedule, parsedDate, language) + `\r\n`;
+                        reply += FormStringFormatSchedule(newSchedule, parsedDate, tz, language) + `\r\n`;
                      } else {
                         if (!inGroup) {
                            reply += replies.errorScheduling + `\r\n`;

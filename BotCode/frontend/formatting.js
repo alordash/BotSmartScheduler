@@ -50,12 +50,13 @@ function FormPeriodStringFormat(parsedDate, language) {
 
 /**@param {Schedule} schedule
  * @param {ParsedDate} parsedDate 
+ * @param {Number} tz 
  * @param {Language} language 
  * @returns {String}
  */
-function FormStringFormatSchedule(schedule, parsedDate, language) {
-   let target_date = new Date(schedule.target_date);
-   let max_date = new Date(schedule.max_date);
+function FormStringFormatSchedule(schedule, parsedDate, tz, language) {
+   let target_date = new Date(schedule.target_date + tz * 1000);
+   let max_date = new Date(schedule.max_date + tz * 1000);
    const replies = LoadReplies(language);
 
    let until = '';
