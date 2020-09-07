@@ -340,18 +340,13 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
  */
 async function HandleCallbackQuery(ctx, db) {
    console.log("got callback_query");
-   try {
-      ctx.answerCbQuery();
-   } catch (e) {
-      console.error(e);
-   }
    const data = ctx.callbackQuery.data;
    let chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
    const language = await db.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
    switch (data) {
       case 'repeat':
-         let text = ctx.message.text.match(/"[\S\s]+"/);
+         let text = ctx.callbackQuery.message.text.match(/"[\S\s]+"/);
          text = text.substring(1, text.length - 1);
          let username = 'none';
          if (chatID[0] === '_') {
@@ -389,6 +384,11 @@ async function HandleCallbackQuery(ctx, db) {
 
       default:
          break;
+   }
+   try {
+      ctx.answerCbQuery();
+   } catch (e) {
+      console.error(e);
    }
 }
 
