@@ -31,11 +31,24 @@ function TimeListIsEmpty(timeList) {
  * @param {TimeList} destination 
  * @returns {TimeList} 
  */
-function FillTimeList(source, destination) {
+function CopyTimeList(source, destination) {
    for (const timeProperty in source) {
       if (isTimeType(timeProperty)
          && typeof (destination[timeProperty]) == 'undefined') {
          destination[timeProperty] = source[timeProperty];
+      }
+   }
+   return destination;
+}
+
+/**@param {TimeList} source 
+ * @param {TimeList} destination 
+ * @returns {TimeList} 
+ */
+function AddTimeList(source, destination) {
+   for (const timeProperty in source) {
+      if (typeof (source[timeProperty]) == 'number') {
+         destination[timeProperty] += source[timeProperty];
       }
    }
    return destination;
@@ -88,6 +101,12 @@ function ProcessParsedDate(parsedDate, tz) {
    const minutes = Math.floor((tz % 3600) / 60);
    console.log('hours :>> ', hours);
    console.log('minutes :>> ', minutes);
+   if (TimeListIsEmpty(parsedDate.target_date) && !TimeListIsEmpty(parsedDate.period_time)) {
+      parsedDate.target_date = TimeListFromDate(parsedDate.target_date, dateValues.target_date);
+      parsedDate.target_date = AddTimeList(parsedDate.period_time, parsedDate.target_date);
+      parsedDate.target_date.isOffset = true;
+      target_date += period_time;
+   }
    if (!parsedDate.target_date.isOffset) {
       console.log(`target_date is not offset, target_date :>> ${target_date}, will be: ${target_date - tz}, tz: ${tz}`);
       parsedDate.target_date.hours -= hours;
@@ -96,7 +115,7 @@ function ProcessParsedDate(parsedDate, tz) {
    }
    parsedDate.target_date = UpdateTime(parsedDate.target_date, target_date);
    if (!TimeListIsEmpty(parsedDate.max_date)) {
-      parsedDate.max_date = FillTimeList(parsedDate.target_date, parsedDate.max_date);
+      parsedDate.max_date = CopyTimeList(parsedDate.target_date, parsedDate.max_date);
       max_date = parsedDate.valueOf().max_date.getTime().div(1000);
       if (!parsedDate.max_date.isOffset) {
          console.log(`max_date is not offset, max_date :>> ${max_date}, will be: ${max_date - tz}, tz: ${tz}`);
@@ -107,11 +126,7 @@ function ProcessParsedDate(parsedDate, tz) {
       parsedDate.max_date = UpdateTime(parsedDate.max_date, max_date);
    } else {
       let zeroDate = new Date(0);
-      parsedDate.max_date.years = zeroDate.getUTCFullYear();
-      parsedDate.max_date.months = zeroDate.getUTCMonth();
-      parsedDate.max_date.dates = zeroDate.getUTCDate();
-      parsedDate.max_date.hours = zeroDate.getUTCHours();
-      parsedDate.max_date.minutes = zeroDate.getUTCMinutes();
+      parsedDate.max_date = TimeListFromDate(parsedDate.max_date, zeroDate);
    }
    if (typeof (parsedDate.target_date) == 'undefined') {
       return undefined;
