@@ -37,8 +37,6 @@ function FormPeriodStringFormat(parsedDate, language) {
          let num = parsedDate.period_time[timeType];
          if (timeType == 'years') {
             num -= 1970;
-         } else if (timeType == 'dates') {
-            num--;
          }
          if (num > 0) {
             result = `${num} (${replies.timeTypes[timeType]}) ${result}`;
