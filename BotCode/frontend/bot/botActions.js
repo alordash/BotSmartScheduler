@@ -62,23 +62,18 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
       let answer = ``;
       schedules.sort((a, b) => a.id - b.id);
       for (let schedule of schedules) {
-         let scheduledBy = '';
-         if (schedule.username != 'none') {
-            scheduledBy = ` by <b>${schedule.username}</b>`;
-         }
          schedule.target_date = +schedule.target_date;
          schedule.period_time = +schedule.period_time;
          schedule.max_date = +schedule.max_date;
-         const now = new Date();
          let period = {
             period_time: new TimeList()
          };
          let period_date = new Date(schedule.period_time);
-         if (period_date.getTime().div(1000) >= 60) {
+         period_date.setUTCDate(period_date.getUTCDate() - 1);
+         if (schedule.period_time >= 60) {
             period.period_time = TimeListFromDate(period.period_time, period_date);
          }
          answer += `/${schedule.id}. ${FormStringFormatSchedule(schedule, period, tsOffset, language)}\r\n`;
-         //         answer += `/${schedule.id}. "${schedule.text}"${scheduledBy}: <b>${FormDateStringFormat(new Date(+schedule.target_date + tsOffset * 1000 + now.getTimezoneOffset() * 60 * 1000), language)}</b>\r\n`;
       }
       return answer;
    } else {
