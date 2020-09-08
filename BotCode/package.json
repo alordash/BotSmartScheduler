@@ -18,7 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@alordash/date-parser": "^1.1.6",
+    "@alordash/date-parser": "^1.1.8",
     "@alordash/parse-word-to-number": "^2.1.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
