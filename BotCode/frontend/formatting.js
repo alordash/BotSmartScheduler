@@ -72,7 +72,11 @@ function FormStringFormatSchedule(schedule, parsedDate, tz, language) {
    if (schedule.username != 'none') {
       username = ` (<b>${schedule.username}</b>)`;
    }
-   return `"${schedule.text}"${username} <b>${FormDateStringFormat(target_date, language)}</b>${until}${period}`;
+   let divider = ' ';
+   if(until != '' || period != '') {
+      divider = '\r\n';
+   }
+   return `"${schedule.text}"${username}${divider}<b>${FormDateStringFormat(target_date, language)}</b>${until}${period}`;
 }
 
 module.exports = {
