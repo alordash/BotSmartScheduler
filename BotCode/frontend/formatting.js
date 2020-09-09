@@ -25,34 +25,35 @@ function FormDateStringFormat(date, language) {
    return `${date.getDate()} ${GetMonthsNames(language)[month]} ${hour}:${minute}${year}`;
 }
 
-/**@param {ParsedDate} parsedDate 
+/**@param {Number} period_time 
  * @param {Language} language 
  * @returns {String} 
  */
-function FormPeriodStringFormat(parsedDate, language) {
+function FormPeriodStringFormat(period_time, language) {
    let result = '';
    const replies = LoadReplies(language);
-   for (const timeType in parsedDate.period_time) {
-      if (typeof (parsedDate.period_time[timeType]) != 'undefined' && isTimeType(timeType)) {
-         let num = parsedDate.period_time[timeType];
-         if (timeType == 'years') {
-            num -= 1970;
-         }
-         if (num > 0) {
-            result = `${num} (${replies.timeTypes[timeType]}) ${result}`;
-         }
-      }
+   const minutes = Math.floor((period_time % 3600) / 60);
+   const hours = Math.floor((period_time % (24 * 3600)) / 3600);
+   const days = Math.floor(period_time / (24 * 3600));
+   if (minutes > 0) {
+      result = `${minutes} (${replies.timeTypes.minutes}) ${result}`;
+   }
+   if (hours > 0) {
+      result = `${hours} (${replies.timeTypes.hours}) ${result}`;
+   }
+   if (days > 0) {
+      result = `${days} (${replies.timeTypes.dates}) ${result}`;
    }
    return result.trim();
 }
 
 /**@param {Schedule} schedule
- * @param {ParsedDate} parsedDate 
+ * @param {Number} period_time 
  * @param {Number} tz 
  * @param {Language} language 
  * @returns {String}
  */
-function FormStringFormatSchedule(schedule, parsedDate, tz, language) {
+function FormStringFormatSchedule(schedule, period_time, tz, language) {
    let target_date = new Date(schedule.target_date + tz * 1000);
    console.log(`FORMATTING target_date: ${schedule.target_date}, tz: ${tz}, will be: ${schedule.target_date + tz * 1000}`);
    let max_date = new Date(schedule.max_date + tz * 1000);
@@ -63,15 +64,15 @@ function FormStringFormatSchedule(schedule, parsedDate, tz, language) {
    if (max_date.getTime() >= Date.now()) {
       until = '\r\nдо <b>' + FormDateStringFormat(max_date, language) + '</b>';
    }
-   if (!TimeListIsEmpty(parsedDate.period_time)) {
-      period = `\r\n${replies.everyTime} <b>${FormPeriodStringFormat(parsedDate, language)}</b>`;
+   if (period_time >= 60) {
+      period = `\r\n${replies.everyTime} <b>${FormPeriodStringFormat(period_time, language)}</b>`;
    }
    let username = '';
    if (schedule.username != 'none') {
       username = ` (<b>${schedule.username}</b>)`;
    }
    let divider = ' ';
-   if(until != '' || period != '') {
+   if (until != '' || period != '') {
       divider = '\r\n';
    }
    return `"${schedule.text}"${username}${divider}<b>${FormDateStringFormat(target_date, language)}</b>${until}${period}`;
