@@ -6,12 +6,12 @@ const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
  * @returns {TimeList} 
  */
 function TimeListFromDate(tl, date) {
-   tl.dates = date.getUTCDate();
-   tl.hours = date.getUTCHours();
-   tl.minutes = date.getUTCMinutes();
-   tl.months = date.getUTCMonth();
+   tl.dates = date.getDate();
+   tl.hours = date.getHours();
+   tl.minutes = date.getMinutes();
+   tl.months = date.getMonth();
    tl.seconds = 0;
-   tl.years = date.getUTCFullYear();
+   tl.years = date.getFullYear();
    return tl;
 }
 
