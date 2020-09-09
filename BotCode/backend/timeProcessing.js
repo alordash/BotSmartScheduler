@@ -2,6 +2,19 @@ const { ParsedDate, TimeList } = require('@alordash/date-parser');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 
 /**@param {TimeList} tl 
+ * @returns {TimeList} 
+ */
+function FillMinutes(tl) {
+   if (typeof (tl.hours) != 'undefined'
+      && typeof (tl.minutes) == 'undefined'
+      && !tl.isFixed
+      && !tl.isOffset) {
+      tl.minutes = 0;
+   }
+   return tl;
+}
+
+/**@param {TimeList} tl 
  * @param {Date} date 
  * @returns {TimeList} 
  */
@@ -117,6 +130,8 @@ function ProcessParsedDate(parsedDate, tz) {
    const minutes = Math.floor((tz % 3600) / 60);
    console.log('hours :>> ', hours);
    console.log('minutes :>> ', minutes);
+   parsedDate.target_date = FillMinutes(parsedDate.target_date);
+   parsedDate.max_date = FillMinutes(parsedDate.max_date);
    if (TimeListIsEmpty(parsedDate.target_date) && !TimeListIsEmpty(parsedDate.period_time)) {
       parsedDate.target_date = TimeListFromDate(parsedDate.target_date, dateValues.target_date);
       parsedDate.target_date = AddTimeList(parsedDate.period_time, parsedDate.target_date);
