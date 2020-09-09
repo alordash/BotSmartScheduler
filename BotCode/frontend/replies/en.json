@@ -12,6 +12,7 @@
     "shouldRemove": "⚠️ Please remove some of your schedules.",
     "maximumSchedulesCount": "Maximum count of schedules:",
     "errorScheduling": "Can not schedule for this date.",
+    "emptyString": "Empty reminder entered.",
     "showKeyboard": "Opened menu.",
     "repeatSchedule": "🔔 Remind in 5 minutes",
     "remindSchedule": "🔔 Remind set to",

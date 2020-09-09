@@ -442,24 +442,26 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                   if (count + schedulesCount < global.MaximumCountOfSchedules) {
                      let dateParams = ProcessParsedDate(parsedDate, tz);
                      if (typeof (dateParams) != 'undefined') {
-                        if (typeof (pendingSchedules[chatID]) == 'undefined') {
-                           pendingSchedules[chatID] = [];
+                        if (parsedDate.string.length > 0) {
+                           if (typeof (pendingSchedules[chatID]) == 'undefined') {
+                              pendingSchedules[chatID] = [];
+                           }
+                           let newSchedule = new Schedule(
+                              chatID,
+                              0,
+                              parsedDate.string,
+                              username,
+                              dateParams.target_date,
+                              dateParams.period_time,
+                              dateParams.max_date);
+                           pendingSchedules[chatID].push(newSchedule);
+                           count++;
+                           reply += FormStringFormatSchedule(newSchedule, dateParams.period_time.div(1000), tz, language) + `\r\n`;
+                        } else if (!inGroup) {
+                           reply += replies.emptyString + '\r\n';
                         }
-                        let newSchedule = new Schedule(
-                           chatID,
-                           0,
-                           parsedDate.string,
-                           username,
-                           dateParams.target_date,
-                           dateParams.period_time,
-                           dateParams.max_date);
-                        pendingSchedules[chatID].push(newSchedule);
-                        count++;
-                        reply += FormStringFormatSchedule(newSchedule, dateParams.period_time.div(1000), tz, language) + `\r\n`;
-                     } else {
-                        if (!inGroup) {
-                           reply += replies.errorScheduling + `\r\n`;
-                        }
+                     } else if (!inGroup) {
+                        reply += replies.errorScheduling + '\r\n';
                      }
                      if (!inGroup && !(await db.HasUserID(ctx.from.id))) {
                         shouldWarn = true;
