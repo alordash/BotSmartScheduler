@@ -7,7 +7,6 @@ const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 function FillMinutes(tl) {
    if (typeof (tl.hours) != 'undefined'
       && typeof (tl.minutes) == 'undefined'
-      && !tl.isFixed
       && !tl.isOffset) {
       tl.minutes = 0;
    }
