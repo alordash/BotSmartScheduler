@@ -50,8 +50,8 @@
     "timeTypes": {
         "minutes": "минуты",
         "hours": "часы",
-        "dates": "днеи",
+        "dates": "дни",
         "months": "месяцы",
-        "years": "года"
+        "years": "годы"
     }
 }

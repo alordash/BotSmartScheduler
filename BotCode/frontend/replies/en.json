@@ -50,7 +50,7 @@
     "timeTypes": {
         "minutes": "minutes",
         "hours": "hours",
-        "dates": "dates",
+        "dates": "days",
         "months": "months",
         "years": "years"
     }
