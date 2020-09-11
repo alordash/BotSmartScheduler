@@ -18,6 +18,7 @@
     "remindSchedule": "🔔 Remind set to",
     "confirmSchedule": "Confirm ✅",
     "declineSchedule": "Decline ⛔️",
+    "until": "until",
     "everyTime": "Repeat period: ",
     "tzWarning": "⚠️ Please select your time zone by typing <b>/tz</b>",
     "tzConfiguration": "🛠 To configure time zone you can either:",
