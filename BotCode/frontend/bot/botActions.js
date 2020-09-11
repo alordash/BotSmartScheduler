@@ -388,6 +388,8 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
    let chatID = FormatChatId(ctx.chat.id)
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
+   const language = DetermineLanguage(msgText);
+   ctx.from.language_code = language;
    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
       ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers);
    } else {
@@ -399,7 +401,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
             await db.RemoveScheduleById(chatID, scheduleId);
             await db.ReorderSchedules(chatID);
             try {
-               ctx.replyWithHTML(rp.Deleted(scheduleId.toString(10), false, ctx.message.from.language_code));
+               ctx.replyWithHTML(rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code));
             } catch (e) {
                console.error(e);
             }
@@ -407,8 +409,6 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
          //#endregion
       } else {
          //#region PARSE SCHEDULE
-         const language = DetermineLanguage(msgText);
-         ctx.from.language_code = language;
          await db.SetUserLanguage(ctx.from.id, language);
          const replies = LoadReplies(language);
          let tz = await db.GetUserTZ(ctx.from.id);
