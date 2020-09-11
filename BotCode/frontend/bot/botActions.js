@@ -228,15 +228,15 @@ async function CheckExpiredSchedules(bot, db) {
          if (schedule.period_time >= 60 && schedule.max_date >= 60) {
             if (nowSeconds < schedule.max_date) {
                shouldDelete = false;
-               await db.SetScheduleTargetDate(schedule.id, nowSeconds + schedule.period_time);
+               await db.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
             }
          } else if (schedule.period_time >= 60 && schedule.max_date < 60) {
             shouldDelete = false;
-            await db.SetScheduleTargetDate(schedule.id, nowSeconds + schedule.period_time);
+            await db.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
          } else if (schedule.period_time < 60 && schedule.max_date >= 60) {
             if (nowSeconds < schedule.max_date) {
                shouldDelete = false;
-               await db.SetScheduleTargetDate(schedule.id, schedule.max_date);
+               await db.SetScheduleTargetDate(schedule.chatid, schedule.id, schedule.max_date);
             }
          }
 

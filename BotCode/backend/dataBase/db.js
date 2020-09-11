@@ -105,14 +105,16 @@ class dbManagement {
       console.log(`Added "${schedule.text}" to ${schedule.target_date} from chat "${schedule.chatid}"`);
    }
 
-   /**@param {Number} id 
+   /**@param {Number} chatID 
+    * @param {Number} id 
     * @param {Number} target_date 
     */
-   async SetScheduleTargetDate(id, target_date) {
+   async SetScheduleTargetDate(chatID, id, target_date) {
       await this.Query(
          `UPDATE schedules 
       SET target_date = ${target_date}
-      WHERE id = ${id};`
+      WHERE ChatID = '${chatID}'
+      AND id = ${id};`
       );
    }
 
