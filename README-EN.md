@@ -4,7 +4,7 @@
 
 - [Версия на русском языке](README.md)
 
-## Currently bot recognizes the time written only in Russian.
+## Bot understands English and Russian languages
 
 If you need fast and handy tool to schedule your plans, Smart Scheduler Bot is the right choice.
 
@@ -16,13 +16,17 @@ If you need fast and handy tool to schedule your plans, Smart Scheduler Bot is t
 Just type task with required expiration time and Smart Scheduler will automatically find scheduling date and what task to schedule in your message.
 Smart Scheduler will send you notification when particular task's time expires.
 
-You do not need to follow specified date format, Smart Scheduler understands most of human date formats (e.g. «через X минут», «без пятнадцати десять», «послезавтра пол первого»).
 
 ## Features
 
-Smart Scheduler can store tasks with _minute precision_.  
+You do not need to follow specified date format, Smart Scheduler understands most of human date formats (e.g. «in 5 minutes, «at 5 minutes to 10 pm», «after tomorrow in half past 1»).  
+Also it's not necessary to write perfectly. Bot can understand what you meant to say even **in words with mistakes** (e.g. «in twinty minuts» -> *«in 20 minutes»*).  
+You can make multiple reminders in one message by dividing each with dot, comma or word "**and**".  
+  
+Smart Scheduler can store tasks with *minute precision*.  
+Smart Scheduler can generate schedules from **voice messages**.  
+Smart Scheduler supports recurring reminders (e.g. «every 5 minutes») and also supports time limits for them (e.g. «every 5 minutes until 20 hours»).  
 Smart Scheduler stores tasks **separately** for every chat and can work in conversations.  
-Smart Scheduler can generate schedules from voice messages.  
 
 ### Supported commands:
 
