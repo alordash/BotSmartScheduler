@@ -62,10 +62,10 @@ function FormStringFormatSchedule(schedule, period_time, tz, language) {
    let until = '';
    let period = '';
    if (max_date.getTime() >= Date.now()) {
-      until = '\r\nдо <b>' + FormDateStringFormat(max_date, language) + '</b>';
+      until = `\r\n      ${replies.until} <b>${FormDateStringFormat(max_date, language)}</b>`;
    }
    if (period_time >= 60) {
-      period = `\r\n${replies.everyTime} <b>${FormPeriodStringFormat(period_time, language)}</b>`;
+      period = `\r\n      ${replies.everyTime} <b>${FormPeriodStringFormat(period_time, language)}</b>`;
    }
    let username = '';
    if (schedule.username != 'none') {
@@ -73,7 +73,7 @@ function FormStringFormatSchedule(schedule, period_time, tz, language) {
    }
    let divider = ' ';
    if (until != '' || period != '') {
-      divider = '\r\n';
+      divider = '\r\n      ';
    }
    return `"${schedule.text}"${username}${divider}<b>${FormDateStringFormat(target_date, language)}</b>${until}${period}`;
 }
