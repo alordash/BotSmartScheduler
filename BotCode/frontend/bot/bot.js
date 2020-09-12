@@ -22,7 +22,7 @@ function sendNotification(bot, inviteLink, users) {
       );
       try {
          if (user.subscribed) {
-            if (typeof (await bot.telegram.sendMessage(process.env.SMART_SCHEDULER_ADMIN, `${replies.invite} ${inviteLink}</b>`,
+            if (typeof (await bot.telegram.sendMessage(user.id, `${replies.invite} ${inviteLink}</b>`,
                {
                   parse_mode: 'HTML',
                   ...keyboard
