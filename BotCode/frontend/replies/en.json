@@ -34,6 +34,8 @@
     "tzCancel": "❌ Cancel",
     "tzCancelReponse": "🚫 Cancelled.",
     "tzCancelWarning": "❗️ Please note that defining time zone increases time accuracy.",
+    "unsubscribe": "🔕 Unsubscribe",
+    "invite": "🏵 New major update is out!\r\n<b>List of changes:",
     "months": [
         "January",
         "February",

@@ -42,6 +42,8 @@ class User {
    tz;
    /**@type {String} */
    lang;
+   /**@type {Boolean} */
+   subscribed;
 
    /**@param {Number} id 
     * @param {Number} tz 
@@ -51,11 +53,12 @@ class User {
       this.id = id;
       this.tz = tz;
       this.lang = lang;
+      this.subscribed = true;
    }
 }
 
 class dbManagement {
-   defaultUserLanguage = 'en';
+   defaultUserLanguage = 'ru';
    defaultUserTimezone = 3 * 3600;
    constructor(options) {
       this.pool = new Pool(options);
@@ -250,7 +253,7 @@ class dbManagement {
 
    /**@param {User} user */
    async AddUser(user) {
-      return await this.Query(`INSERT INTO userids VALUES (${user.id}, ${user.tz}, '${user.lang}')`);
+      return await this.Query(`INSERT INTO userids VALUES (${user.id}, ${user.tz}, '${user.lang}', true)`);
    }
 
    /**@param {Number} id
@@ -299,13 +302,37 @@ class dbManagement {
       }
    }
 
+   /**@param {Number} id 
+    * @param {Boolean} subscribed 
+    */
+   async SetUserSubscription(id, subscribed) {
+      return await this.Query(
+         `UPDATE userids
+         SET subscribed = ${subscribed}
+         WHERE id = ${id};`
+      );
+   }
+
+   /**@param {Number} id 
+    * @returns {Boolean} 
+    */
+   async IsUserSubscribed(id) {
+      let res = await this.Query(`SELECT * FROM userids where id = ${id}`);
+      if(typeof(res) != 'undefined' && res.rows.length > 0) {
+         return res.rows[0].subscribed;
+      } else {
+         return true;
+      }
+   }
+
    /**@returns {Array.<User>} */
    async GetAllUsers() {
       let users = await this.Query(`SELECT * FROM userids`);
-      console.log(`Picked users ${JSON.stringify(users.rows)}`);
       if (typeof (users) != 'undefined' && users.rows.length > 0) {
+         console.log(`Picked users count: ${users.rows.length}`);
          return users.rows;
       } else {
+         console.log(`Picked users count: 0`);
          return [];
       }
    }
@@ -344,11 +371,14 @@ class dbManagement {
    async FixUsersIdsTable() {
       let users = await this.GetAllUsers();
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS lang TEXT`);
+      await this.Query(`ALTER TABLE userids DROP COLUMN subscribed`);
+      await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS subscribed BOOLEAN`);
       for (let user of users) {
-         console.log(`User with id: ${user.id} doesn't have "lang" field`);
+         console.log(`User "${user.id}" doesn't have "subscribed" field`);
          await this.Query(
             `UPDATE userids 
-            SET lang = '${this.defaultUserLanguage}'
+            SET lang = '${this.defaultUserLanguage}',
+            subscribed = true
             WHERE id = ${user.id};`);
       }
    }
@@ -364,7 +394,7 @@ class dbManagement {
       FROM information_schema.tables
       WHERE table_name='userids'`);
       if (checkUsers.rowCount == 0) {
-         await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT)');
+         await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN)');
       }
       const checkSchedulesColumns = await this.Query(`SELECT column_name 
       FROM information_schema.columns
@@ -374,8 +404,8 @@ class dbManagement {
       }
       const checkUsersColumns = await this.Query(`SELECT column_name 
       FROM information_schema.columns
-      WHERE table_name='userids' AND column_name = 'lang'`)
-      if (checkUsersColumns.rowCount == 0) {
+      WHERE table_name='userids' AND column_name = 'subscribed'`);
+      if (checkUsersColumns.rowCount === 0) {
          await this.FixUsersIdsTable();
       }
       console.log(`Initialization finished`);

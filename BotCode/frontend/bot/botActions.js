@@ -368,7 +368,9 @@ async function HandleCallbackQuery(ctx, db) {
       case 'delete':
          ctx.deleteMessage();
          break;
-
+      case 'unsubscribe':
+         await db.SetUserSubscription(ctx.from.id, false);
+         break;
       default:
          break;
    }
