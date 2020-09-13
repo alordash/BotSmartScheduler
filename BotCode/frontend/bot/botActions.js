@@ -438,7 +438,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                }
                let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
                if (typeof (schedule) != 'undefined') {
-                  reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(schedule.target_date + tz * 1000), language), ctx.message.from.language_code);
+                  reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
                   alreadyScheduled = true;
                } else {
                   if (count + schedulesCount < global.MaximumCountOfSchedules) {
