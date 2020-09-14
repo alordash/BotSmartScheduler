@@ -8,7 +8,7 @@
 
 Если вам нужно быстро и с удобством планировать свои задачи, бот Smart Scheduler станет незаменимым инструментом в этом деле.
 
-![Пример использования](https://habrastorage.org/webt/br/md/wx/brmdwxnbkbo-3pu7ff77fqjrqva.png)
+![Пример использования](https://habrastorage.org/webt/zi/ew/z0/ziewz0o0lk1ytxwd5k0bynkipka.png)
 
 ## Как использовать
 
