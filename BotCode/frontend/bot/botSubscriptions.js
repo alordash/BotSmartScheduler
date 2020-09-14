@@ -57,15 +57,6 @@ exports.InitActions = function (bot, db) {
          console.error(e);
       }
    });
-   bot.command('kb', async ctx => {
-      let language = await db.GetUserLanguage(ctx.from.id);
-      const replies = LoadReplies(language);
-      try {
-         ctx.replyWithHTML(replies.showKeyboard, rp.MainKeyboard(language));
-      } catch (e) {
-         console.error(e);
-      }
-   });
    console.log('__dirname :>> ', __dirname);
    let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
    console.log('repliesFiles :>> ', repliesFiles);

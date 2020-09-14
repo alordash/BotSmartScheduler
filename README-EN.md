@@ -40,8 +40,6 @@ Smart Scheduler stores tasks **separately** for every chat and can work in conve
 
 - 🌐 **_/tz_** - Configures time zone.
 
-- 🎛 **_/kb_** - Open menu.
-
 and /start with /help of course.
 
 
