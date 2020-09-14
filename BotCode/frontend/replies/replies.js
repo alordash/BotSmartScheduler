@@ -22,7 +22,7 @@ function GetMonthsNames(language) {
 function MainKeyboard(language) {
     const replies = LoadReplies(language);
     return Markup.keyboard([
-        [{ text: replies.showListAction }, { text: replies.changeTimeZoneAction }]
+        [{ text: replies.showListAction }]
     ]).oneTime().removeKeyboard().resize().extra();
 }
 
