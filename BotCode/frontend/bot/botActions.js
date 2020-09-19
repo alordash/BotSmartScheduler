@@ -392,6 +392,16 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
    let msgText = ctx.message.text;
    const language = DetermineLanguage(msgText);
    ctx.from.language_code = language;
+
+   const mentionText = `@${ctx.me}`;
+   const mentionIndex = msgText.indexOf(mentionText);
+   const mentioned = mentionIndex != -1;
+   if(mentioned) {
+      msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + mentionText.length);
+      if(msgText[mentionIndex - 1] == ' ' && msgText[mentionIndex] == ' ') {
+         msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + 1);
+      }
+   }
    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
       ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers);
    } else {
@@ -475,7 +485,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                i++;
             }
          }
-         if (!inGroup && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
+         if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
             await db.AddSchedules(chatID, pendingSchedules[chatID]);
             pendingSchedules[chatID] = [];
          }
@@ -485,7 +495,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                reply += replies.tzWarning;
             }
             try {
-               if (inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
+               if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
                   let keyboard;
                   if (!alreadyScheduled || parsedDates.length > 1) {
                      keyboard = Extra.markup((m) =>
