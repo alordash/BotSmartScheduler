@@ -4,9 +4,11 @@ const request = require('request-promise');
 const { Languages, LoadReplies } = require('../replies/replies');
 const rp = require('../replies/replies');
 const botActions = require('./botActions');
+const { FormatChatId } = require('./botActions');
 const { Composer } = require('telegraf');
 const { dbManagement, User } = require('../../backend/dataBase/db');
 const { speechToText } = require('../../backend/stt/stt');
+const Markup = require('telegraf/markup');
 const { pathToFileURL } = require('url');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 
@@ -19,7 +21,7 @@ let tzPendingConfirmationUsers = [];
 exports.InitActions = function (bot, db) {
    bot.start(ctx => {
       const replies = LoadReplies(Languages.general);
-      let options = rp.MainKeyboard(Languages.EN);
+      let options = rp.TzDeterminationKeyboard(Languages.EN);
       options['disable_web_page_preview'] = true;
       try {
          ctx.replyWithHTML(replies.start, options);
@@ -31,7 +33,9 @@ exports.InitActions = function (bot, db) {
       let language = await db.GetUserLanguage(ctx.from.id);
       const replies = LoadReplies(language);
       try {
-         ctx.replyWithHTML(replies.commands, rp.MainKeyboard(language));
+         const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+         ctx.replyWithHTML(replies.commands,
+            schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
       } catch (e) {
          console.error(e);
       }
@@ -40,7 +44,7 @@ exports.InitActions = function (bot, db) {
    bot.command('list', async ctx => {
       let tz = await db.GetUserTZ(ctx.from.id);
       let language = await db.GetUserLanguage(ctx.from.id);
-      let chatID = botActions.FormatChatId(ctx.chat.id);
+      let chatID = FormatChatId(ctx.chat.id);
       await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db, language));
    });
    bot.command('del', async ctx => {
@@ -93,7 +97,9 @@ exports.InitActions = function (bot, db) {
                   reply += '\r\n' + replies.tzCancelWarning;
                }
                try {
-                  ctx.replyWithHTML(reply, rp.MainKeyboard(language));
+                  const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+                  ctx.replyWithHTML(reply,
+                     schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
                } catch (e) {
                   console.error(e);
                }
@@ -101,7 +107,7 @@ exports.InitActions = function (bot, db) {
          }
          if (typeof (replies.showListAction) != 'undefined') {
             bot.hears(replies.showListAction, async ctx => {
-               let chatID = botActions.FormatChatId(ctx.chat.id);
+               let chatID = FormatChatId(ctx.chat.id);
                let tz = await db.GetUserTZ(ctx.from.id);
                try {
                   return await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db, language));
@@ -129,7 +135,9 @@ exports.InitActions = function (bot, db) {
       try {
          ctx.editMessageText('...');
          await ctx.answerCbQuery();
-         await ctx.replyWithHTML(text, rp.MainKeyboard(language));
+         const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+         await ctx.replyWithHTML(text,
+            schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
          await ctx.deleteMessage();
       } catch (e) {
          console.error(e);
@@ -152,7 +160,9 @@ exports.InitActions = function (bot, db) {
             await db.SetUserTz(userId, ts);
          }
          try {
-            ctx.replyWithHTML(replies.tzDefined + '<b>' + rp.TzLocation(rawOffset) + '</b>', rp.MainKeyboard(language));
+            const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+            ctx.replyWithHTML(replies.tzDefined + '<b>' + rp.TzLocation(rawOffset) + '</b>',
+               schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
          } catch (e) {
             console.error(e);
          }

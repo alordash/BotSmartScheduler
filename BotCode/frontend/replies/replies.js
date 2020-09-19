@@ -19,11 +19,23 @@ function GetMonthsNames(language) {
 }
 
 /**@param {Languages} language */
-function MainKeyboard(language) {
+function ListKeyboard(language) {
     const replies = LoadReplies(language);
     return Markup.keyboard([
         [{ text: replies.showListAction }]
     ]).oneTime().removeKeyboard().resize().extra();
+}
+
+/**@param {Languages} language */
+function TzDeterminationKeyboard(language) {
+    const replies = LoadReplies(language);
+    return Markup
+        .keyboard([
+            [{ text: replies.tzUseLocation, request_location: true }, { text: replies.tzTypeManually }],
+            [{ text: replies.tzCancel }]
+        ]).oneTime()
+        .resize()
+        .extra()
 }
 
 /**
@@ -99,7 +111,8 @@ module.exports = {
     Languages,
     LoadReplies,
     GetMonthsNames,
-    MainKeyboard,
+    ListKeyboard,
+    TzDeterminationKeyboard,
     Deleted,
     TzDetermined,
     TzLocation,
