@@ -156,15 +156,7 @@ async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
    if (isPrivateChat) {
       reply += replies.tzConfiguration + '\r\n' + replies.tzViaLoc + '\r\n' + replies.tzManually;
       try {
-         return ctx.replyWithHTML(reply, Markup
-            .keyboard([
-               [{ text: replies.tzUseLocation, request_location: true }, { text: replies.tzTypeManually }],
-               [{ text: replies.tzCancel }]
-            ]).oneTime()
-            .removeKeyboard()
-            .resize()
-            .extra()
-         );
+         return ctx.replyWithHTML(reply, rp.TzDeterminationKeyboard(language));
       } catch (e) {
          console.error(e);
       }
@@ -303,7 +295,9 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
       }
       tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
       try {
-         ctx.replyWithHTML(replies.tzDefined + '<b>' + rp.TzCurrent(ts) + '</b>\r\n', rp.MainKeyboard(ctx.from.language_code));
+         const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+         ctx.replyWithHTML(replies.tzDefined + '<b>' + rp.TzCurrent(ts) + '</b>\r\n',
+            schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
       } catch (e) {
          console.error(e);
       }
@@ -396,9 +390,9 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
    const mentionText = `@${ctx.me}`;
    const mentionIndex = msgText.indexOf(mentionText);
    const mentioned = mentionIndex != -1;
-   if(mentioned) {
+   if (mentioned) {
       msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + mentionText.length);
-      if(msgText[mentionIndex - 1] == ' ' && msgText[mentionIndex] == ' ') {
+      if (msgText[mentionIndex - 1] == ' ' && msgText[mentionIndex] == ' ') {
          msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + 1);
       }
    }
@@ -434,12 +428,12 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
          let count = 1;
          let shouldWarn = false;
          let alreadyScheduled = false;
+         let schedulesCount = (await db.GetSchedules(chatID)).length;
          if (parsedDates.length == 0) {
             if (!inGroup) {
                reply += replies.errorScheduling;
             }
          } else {
-            let schedulesCount = (await db.GetSchedules(chatID)).length;
             console.log(`schedulesCount = ${schedulesCount}`);
             let i = 1;
             for (let parsedDate of parsedDates) {
@@ -515,7 +509,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                      }
                   }, repeatScheduleTime, ctx, msg);
                } else {
-                  ctx.replyWithHTML(reply, rp.MainKeyboard(language));
+                  ctx.replyWithHTML(reply, schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
                }
             } catch (e) {
                console.error(e);
