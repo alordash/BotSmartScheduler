@@ -200,7 +200,7 @@ async function CheckExpiredSchedules(bot, db) {
          let language = await db.GetUserLanguage(+chatID);
          const replies = LoadReplies(language);
          try {
-            let msg = await bot.telegram.sendMessage(+chatID, `⏰${mentionUser} "${schedule.text}"`, Extra.markup((m) =>
+            let msg = await bot.telegram.sendMessage(+chatID, `⏰${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`, Extra.markup((m) =>
                m.inlineKeyboard([
                   m.callbackButton(replies.repeatSchedule, `repeat`)
                ]).oneTime()
