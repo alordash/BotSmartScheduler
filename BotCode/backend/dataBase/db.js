@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const { Encrypt, Decrypt } = require('../encryption/encrypt');
 
 class Schedule {
    /**@type {String} */
@@ -90,7 +91,8 @@ class dbManagement {
          if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') {
             schedule.username = 'none';
          }
-         queryString += `('${schedule.chatid}', ${id}, '${schedule.text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}), `;
+         const text = Encrypt(schedule.text, schedule.chatid);
+         queryString += `('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}), `;
          id++;
       }
       queryString = queryString.substring(0, queryString.length - 2);
@@ -104,8 +106,9 @@ class dbManagement {
       let schedules = await this.GetSchedules(schedule.chatid);
       let id = schedules.length + 1;
       console.log(`Target_date = ${schedule.target_date}`);
-      await this.Query(`INSERT INTO schedules VALUES ('${schedule.chatid}', ${id}, '${schedule.text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date})`);
-      console.log(`Added "${schedule.text}" to ${schedule.target_date} from chat "${schedule.chatid}"`);
+      const text = Encrypt(schedule.text, schedule.chatid);
+      await this.Query(`INSERT INTO schedules VALUES ('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date})`);
+      console.log(`Added "${schedule.text}" (encrypted: "${text}") to ${schedule.target_date} from chat "${schedule.chatid}"`);
    }
 
    /**@param {Number} chatID 
@@ -204,7 +207,8 @@ class dbManagement {
     * @returns {Schedule}
     */
    async GetScheduleByText(chatID, text) {
-      let res = await this.Query(`SELECT * FROM schedules WHERE text = '${text}' AND ChatID = '${chatID}'`);
+      const encryptedText = Encrypt(text, chatID);
+      let res = await this.Query(`SELECT * FROM schedules WHERE text = '${encryptedText}' AND ChatID = '${chatID}'`);
       console.log(`Picked schedule by text ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows[0];
@@ -221,6 +225,7 @@ class dbManagement {
       let res = await this.Query(`SELECT * FROM schedules WHERE id = '${id}' AND ChatID = '${chatID}'`);
       console.log(`Picked schedule by id ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
+         res.rows[0].text = Decrypt(res.rows[0].text, res.rows[0].chatid);
          return res.rows[0];
       } else {
          return undefined;
@@ -243,6 +248,11 @@ class dbManagement {
     */
    async GetSchedules(chatID) {
       let res = await this.Query(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`);
+      let i = res.rows.length;
+      while (i--) {
+         let schedule = res.rows[i];
+         res.rows[i].text = Decrypt(schedule.text, schedule.chatid);
+      }
       console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows;
@@ -318,7 +328,7 @@ class dbManagement {
     */
    async IsUserSubscribed(id) {
       let res = await this.Query(`SELECT * FROM userids where id = ${id}`);
-      if(typeof(res) != 'undefined' && res.rows.length > 0) {
+      if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows[0].subscribed;
       } else {
          return true;
@@ -348,6 +358,29 @@ class dbManagement {
    async HasUserID(id) {
       let res = await this.Query(`SELECT * FROM userids where id = ${id}`);
       return typeof (res) != 'undefined' && res.rows.length > 0
+   }
+
+   async EncryptSchedules() {
+      let schedules = await this.GetAllSchedules();
+      for (const schedule of schedules) {
+         let encrypted = true;
+         const key = schedule.chatid;
+         let text = schedule.text;
+         try {
+            text = Decrypt(text, key);
+         } catch (e) {
+            console.log(`Schedule #${schedule.id} in chat ${schedule.chatid} is not encrypted`);
+            encrypted = false;
+            text = schedule.text;
+         }
+         if (!encrypted) {
+            const encryptedText = Encrypt(text, key);
+            await this.Query(`UPDATE schedules
+            SET text = '${encryptedText}'
+            WHERE id = ${schedule.id}`);
+            console.log(`Updated not encrypted schedule "${schedule.text}"`);
+         }
+      }
    }
 
    async FixSchedulesTable() {
@@ -407,6 +440,10 @@ class dbManagement {
       WHERE table_name='userids' AND column_name = 'subscribed'`);
       if (checkUsersColumns.rowCount === 0) {
          await this.FixUsersIdsTable();
+      }
+
+      if (process.env.SMART_SCHEDULER_ENCRYPT_SCHEDULES === 'true') {
+         await this.EncryptSchedules();
       }
       console.log(`Initialization finished`);
    }
