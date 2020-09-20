@@ -166,7 +166,7 @@ class dbManagement {
          let queryString = `INSERT INTO schedules VALUES `;
          for (let i = 0; i < schedules.length; i++) {
             let schedule = schedules[i];
-            queryString += `('${chatID}', ${i + 1}, '${schedule.text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}), `;
+            queryString += `('${chatID}', ${i + 1}, '${Encrypt(schedule.text, schedule.chatid)}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}), `;
             console.log(`Reordering schedule with new id = ${i + 1}`);
          }
          queryString = queryString.substring(0, queryString.length - 2);
