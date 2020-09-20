@@ -7,6 +7,7 @@ const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { parseString } = require('@alordash/parse-word-to-number');
 const { parseDate, TimeList } = require('@alordash/date-parser');
 const { FormStringFormatSchedule, FormDateStringFormat } = require('../formatting');
+const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
 
 let pendingSchedules = [];
@@ -442,7 +443,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                }
                let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
                if (typeof (schedule) != 'undefined') {
-                  reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
+                  reply += rp.Scheduled(Decrypt(schedule.text, schedule.chatid), FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
                   alreadyScheduled = true;
                } else {
                   if (count + schedulesCount < global.MaximumCountOfSchedules) {
