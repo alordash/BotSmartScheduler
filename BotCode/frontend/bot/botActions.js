@@ -336,7 +336,7 @@ async function HandleCallbackQuery(ctx, db) {
          }
          let schedulesCount = await db.GetSchedules(chatID).length;
          let target_date = Date.now() + global.repeatScheduleTime;
-         let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0);
+         let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0, -1);
          let tz = await db.GetUserTZ(ctx.from.id);
 
          try {
@@ -385,135 +385,141 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
    let chatID = FormatChatId(ctx.chat.id)
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
-   const language = DetermineLanguage(msgText);
-   ctx.from.language_code = language;
-
-   const mentionText = `@${ctx.me}`;
-   const mentionIndex = msgText.indexOf(mentionText);
-   const mentioned = mentionIndex != -1;
-   if (mentioned) {
-      msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + mentionText.length);
-      if (msgText[mentionIndex - 1] == ' ' && msgText[mentionIndex] == ' ') {
-         msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + 1);
-      }
+   if (typeof (msgText) == 'undefined') {
+      msgText = ctx.message.caption;
    }
-   if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
-      ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers);
-   } else {
-      let reply = '';
-      if (msgText[0] == '/') {
-         //#region DELETE CLICKED TASK 
-         let scheduleId = parseInt(msgText.substring(1, msgText.length));
-         if (!isNaN(scheduleId)) {
-            await db.RemoveScheduleById(chatID, scheduleId);
-            await db.ReorderSchedules(chatID);
-            try {
-               ctx.replyWithHTML(rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code));
-            } catch (e) {
-               console.error(e);
-            }
+   if (typeof (msgText) != 'undefined') {
+      const language = DetermineLanguage(msgText);
+      ctx.from.language_code = language;
+
+      const mentionText = `@${ctx.me}`;
+      const mentionIndex = msgText.indexOf(mentionText);
+      const mentioned = mentionIndex != -1;
+      if (mentioned) {
+         msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + mentionText.length);
+         if (msgText[mentionIndex - 1] == ' ' && msgText[mentionIndex] == ' ') {
+            msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + 1);
          }
-         //#endregion
+      }
+      if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
+         ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers);
       } else {
-         //#region PARSE SCHEDULE
-         await db.SetUserLanguage(ctx.from.id, language);
-         const replies = LoadReplies(language);
-         let tz = await db.GetUserTZ(ctx.from.id);
-         let prevalence = 50;
-         let username = 'none';
-         if (inGroup) {
-            username = ctx.from.username;
-            //            prevalence = 60;
-         }
-         let parsedDates = parseDate(parseString(msgText, 1), 1, prevalence);
-         let count = 1;
-         let shouldWarn = false;
-         let alreadyScheduled = false;
-         let schedulesCount = (await db.GetSchedules(chatID)).length;
-         if (parsedDates.length == 0) {
-            if (!inGroup) {
-               reply += replies.errorScheduling;
+         let reply = '';
+         if (msgText[0] == '/') {
+            //#region DELETE CLICKED TASK 
+            let scheduleId = parseInt(msgText.substring(1, msgText.length));
+            if (!isNaN(scheduleId)) {
+               await db.RemoveScheduleById(chatID, scheduleId);
+               await db.ReorderSchedules(chatID);
+               try {
+                  ctx.replyWithHTML(rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code));
+               } catch (e) {
+                  console.error(e);
+               }
             }
+            //#endregion
          } else {
-            console.log(`schedulesCount = ${schedulesCount}`);
-            let i = 1;
-            for (let parsedDate of parsedDates) {
-               if (parsedDates.length > 1) {
-                  reply += `${i}. `;
+            //#region PARSE SCHEDULE
+            await db.SetUserLanguage(ctx.from.id, language);
+            const replies = LoadReplies(language);
+            let tz = await db.GetUserTZ(ctx.from.id);
+            let prevalence = 50;
+            let username = 'none';
+            if (inGroup) {
+               username = ctx.from.username;
+               //            prevalence = 60;
+            }
+            let parsedDates = parseDate(parseString(msgText, 1), 1, prevalence);
+            let count = 1;
+            let shouldWarn = false;
+            let alreadyScheduled = false;
+            let schedulesCount = (await db.GetSchedules(chatID)).length;
+            if (parsedDates.length == 0) {
+               if (!inGroup) {
+                  reply += replies.errorScheduling;
                }
-               let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
-               if (typeof (schedule) != 'undefined') {
-                  reply += rp.Scheduled(Decrypt(schedule.text, schedule.chatid), FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
-                  alreadyScheduled = true;
-               } else {
-                  if (count + schedulesCount < global.MaximumCountOfSchedules) {
-                     let dateParams = ProcessParsedDate(parsedDate, tz);
-                     if (typeof (dateParams) != 'undefined') {
-                        if (parsedDate.string.length > 0) {
-                           if (typeof (pendingSchedules[chatID]) == 'undefined') {
-                              pendingSchedules[chatID] = [];
-                           }
-                           let newSchedule = new Schedule(
-                              chatID,
-                              0,
-                              parsedDate.string,
-                              username,
-                              dateParams.target_date,
-                              dateParams.period_time,
-                              dateParams.max_date);
-                           pendingSchedules[chatID].push(newSchedule);
-                           count++;
-                           reply += FormStringFormatSchedule(newSchedule, dateParams.period_time.div(1000), tz, language) + `\r\n`;
-                        } else if (!inGroup) {
-                           reply += replies.emptyString + '\r\n';
-                        }
-                     } else if (!inGroup) {
-                        reply += replies.errorScheduling + '\r\n';
-                     }
-                     if (!inGroup && !(await db.HasUserID(ctx.from.id))) {
-                        shouldWarn = true;
-                     }
+            } else {
+               console.log(`schedulesCount = ${schedulesCount}`);
+               let i = 1;
+               for (let parsedDate of parsedDates) {
+                  if (parsedDates.length > 1) {
+                     reply += `${i}. `;
+                  }
+                  let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
+                  if (typeof (schedule) != 'undefined') {
+                     reply += rp.Scheduled(Decrypt(schedule.text, schedule.chatid), FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
+                     alreadyScheduled = true;
                   } else {
-                     reply += replies.shouldRemove + '\r\n' + replies.maximumSchedulesCount + ` <b>${global.MaximumCountOfSchedules}</b>.`;
-                  }
-               }
-               i++;
-            }
-         }
-         if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-            await db.AddSchedules(chatID, pendingSchedules[chatID]);
-            pendingSchedules[chatID] = [];
-         }
-         //#endregion
-         if (reply != '') {
-            if (shouldWarn) {
-               reply += replies.tzWarning;
-            }
-            try {
-               if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
-                  let keyboard;
-                  if (!alreadyScheduled || parsedDates.length > 1) {
-                     keyboard = Extra.markup((m) =>
-                        m.inlineKeyboard([
-                           m.callbackButton(replies.confirmSchedule, `confirm`),
-                           m.callbackButton(replies.declineSchedule, `delete`)
-                        ]).oneTime()
-                     )
-                  }
-                  let msg = await ctx.replyWithHTML(reply, keyboard);
-                  setTimeout(function (ctx, msg) {
-                     if (typeof (msg) != 'undefined') {
-                        let chatID = FormatChatId(msg.chat.id);
-                        console.log('msg.message_id :>> ', msg.message_id);
-                        ctx.telegram.deleteMessage(msg.chat.id, msg.message_id);
-                        pendingSchedules[chatID] = [];
+                     if (count + schedulesCount < global.MaximumCountOfSchedules) {
+                        let dateParams = ProcessParsedDate(parsedDate, tz);
+                        if (typeof (dateParams) != 'undefined') {
+                           if (parsedDate.string.length > 0) {
+                              if (typeof (pendingSchedules[chatID]) == 'undefined') {
+                                 pendingSchedules[chatID] = [];
+                              }
+                              let newSchedule = new Schedule(
+                                 chatID,
+                                 0,
+                                 parsedDate.string,
+                                 username,
+                                 dateParams.target_date,
+                                 dateParams.period_time,
+                                 dateParams.max_date,
+                                 ctx.message.message_id);
+                              pendingSchedules[chatID].push(newSchedule);
+                              count++;
+                              reply += FormStringFormatSchedule(newSchedule, dateParams.period_time.div(1000), tz, language) + `\r\n`;
+                           } else if (!inGroup) {
+                              reply += replies.emptyString + '\r\n';
+                           }
+                        } else if (!inGroup) {
+                           reply += replies.errorScheduling + '\r\n';
+                        }
+                        if (!inGroup && !(await db.HasUserID(ctx.from.id))) {
+                           shouldWarn = true;
+                        }
+                     } else {
+                        reply += replies.shouldRemove + '\r\n' + replies.maximumSchedulesCount + ` <b>${global.MaximumCountOfSchedules}</b>.`;
                      }
-                  }, repeatScheduleTime, ctx, msg);
-               } else {
-                  ctx.replyWithHTML(reply, schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
+                  }
+                  i++;
                }
-            } catch (e) {
-               console.error(e);
+            }
+            if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
+               await db.AddSchedules(chatID, pendingSchedules[chatID]);
+               pendingSchedules[chatID] = [];
+            }
+            //#endregion
+            if (reply != '') {
+               if (shouldWarn) {
+                  reply += replies.tzWarning;
+               }
+               try {
+                  if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
+                     let keyboard;
+                     if (!alreadyScheduled || parsedDates.length > 1) {
+                        keyboard = Extra.markup((m) =>
+                           m.inlineKeyboard([
+                              m.callbackButton(replies.confirmSchedule, `confirm`),
+                              m.callbackButton(replies.declineSchedule, `delete`)
+                           ]).oneTime()
+                        )
+                     }
+                     let msg = await ctx.replyWithHTML(reply, keyboard);
+                     setTimeout(function (ctx, msg) {
+                        if (typeof (msg) != 'undefined') {
+                           let chatID = FormatChatId(msg.chat.id);
+                           console.log('msg.message_id :>> ', msg.message_id);
+                           ctx.telegram.deleteMessage(msg.chat.id, msg.message_id);
+                           pendingSchedules[chatID] = [];
+                        }
+                     }, repeatScheduleTime, ctx, msg);
+                  } else {
+                     ctx.replyWithHTML(reply, schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
+                  }
+               } catch (e) {
+                  console.error(e);
+               }
             }
          }
       }

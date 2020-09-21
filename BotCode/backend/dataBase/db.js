@@ -16,6 +16,8 @@ class Schedule {
    max_date;
    /**@type {String} */
    username;
+   /**@type {Number} */
+   message_id;
 
    /**@param {String} chatid 
     * @param {Number} id 
@@ -24,8 +26,9 @@ class Schedule {
     * @param {Number} target_date 
     * @param {Number} period_time 
     * @param {Number} max_date 
+    * @param {Number} message_id 
     */
-   constructor(chatid, id, text, username, target_date, period_time, max_date) {
+   constructor(chatid, id, text, username, target_date, period_time, max_date, message_id) {
       this.chatid = chatid;
       this.id = id;
       this.text = text;
@@ -33,6 +36,7 @@ class Schedule {
       this.target_date = target_date;
       this.period_time = period_time;
       this.max_date = max_date;
+      this.message_id = message_id;
    }
 }
 
@@ -92,7 +96,7 @@ class dbManagement {
             schedule.username = 'none';
          }
          const text = Encrypt(schedule.text, schedule.chatid);
-         queryString += `('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}), `;
+         queryString += `('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, ${schedule.message_id}), `;
          id++;
       }
       queryString = queryString.substring(0, queryString.length - 2);
@@ -107,7 +111,7 @@ class dbManagement {
       let id = schedules.length + 1;
       console.log(`Target_date = ${schedule.target_date}`);
       const text = Encrypt(schedule.text, schedule.chatid);
-      await this.Query(`INSERT INTO schedules VALUES ('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date})`);
+      await this.Query(`INSERT INTO schedules VALUES ('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, ${schedule.message_id})`);
       console.log(`Added "${schedule.text}" (encrypted: "${text}") to ${schedule.target_date} from chat "${schedule.chatid}"`);
    }
 
