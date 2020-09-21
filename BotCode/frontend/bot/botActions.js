@@ -7,6 +7,7 @@ const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { parseString } = require('@alordash/parse-word-to-number');
 const { parseDate, TimeList } = require('@alordash/date-parser');
 const { FormStringFormatSchedule, FormDateStringFormat } = require('../formatting');
+const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
 
@@ -59,9 +60,9 @@ function GetAttachmentId(message) {
       let photoes = message.photo;
       let file_id = photoes[0].file_id;
       let file_size = photoes[0].file_size;
-      for(let i = 1; i < photoes.length; i++) {
+      for (let i = 1; i < photoes.length; i++) {
          const photo = photoes[i];
-         if(photo.file_size > file_size) {
+         if (photo.file_size > file_size) {
             file_size = photo.file_size;
             file_id = photo.file_id;
          }
@@ -220,11 +221,32 @@ async function CheckExpiredSchedules(bot, db) {
          let language = await db.GetUserLanguage(+chatID);
          const replies = LoadReplies(language);
          try {
-            let msg = await bot.telegram.sendMessage(+chatID, `⏰${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`, Extra.markup((m) =>
+            let keyboard = Extra.markup((m) =>
                m.inlineKeyboard([
                   m.callbackButton(replies.repeatSchedule, `repeat`)
                ]).oneTime()
-            ));
+            );
+            let msg;
+            const remindText = `⏰${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`;
+            if (schedule.file_id != '~' && schedule.file_id != null) {
+               let file_info = await bot.telegram.getFile(schedule.file_id);
+               let file_path = path.parse(file_info.file_path);
+               if (file_path.dir == 'photos') {
+                  msg = await bot.telegram.sendPhoto(+chatID, schedule.file_id, {
+                     caption: remindText,
+                     ...keyboard
+                  });
+               } else {
+                  msg = await bot.telegram.sendDocument(+chatID, schedule.file_id, {
+                     caption: remindText,
+                     ...keyboard
+                  });
+               }
+            } else {
+               msg = await bot.telegram.sendMessage(+chatID, remindText, {
+                  ...keyboard
+               });
+            }
             setTimeout(function (msg) {
                bot.telegram.editMessageReplyMarkup(msg.chat.id, msg.message_id, Extra.markup((m) =>
                   m.inlineKeyboard([]).removeKeyboard()
@@ -348,20 +370,32 @@ async function HandleCallbackQuery(ctx, db) {
    const replies = LoadReplies(language);
    switch (data) {
       case 'repeat':
-         let text = ctx.callbackQuery.message.text.match(/"[\S\s]+"/);
+         let hasCaption = false;
+         let msgText = ctx.callbackQuery.message.text;
+         if (typeof (msgText) == 'undefined') {
+            hasCaption = true;
+            msgText = ctx.callbackQuery.message.caption;
+         }
+         let text = msgText.match(/"[\S\s]+"/);
          text = text[0].substring(1, text[0].length - 1);
          let username = 'none';
          if (chatID[0] === '_') {
             username = ctx.from.username;
          }
+         let file_id = GetAttachmentId(ctx.callbackQuery.message);
          let schedulesCount = await db.GetSchedules(chatID).length;
          let target_date = Date.now() + global.repeatScheduleTime;
-         let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0, -1);
+         let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0, file_id);
          let tz = await db.GetUserTZ(ctx.from.id);
 
          try {
             await db.AddSchedule(schedule);
-            ctx.editMessageText(text + '\r\n' + replies.remindSchedule + ' <b>' + FormDateStringFormat(new Date(target_date + tz * 1000), language) + '</b>', { parse_mode: 'HTML' });
+            let newText = text + '\r\n' + replies.remindSchedule + ' <b>' + FormDateStringFormat(new Date(target_date + tz * 1000), language) + '</b>';
+            if (hasCaption) {
+               ctx.editMessageCaption(newText, { parse_mode: 'HTML' });
+            } else {
+               ctx.editMessageText(newText, { parse_mode: 'HTML' });
+            }
          } catch (e) {
             console.error(e);
          }
