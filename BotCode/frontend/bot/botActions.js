@@ -74,6 +74,27 @@ function GetAttachmentId(message) {
    return '~';
 }
 
+async function SendAttachment(bot, schedule, chatID, caption, keyboard) {
+   let file_info = await bot.telegram.getFile(schedule.file_id);
+   let file_path = path.parse(file_info.file_path);
+   if (file_path.dir == 'photos') {
+      return await bot.telegram.sendPhoto(chatID, schedule.file_id, {
+         caption,
+         ...keyboard
+      });
+   } else if (file_path.dir == 'videos') {
+      return await bot.telegram.sendVideo(chatID, schedule.file_id, {
+         caption,
+         ...keyboard
+      });
+   } else {
+      return await bot.telegram.sendDocument(chatID, schedule.file_id, {
+         caption,
+         ...keyboard
+      });
+   }
+}
+
 /**
  * @param {String} chatID 
  * @param {Number} tsOffset 
@@ -231,24 +252,7 @@ async function CheckExpiredSchedules(bot, db) {
             let msg;
             const remindText = `⏰${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`;
             if (schedule.file_id != '~' && schedule.file_id != null) {
-               let file_info = await bot.telegram.getFile(schedule.file_id);
-               let file_path = path.parse(file_info.file_path);
-               if (file_path.dir == 'photos') {
-                  msg = await bot.telegram.sendPhoto(+chatID, schedule.file_id, {
-                     caption: remindText,
-                     ...keyboard
-                  });
-               } else if (file_path.dir == 'videos') {
-                  msg = await bot.telegram.sendVideo(+chatID, schedule.file_id, {
-                     caption: remindText,
-                     ...keyboard
-                  });
-               } else {
-                  msg = await bot.telegram.sendDocument(+chatID, schedule.file_id, {
-                     caption: remindText,
-                     ...keyboard
-                  });
-               }
+               msg = await SendAttachment(bot, schedule, +chatID, remindText, keyboard);
             } else {
                msg = await bot.telegram.sendMessage(+chatID, remindText, {
                   ...keyboard
@@ -442,7 +446,7 @@ async function HandleCallbackQuery(ctx, db) {
  * @param {dbManagement} db 
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  */
-async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
+async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
    let chatID = FormatChatId(ctx.chat.id)
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
@@ -470,10 +474,16 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
             //#region DELETE CLICKED TASK 
             let scheduleId = parseInt(msgText.substring(1, msgText.length));
             if (!isNaN(scheduleId)) {
+               let schedule = await db.GetScheduleById(chatID, scheduleId);
                await db.RemoveScheduleById(chatID, scheduleId);
                await db.ReorderSchedules(chatID);
                try {
-                  ctx.replyWithHTML(rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code));
+                  const text = rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
+                  if (schedule.file_id != '~' && schedule.file_id != null) {
+                     SendAttachment(bot, schedule, chatID, text, {});
+                  } else {
+                     ctx.replyWithHTML(text);
+                  }
                } catch (e) {
                   console.error(e);
                }

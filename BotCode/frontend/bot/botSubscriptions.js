@@ -194,7 +194,7 @@ exports.InitActions = function (bot, db) {
                ctx.message.text = text;
                let language = await db.GetUserLanguage(ctx.from.id);
                ctx.from.language_code = language;
-               botActions.HandleTextMessage(ctx, db, tzPendingConfirmationUsers);
+               botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);
             }
          } else {
             try {
@@ -208,6 +208,6 @@ exports.InitActions = function (bot, db) {
 
    bot.on('message', async ctx => {
       console.log(`Received msg`);
-      await botActions.HandleTextMessage(ctx, db, tzPendingConfirmationUsers);
+      await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);
    });
 }
