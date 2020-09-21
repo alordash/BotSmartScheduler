@@ -75,7 +75,8 @@ function FormStringFormatSchedule(schedule, period_time, tz, language) {
    if (until != '' || period != '') {
       divider = '\r\n      ';
    }
-   return `"${schedule.text}"${username}${divider}<b>${FormDateStringFormat(target_date, language)}</b>${until}${period}`;
+   let file = (schedule.file_id != '~' && schedule.file_id != null) ? ' 💾' : '';
+   return `"${schedule.text}"${file}${username}${divider}<b>${FormDateStringFormat(target_date, language)}</b>${until}${period}`;
 }
 
 module.exports = {
