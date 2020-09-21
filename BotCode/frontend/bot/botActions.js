@@ -51,6 +51,26 @@ function FormatChatId(id) {
    return id;
 }
 
+/**@returns {String} */
+function GetAttachmentId(message) {
+   if (typeof (message.document) != 'undefined') {
+      return message.document.file_id;
+   } else if (typeof (message.photo) != 'undefined' && message.photo.length > 0) {
+      let photoes = message.photo;
+      let file_id = photoes[0].file_id;
+      let file_size = photoes[0].file_size;
+      for(let i = 1; i < photoes.length; i++) {
+         const photo = photoes[i];
+         if(photo.file_size > file_size) {
+            file_size = photo.file_size;
+            file_id = photo.file_id;
+         }
+      }
+      return file_id;
+   }
+   return '~';
+}
+
 /**
  * @param {String} chatID 
  * @param {Number} tsOffset 
@@ -420,6 +440,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
             //#endregion
          } else {
             //#region PARSE SCHEDULE
+            let file_id = GetAttachmentId(ctx.message);
             await db.SetUserLanguage(ctx.from.id, language);
             const replies = LoadReplies(language);
             let tz = await db.GetUserTZ(ctx.from.id);
@@ -465,7 +486,7 @@ async function HandleTextMessage(ctx, db, tzPendingConfirmationUsers) {
                                  dateParams.target_date,
                                  dateParams.period_time,
                                  dateParams.max_date,
-                                 ctx.message.message_id);
+                                 file_id);
                               pendingSchedules[chatID].push(newSchedule);
                               count++;
                               reply += FormStringFormatSchedule(newSchedule, dateParams.period_time.div(1000), tz, language) + `\r\n`;

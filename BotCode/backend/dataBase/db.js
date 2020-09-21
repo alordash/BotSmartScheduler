@@ -17,7 +17,7 @@ class Schedule {
    /**@type {String} */
    username;
    /**@type {Number} */
-   message_id;
+   file_id;
 
    /**@param {String} chatid 
     * @param {Number} id 
@@ -26,9 +26,9 @@ class Schedule {
     * @param {Number} target_date 
     * @param {Number} period_time 
     * @param {Number} max_date 
-    * @param {Number} message_id 
+    * @param {Number} file_id 
     */
-   constructor(chatid, id, text, username, target_date, period_time, max_date, message_id) {
+   constructor(chatid, id, text, username, target_date, period_time, max_date, file_id) {
       this.chatid = chatid;
       this.id = id;
       this.text = text;
@@ -36,7 +36,7 @@ class Schedule {
       this.target_date = target_date;
       this.period_time = period_time;
       this.max_date = max_date;
-      this.message_id = message_id;
+      this.file_id = file_id;
    }
 }
 
@@ -96,7 +96,7 @@ class dbManagement {
             schedule.username = 'none';
          }
          const text = Encrypt(schedule.text, schedule.chatid);
-         queryString += `('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, ${schedule.message_id}), `;
+         queryString += `('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, '${schedule.file_id}'), `;
          id++;
       }
       queryString = queryString.substring(0, queryString.length - 2);
@@ -111,7 +111,7 @@ class dbManagement {
       let id = schedules.length + 1;
       console.log(`Target_date = ${schedule.target_date}`);
       const text = Encrypt(schedule.text, schedule.chatid);
-      await this.Query(`INSERT INTO schedules VALUES ('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, ${schedule.message_id})`);
+      await this.Query(`INSERT INTO schedules VALUES ('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, '${schedule.file_id}')`);
       console.log(`Added "${schedule.text}" (encrypted: "${text}") to ${schedule.target_date} from chat "${schedule.chatid}"`);
    }
 
@@ -393,12 +393,12 @@ class dbManagement {
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS target_date BIGINT`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS period_time BIGINT`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS max_date BIGINT`);
-      await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS message_id INTEGER`);
+      await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS file_id TEXT`);
       for (let schedule of schedules) {
-         console.log(`Schedule with id: ${schedule.id} doesn't have message_id field`);
+         console.log(`Schedule with id: ${schedule.id} doesn't have file_id field`);
          await this.Query(
             `UPDATE schedules 
-            SET message_id = -1
+            SET file_id = '~'
             WHERE id = ${schedule.id};`
          );
       }
@@ -424,7 +424,7 @@ class dbManagement {
       FROM information_schema.tables
       WHERE table_name='schedules'`);
       if (checkSchedules.rowCount == 0) {
-         await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, message_id INTEGER)');
+         await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT)');
       }
       const checkUsers = await this.Query(`SELECT table_name 
       FROM information_schema.tables
@@ -434,7 +434,7 @@ class dbManagement {
       }
       const checkSchedulesColumns = await this.Query(`SELECT column_name 
       FROM information_schema.columns
-      WHERE table_name='schedules' AND column_name = 'message_id'`);
+      WHERE table_name='schedules' AND column_name = 'file_id'`);
       if (checkSchedulesColumns.rowCount === 0) {
          await this.FixSchedulesTable();
       }
@@ -448,7 +448,7 @@ class dbManagement {
       if (process.env.SMART_SCHEDULER_ENCRYPT_SCHEDULES === 'true') {
          await this.EncryptSchedules();
       }
-      console.log(`Initialization finished`);
+      console.log(`Data base initialization finished`);
    }
 }
 
