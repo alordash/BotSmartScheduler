@@ -56,6 +56,8 @@ function FormatChatId(id) {
 function GetAttachmentId(message) {
    if (typeof (message.document) != 'undefined') {
       return message.document.file_id;
+   } else if (typeof (message.video) != 'undefined') {
+      return message.video.file_id;
    } else if (typeof (message.photo) != 'undefined' && message.photo.length > 0) {
       let photoes = message.photo;
       let file_id = photoes[0].file_id;
@@ -233,6 +235,11 @@ async function CheckExpiredSchedules(bot, db) {
                let file_path = path.parse(file_info.file_path);
                if (file_path.dir == 'photos') {
                   msg = await bot.telegram.sendPhoto(+chatID, schedule.file_id, {
+                     caption: remindText,
+                     ...keyboard
+                  });
+               } else if (file_path.dir == 'videos') {
+                  msg = await bot.telegram.sendVideo(+chatID, schedule.file_id, {
                      caption: remindText,
                      ...keyboard
                   });
