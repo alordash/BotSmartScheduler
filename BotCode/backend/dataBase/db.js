@@ -385,17 +385,16 @@ class dbManagement {
 
    async FixSchedulesTable() {
       let schedules = await this.GetAllSchedules();
-      await this.Query(`ALTER TABLE schedules DROP COLUMN ts`);
+      await this.Query(`ALTER TABLE schedules DROP COLUMN IF EXISTS ts`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS target_date BIGINT`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS period_time BIGINT`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS max_date BIGINT`);
+      await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS message_id INTEGER`);
       for (let schedule of schedules) {
-         console.log(`Schedule with id: ${schedule.id} doesn't have target_date, period_time and max_date fields`);
+         console.log(`Schedule with id: ${schedule.id} doesn't have message_id field`);
          await this.Query(
             `UPDATE schedules 
-            SET target_date = ${+schedule.ts},
-            period_time = 0,
-            max_date = 0
+            SET message_id = -1
             WHERE id = ${schedule.id};`
          );
       }
@@ -421,7 +420,7 @@ class dbManagement {
       FROM information_schema.tables
       WHERE table_name='schedules'`);
       if (checkSchedules.rowCount == 0) {
-         await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT)');
+         await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, message_id INTEGER)');
       }
       const checkUsers = await this.Query(`SELECT table_name 
       FROM information_schema.tables
@@ -431,8 +430,8 @@ class dbManagement {
       }
       const checkSchedulesColumns = await this.Query(`SELECT column_name 
       FROM information_schema.columns
-      WHERE table_name='schedules' AND column_name = 'target_date'`);
-      if (checkSchedulesColumns.rowCount == 0) {
+      WHERE table_name='schedules' AND column_name = 'message_id'`);
+      if (checkSchedulesColumns.rowCount === 0) {
          await this.FixSchedulesTable();
       }
       const checkUsersColumns = await this.Query(`SELECT column_name 
