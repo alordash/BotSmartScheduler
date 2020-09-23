@@ -523,7 +523,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                      alreadyScheduled = true;
                   } else {
                      if (count + schedulesCount < global.MaximumCountOfSchedules) {
-                        let dateParams = ProcessParsedDate(parsedDate, tz);
+                        let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
                         if (typeof (dateParams) != 'undefined') {
                            if (parsedDate.string.length > 0) {
                               if (typeof (pendingSchedules[chatID]) == 'undefined') {

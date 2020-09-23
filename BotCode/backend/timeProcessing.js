@@ -118,9 +118,18 @@ function UpdateTime(timeList, timeListDate) {
 /**
  * @param {ParsedDate} parsedDate 
  * @param {Number} tz 
+ * @param {Boolean} requireHours 
  * @returns {{target_date: Number, period_time: Number, max_date: Number}}
  */
-function ProcessParsedDate(parsedDate, tz) {
+function ProcessParsedDate(parsedDate, tz, requireHours) {
+   if (requireHours
+      && TimeListIsEmpty(parsedDate.max_date)
+      && TimeListIsEmpty(parsedDate.period_time)) {
+      if (typeof (parsedDate.target_date.hours) == 'undefined'
+         && typeof (parsedDate.target_date.minutes) == 'undefined') {
+         return undefined;
+      }
+   }
    let dateValues = parsedDate.valueOf();
    let target_date = dateValues.target_date.getTime().div(1000);
    let period_time = dateValues.period_time.getTime().div(1000);
