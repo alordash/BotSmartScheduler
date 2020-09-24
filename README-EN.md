@@ -26,6 +26,7 @@ You can make multiple reminders in one message by dividing each with dot, comma 
 Smart Scheduler can store tasks with *minute precision*.  
 Smart Scheduler can generate schedules from **voice messages**.  
 Smart Scheduler supports recurring reminders (e.g. «every 5 minutes») and also supports time limits for them (e.g. «every 5 minutes until 20 hours»).  
+Smart Scheduler supports pictures, videos and files 💾 in reminders.  
 Smart Scheduler stores tasks **separately** for every chat and can work in conversations.  
 
 ### Supported commands:
