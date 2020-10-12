@@ -18,12 +18,12 @@ function FillMinutes(tl) {
  * @returns {TimeList} 
  */
 function TimeListFromDate(tl, date) {
-   tl.dates = date.getDate();
-   tl.hours = date.getHours();
-   tl.minutes = date.getMinutes();
-   tl.months = date.getMonth();
+   tl.dates = date.getUTCDate();
+   tl.hours = date.getUTCHours();
+   tl.minutes = date.getUTCMinutes();
+   tl.months = date.getUTCMonth();
    tl.seconds = 0;
-   tl.years = date.getFullYear();
+   tl.years = date.getUTCFullYear();
    return tl;
 }
 
