@@ -154,12 +154,14 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
       let curTL = TimeListFromDate(new TimeList(), dateValues.target_date);
       if (typeof (parsedDate.target_date.hours) == 'undefined') {
          parsedDate.target_date.hours = curTL.hours;
+      } else {
+         parsedDate.target_date.hours -= hours;
       }
       if (typeof (parsedDate.target_date.minutes) == 'undefined') {
          parsedDate.target_date.minutes = curTL.minutes;
+      } else {
+         parsedDate.target_date.minutes -= minutes;
       }
-      parsedDate.target_date.hours -= hours;
-      parsedDate.target_date.minutes -= minutes;
       target_date -= tz;
    }
    parsedDate.target_date = UpdateTime(parsedDate.target_date, target_date);
