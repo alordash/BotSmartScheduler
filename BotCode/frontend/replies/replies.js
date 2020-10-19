@@ -62,10 +62,14 @@ function TzDetermined(hours, minutes, isNegative) {
         s = '-';
         hours *= -1;
     }
-    if (hours < 10)
+    if (hours < 10) {
         t = '0';
+    }
     s += t + hours + ':';
-    if (minutes >= 10) t = '';
+    t = '0';
+    if (minutes >= 10) {
+        t = '';
+    }
     s += t + minutes;
     return s;
 }
