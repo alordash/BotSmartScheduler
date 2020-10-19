@@ -105,7 +105,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
    let schedules = await db.ListSchedules(chatID);
    if (schedules.length > 0) {
       let answer = ``;
-      schedules.sort((a, b) => a.id - b.id);
+      schedules.sort((a, b) => a.target_date - b.target_date);
       for (let schedule of schedules) {
          schedule.target_date = +schedule.target_date;
          schedule.period_time = +schedule.period_time;
