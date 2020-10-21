@@ -133,7 +133,7 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
    let dateValues = parsedDate.valueOf();
    let target_date = dateValues.target_date.getTime().div(1000);
    let period_time = dateValues.period_time.getTime().div(1000);
-   let max_date;
+   let max_date = dateValues.max_date.getTime().div(1000);
    const hours = Math.floor(tz / 3600);
    const minutes = Math.floor((tz % 3600) / 60);
    console.log('hours :>> ', hours);
@@ -166,6 +166,7 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
    }
    parsedDate.target_date = UpdateTime(parsedDate.target_date, target_date);
    if (!TimeListIsEmpty(parsedDate.max_date)) {
+      parsedDate.max_date = UpdateTime(parsedDate.max_date, max_date);
       parsedDate.max_date = CopyTimeList(parsedDate.target_date, parsedDate.max_date);
       max_date = parsedDate.valueOf().max_date.getTime().div(1000);
       if (!parsedDate.max_date.isOffset) {
@@ -174,7 +175,6 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
          parsedDate.max_date.minutes -= minutes;
          max_date -= tz;
       }
-      parsedDate.max_date = UpdateTime(parsedDate.max_date, max_date);
    } else {
       let zeroDate = new Date(0);
       parsedDate.max_date = TimeListFromDate(parsedDate.max_date, zeroDate);
