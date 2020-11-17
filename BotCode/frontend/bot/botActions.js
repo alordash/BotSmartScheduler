@@ -250,7 +250,12 @@ async function CheckExpiredSchedules(bot, db) {
                ]).oneTime()
             );
             let msg;
-            const remindText = `⏰${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`;
+            let remindIcon = '⏰';
+            if(schedule.period_time > 0) {
+               remindIcon = '🔄';
+            }
+
+            const remindText = `${remindIcon}${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`;
             if (schedule.file_id != '~' && schedule.file_id != null) {
                msg = await SendAttachment(bot, schedule, +chatID, remindText, keyboard);
             } else {
