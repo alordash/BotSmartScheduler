@@ -45,7 +45,11 @@ exports.InitActions = function (bot, db) {
       let tz = await db.GetUserTZ(ctx.from.id);
       let language = await db.GetUserLanguage(ctx.from.id);
       let chatID = FormatChatId(ctx.chat.id);
-      await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db, language));
+      try {
+         await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db, language));
+      } catch (e) {
+         console.error(e);
+      }
    });
    bot.command('del', async ctx => {
       let language = await db.GetUserLanguage(ctx.from.id);
@@ -62,7 +66,7 @@ exports.InitActions = function (bot, db) {
       }
    });
    console.log('__dirname :>> ', __dirname);
-   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
+   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('\\')) + '/replies');
    console.log('repliesFiles :>> ', repliesFiles);
    for (filename of repliesFiles) {
       if (path.extname(filename) == '.json') {
