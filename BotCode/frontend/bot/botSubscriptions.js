@@ -45,10 +45,13 @@ exports.InitActions = function (bot, db) {
       let tz = await db.GetUserTZ(ctx.from.id);
       let language = await db.GetUserLanguage(ctx.from.id);
       let chatID = FormatChatId(ctx.chat.id);
-      try {
-         await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db, language));
-      } catch (e) {
-         console.error(e);
+      let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
+      for (const answer of answers) {
+         try {
+            await ctx.replyWithHTML(answer);
+         } catch (e) {
+            console.error(e);
+         }
       }
    });
    bot.command('del', async ctx => {
@@ -113,10 +116,13 @@ exports.InitActions = function (bot, db) {
             bot.hears(replies.showListAction, async ctx => {
                let chatID = FormatChatId(ctx.chat.id);
                let tz = await db.GetUserTZ(ctx.from.id);
-               try {
-                  return await ctx.replyWithHTML(await botActions.LoadSchedulesList(chatID, tz, db, language));
-               } catch (e) {
-                  console.error(e);
+               let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
+               for (const answer of answers) {
+                  try {
+                     await ctx.replyWithHTML(answer);
+                  } catch (e) {
+                     console.error(e);
+                  }
                }
             });
          }

@@ -100,22 +100,33 @@ async function SendAttachment(bot, schedule, chatID, caption, keyboard) {
  * @param {Number} tsOffset 
  * @param {dbManagement} db 
  * @param {Languages} language
+ * @returns {Array.<String>}
  */
 async function LoadSchedulesList(chatID, tsOffset, db, language) {
    let schedules = await db.ListSchedules(chatID);
    if (schedules.length > 0) {
+      let answers = [];
       let answer = ``;
       schedules.sort((a, b) => a.target_date - b.target_date);
       for (let schedule of schedules) {
          schedule.target_date = +schedule.target_date;
          schedule.period_time = +schedule.period_time;
          schedule.max_date = +schedule.max_date;
-         answer += `/${schedule.id}. ${FormStringFormatSchedule(schedule, schedule.period_time.div(1000), tsOffset, language)}\r\n`;
+         let newAnswer = `/${schedule.id}. ${FormStringFormatSchedule(schedule, schedule.period_time.div(1000), tsOffset, language)}\r\n`;
+         if (answer.length + newAnswer.length > global.MaxMessageLength) {
+            answers.push(answer);
+            answer = newAnswer;
+         } else {
+            answer += newAnswer;
+         }
       }
-      return answer;
+      if (answer.length > 0) {
+         answers.push(answer);
+      }
+      return answers;
    } else {
       const replies = LoadReplies(language);
-      return replies.listIsEmpty;
+      return [replies.listIsEmpty];
    }
 }
 
@@ -251,7 +262,7 @@ async function CheckExpiredSchedules(bot, db) {
             );
             let msg;
             let remindIcon = '⏰';
-            if(schedule.period_time > 0) {
+            if (schedule.period_time > 0) {
                remindIcon = '🔄';
             }
 
