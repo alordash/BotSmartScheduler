@@ -217,7 +217,7 @@ exports.InitActions = function (bot, db) {
    }
 
    bot.on('message', async ctx => {
-      console.log(`Received msg`);
+      console.log(`Received msg, text: ${ctx.message.text}`);
       try {
          await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);  
       } catch (e) {

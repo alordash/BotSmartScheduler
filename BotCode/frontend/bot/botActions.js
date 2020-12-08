@@ -521,6 +521,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                username = ctx.from.username;
                //            prevalence = 60;
             }
+            console.log('msgText :>> ', msgText);
             let parsedDates = parseDate(parseString(msgText, 1), 1, prevalence);
             let count = 1;
             let shouldWarn = false;
