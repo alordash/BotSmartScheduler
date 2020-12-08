@@ -270,9 +270,13 @@ async function CheckExpiredSchedules(bot, db) {
             if (schedule.file_id != '~' && schedule.file_id != null) {
                msg = await SendAttachment(bot, schedule, +chatID, remindText, keyboard);
             } else {
-               msg = await bot.telegram.sendMessage(+chatID, remindText, {
-                  ...keyboard
-               });
+               try {
+                  msg = await bot.telegram.sendMessage(+chatID, remindText, {
+                     ...keyboard
+                  });
+               } catch (e) {
+                  console.error(e)
+               }
             }
             setTimeout(function (msg) {
                bot.telegram.editMessageReplyMarkup(msg.chat.id, msg.message_id, Extra.markup((m) =>
