@@ -69,7 +69,7 @@ exports.InitActions = function (bot, db) {
       }
    });
    console.log('__dirname :>> ', __dirname);
-   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
+   let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
    console.log('repliesFiles :>> ', repliesFiles);
    for (filename of repliesFiles) {
       if (path.extname(filename) == '.json') {
@@ -218,6 +218,10 @@ exports.InitActions = function (bot, db) {
 
    bot.on('message', async ctx => {
       console.log(`Received msg`);
-      await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);
+      try {
+         await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);  
+      } catch (e) {
+         console.log(e)
+      }
    });
 }
