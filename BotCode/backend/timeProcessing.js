@@ -44,7 +44,7 @@ function TimeListIsEmpty(timeList) {
  * @returns {TimeList} 
  */
 function CopyTimeList(source, destination) {
-   if (typeof (destination) == undefined) {
+   if (typeof (destination) == 'undefined') {
       destination = {};
    }
    for (const timeProperty in source) {
