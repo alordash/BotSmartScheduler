@@ -525,7 +525,6 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
             let parsedDates = parseDate(parseString(msgText, 1), 1, prevalence);
             let count = 1;
             let shouldWarn = false;
-            let alreadyScheduled = false;
             let schedulesCount = (await db.GetSchedules(chatID)).length;
             if (parsedDates.length == 0) {
                if (!inGroup) {
@@ -535,18 +534,19 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                console.log(`schedulesCount = ${schedulesCount}`);
                let i = 1;
                for (let parsedDate of parsedDates) {
-                  if (parsedDates.length > 1) {
-                     reply += `${i}. `;
-                  }
-                  let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
-                  if (typeof (schedule) != 'undefined') {
-                     reply += rp.Scheduled(Decrypt(schedule.text, schedule.chatid), FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
-                     alreadyScheduled = true;
-                  } else {
-                     if (count + schedulesCount < global.MaximumCountOfSchedules) {
-                        let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
-                        if (typeof (dateParams) != 'undefined') {
+                  let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
+                  if (typeof (dateParams) != 'undefined') {
+                     let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
+                     if (typeof (schedule) != 'undefined') {
+                        if (!inGroup) {
+                           reply += rp.Scheduled(Decrypt(schedule.text, schedule.chatid), FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
+                        }
+                     } else {
+                        if (count + schedulesCount < global.MaximumCountOfSchedules) {
                            if (parsedDate.string.length > 0) {
+                              if (parsedDates.length > 1) {
+                                 reply += `${i}. `;
+                              }
                               if (typeof (pendingSchedules[chatID]) == 'undefined') {
                                  pendingSchedules[chatID] = [];
                               }
@@ -565,15 +565,15 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                            } else if (!inGroup) {
                               reply += replies.emptyString + '\r\n';
                            }
-                        } else if (!inGroup) {
-                           reply += replies.errorScheduling + '\r\n';
+                        } else {
+                           reply += replies.shouldRemove + '\r\n' + replies.maximumSchedulesCount + ` <b>${global.MaximumCountOfSchedules}</b>.`;
                         }
-                        if (!inGroup && !(await db.HasUserID(ctx.from.id))) {
-                           shouldWarn = true;
-                        }
-                     } else {
-                        reply += replies.shouldRemove + '\r\n' + replies.maximumSchedulesCount + ` <b>${global.MaximumCountOfSchedules}</b>.`;
                      }
+                  } else if (!inGroup) {
+                     reply += replies.errorScheduling + '\r\n';
+                  }
+                  if (!inGroup && !(await db.HasUserID(ctx.from.id))) {
+                     shouldWarn = true;
                   }
                   i++;
                }
@@ -590,7 +590,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                try {
                   if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
                      let keyboard;
-                     if (!alreadyScheduled || parsedDates.length > 1) {
+                     if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
                         keyboard = Extra.markup((m) =>
                            m.inlineKeyboard([
                               m.callbackButton(replies.confirmSchedule, `confirm`),
