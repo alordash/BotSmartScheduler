@@ -1,4 +1,5 @@
 const Markup = require('telegraf/markup');
+const Extra = require('telegraf/extra');
 
 const Languages = Object.freeze({
     general: "general",
@@ -36,6 +37,16 @@ function TzDeterminationKeyboard(language) {
         ]).oneTime()
         .resize()
         .extra()
+}
+
+/**@param {Languages} language */
+function TzDeterminationOnStartInlineKeyboard(language) {
+    const replies = LoadReplies(language);
+    return Extra.markup((m) =>
+       m.inlineKeyboard([
+          m.callbackButton(replies.startTZ, `startTZ`)
+       ]).oneTime()
+    );
 }
 
 /**
@@ -117,6 +128,7 @@ module.exports = {
     GetMonthsNames,
     ListKeyboard,
     TzDeterminationKeyboard,
+    TzDeterminationOnStartInlineKeyboard,
     Deleted,
     TzDetermined,
     TzLocation,

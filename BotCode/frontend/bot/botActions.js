@@ -395,8 +395,9 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
 /**
  * @param {*} ctx 
  * @param {dbManagement} db 
+ * @param {Array.<Number>} tzPendingConfirmationUsers
  */
-async function HandleCallbackQuery(ctx, db) {
+async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
    console.log("got callback_query");
    const data = ctx.callbackQuery.data;
    let chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
@@ -453,6 +454,18 @@ async function HandleCallbackQuery(ctx, db) {
          break;
       case 'unsubscribe':
          await db.SetUserSubscription(ctx.from.id, false);
+         break;
+      case 'startTZ':
+         try {
+            let language = await db.GetUserLanguage(ctx.from.id);
+            ctx.from.language_code = language;
+            ctx.editMessageReplyMarkup(Extra.markup((m) =>
+               m.inlineKeyboard([]).removeKeyboard()
+            ));
+            await StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
+         } catch (e) {
+            console.error(e);
+         }
          break;
       default:
          break;
@@ -605,7 +618,6 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                      setTimeout(function (ctx, msg) {
                         if (typeof (msg) != 'undefined') {
                            let chatID = FormatChatId(msg.chat.id);
-                           console.log('msg.message_id :>> ', msg.message_id);
                            ctx.telegram.deleteMessage(msg.chat.id, msg.message_id);
                            pendingSchedules[chatID] = [];
                         }

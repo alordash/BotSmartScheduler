@@ -9,7 +9,6 @@ const { Composer } = require('telegraf');
 const { dbManagement, User } = require('../../backend/dataBase/db');
 const { speechToText } = require('../../backend/stt/stt');
 const Markup = require('telegraf/markup');
-const { pathToFileURL } = require('url');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 
 let tzPendingConfirmationUsers = [];
@@ -19,12 +18,12 @@ let tzPendingConfirmationUsers = [];
  * @param {dbManagement} db 
  */
 exports.InitActions = function (bot, db) {
-   bot.start(ctx => {
+   bot.start(async ctx => {
       const replies = LoadReplies(Languages.general);
-      let options = rp.TzDeterminationKeyboard(Languages.EN);
-      options['disable_web_page_preview'] = true;
       try {
-         ctx.replyWithHTML(replies.start, options);
+         let inlineKeyboard = rp.TzDeterminationOnStartInlineKeyboard(Languages.general);
+         inlineKeyboard['disable_web_page_preview'] = true;
+         await ctx.replyWithHTML(replies.start, inlineKeyboard);
       } catch (e) {
          console.error(e);
       }
@@ -69,8 +68,8 @@ exports.InitActions = function (bot, db) {
       }
    });
    console.log('__dirname :>> ', __dirname);
-//   let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
-   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
+   //   let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
+      let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
    console.log('repliesFiles :>> ', repliesFiles);
    for (filename of repliesFiles) {
       if (path.extname(filename) == '.json') {
@@ -184,7 +183,7 @@ exports.InitActions = function (bot, db) {
    bot.on('callback_query', async (ctx) => {
       let language = await db.GetUserLanguage(ctx.from.id);
       ctx.from.language_code = language;
-      await botActions.HandleCallbackQuery(ctx, db)
+      await botActions.HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers)
    });
 
    if (!!process.env.YC_FOLDER_ID && !!process.env.YC_API_KEY) {
@@ -220,7 +219,7 @@ exports.InitActions = function (bot, db) {
    bot.on('message', async ctx => {
       console.log(`Received msg, text: ${ctx.message.text}`);
       try {
-         await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);  
+         await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);
       } catch (e) {
          console.log(e)
       }
