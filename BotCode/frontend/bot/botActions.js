@@ -491,7 +491,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
    if (typeof (msgText) == 'undefined') {
       msgText = ctx.message.caption;
    }
-   if (typeof (msgText) != 'undefined') {
+   if (typeof (msgText) != 'undefined' && (!inGroup || (inGroup && typeof(ctx.message.forward_date) == 'undefined'))) {
       const language = DetermineLanguage(msgText);
       ctx.from.language_code = language;
 
