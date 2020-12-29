@@ -112,7 +112,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
          schedule.target_date = +schedule.target_date;
          schedule.period_time = +schedule.period_time;
          schedule.max_date = +schedule.max_date;
-         let newAnswer = `/${schedule.id}. ${FormStringFormatSchedule(schedule, schedule.period_time.div(1000), tsOffset, language)}\r\n`;
+         let newAnswer = `${FormStringFormatSchedule(schedule, schedule.period_time.div(1000), tsOffset, language)}\r\n`;
          if (answer.length + newAnswer.length > global.MaxMessageLength) {
             answers.push(answer);
             answer = newAnswer;
@@ -537,7 +537,6 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                username = ctx.from.username;
                //            prevalence = 60;
             }
-            console.log('msgText :>> ', msgText);
             let parsedDates = parseDate(parseString(msgText, 1), 1, prevalence);
             let count = 1;
             let shouldWarn = false;
@@ -552,10 +551,18 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                for (let parsedDate of parsedDates) {
                   let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
                   if (typeof (dateParams) != 'undefined') {
-                     let schedule = await db.GetScheduleByText(chatID, parsedDate.string);
-                     if (typeof (schedule) != 'undefined') {
+                     let schedules = await db.GetSchedules(chatID);
+                     let found = false;
+                     let i = 0;
+                     for (; !found && i < schedules.length; i++) {
+                        if(schedules[i].text == parsedDate.string) {
+                           found = true;
+                        }
+                     }
+                     if (found) {
+                        let schedule = schedules[i];
                         if (!inGroup) {
-                           reply += rp.Scheduled(Decrypt(schedule.text, schedule.chatid), FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
+                           reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
                         }
                      } else {
                         if (count + schedulesCount < global.MaximumCountOfSchedules) {
@@ -568,7 +575,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                               }
                               let newSchedule = new Schedule(
                                  chatID,
-                                 0,
+                                 schedules.length + 1,
                                  parsedDate.string,
                                  username,
                                  dateParams.target_date,
