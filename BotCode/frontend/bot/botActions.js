@@ -254,6 +254,7 @@ async function CheckExpiredSchedules(bot, db) {
          }
          let language = await db.GetUserLanguage(+chatID);
          const replies = LoadReplies(language);
+         let isBlocked = false;
          try {
             let keyboard = Extra.markup((m) =>
                m.inlineKeyboard([
@@ -267,45 +268,47 @@ async function CheckExpiredSchedules(bot, db) {
             }
 
             const remindText = `${remindIcon}${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`;
-            if (schedule.file_id != '~' && schedule.file_id != null) {
-               msg = await SendAttachment(bot, schedule, +chatID, remindText, keyboard);
-            } else {
-               try {
+            try {
+               if (schedule.file_id != '~' && schedule.file_id != null) {
+                  msg = await SendAttachment(bot, schedule, +chatID, remindText, keyboard);
+               } else {
                   msg = await bot.telegram.sendMessage(+chatID, remindText, {
                      ...keyboard
                   });
-               } catch (e) {
-                  console.error(e)
                }
+               setTimeout(function (msg) {
+                  bot.telegram.editMessageReplyMarkup(msg.chat.id, msg.message_id, Extra.markup((m) =>
+                     m.inlineKeyboard([]).removeKeyboard()
+                  ));
+               }, repeatScheduleTime, msg);
+            } catch (e) {
+               console.error(e);
+               isBlocked = true;
             }
-            setTimeout(function (msg) {
-               bot.telegram.editMessageReplyMarkup(msg.chat.id, msg.message_id, Extra.markup((m) =>
-                  m.inlineKeyboard([]).removeKeyboard()
-               ));
-            }, repeatScheduleTime, msg);
          } catch (e) {
             console.error(e);
          }
          let shouldDelete = true;
-         const nowSeconds = Date.now();
-         schedule.target_date = +schedule.target_date;
-         schedule.period_time = +schedule.period_time;
-         schedule.max_date = +schedule.max_date;
-         if (schedule.period_time >= 60 && schedule.max_date >= 60) {
-            if (nowSeconds < schedule.max_date) {
+         if (!isBlocked) {
+            const nowSeconds = Date.now();
+            schedule.target_date = +schedule.target_date;
+            schedule.period_time = +schedule.period_time;
+            schedule.max_date = +schedule.max_date;
+            if (schedule.period_time >= 60 && schedule.max_date >= 60) {
+               if (nowSeconds < schedule.max_date) {
+                  shouldDelete = false;
+                  await db.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
+               }
+            } else if (schedule.period_time >= 60 && schedule.max_date < 60) {
                shouldDelete = false;
                await db.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
-            }
-         } else if (schedule.period_time >= 60 && schedule.max_date < 60) {
-            shouldDelete = false;
-            await db.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
-         } else if (schedule.period_time < 60 && schedule.max_date >= 60) {
-            if (nowSeconds < schedule.max_date) {
-               shouldDelete = false;
-               await db.SetScheduleTargetDate(schedule.chatid, schedule.id, schedule.max_date);
+            } else if (schedule.period_time < 60 && schedule.max_date >= 60) {
+               if (nowSeconds < schedule.max_date) {
+                  shouldDelete = false;
+                  await db.SetScheduleTargetDate(schedule.chatid, schedule.id, schedule.max_date);
+               }
             }
          }
-
          if (shouldDelete) {
             let index = GetDeletingIDsIndex(schedule.chatid, deletingIDs);
             if (index === false) {
