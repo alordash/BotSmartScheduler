@@ -1,6 +1,6 @@
 # Bot Smart Scheduler
 
-## Links
+## Ссылки
 
 - [English version](README-EN.md)
 
