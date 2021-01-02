@@ -112,7 +112,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
          schedule.target_date = +schedule.target_date;
          schedule.period_time = +schedule.period_time;
          schedule.max_date = +schedule.max_date;
-         let newAnswer = `${FormStringFormatSchedule(schedule, schedule.period_time.div(1000), tsOffset, language)}\r\n`;
+         let newAnswer = `${FormStringFormatSchedule(schedule, tsOffset, language)}\r\n`;
          if (answer.length + newAnswer.length > global.MaxMessageLength) {
             answers.push(answer);
             answer = newAnswer;
@@ -586,7 +586,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                                  file_id);
                               pendingSchedules[chatID].push(newSchedule);
                               count++;
-                              reply += FormStringFormatSchedule(newSchedule, dateParams.period_time.div(1000), tz, language) + `\r\n`;
+                              reply += FormStringFormatSchedule(newSchedule, tz, language) + `\r\n`;
                            } else if (!inGroup) {
                               reply += replies.emptyString + '\r\n';
                            }

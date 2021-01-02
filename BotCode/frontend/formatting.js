@@ -48,12 +48,12 @@ function FormPeriodStringFormat(period_time, language) {
 }
 
 /**@param {Schedule} schedule
- * @param {Number} period_time 
  * @param {Number} tz 
  * @param {Language} language 
  * @returns {String}
  */
-function FormStringFormatSchedule(schedule, period_time, tz, language) {
+function FormStringFormatSchedule(schedule, tz, language) {
+   let period_time = schedule.period_time.div(1000);
    let target_date = new Date(schedule.target_date + tz * 1000);
    console.log(`FORMATTING target_date: ${schedule.target_date}, tz: ${tz}, will be: ${schedule.target_date + tz * 1000}`);
    let max_date = new Date(schedule.max_date + tz * 1000);
