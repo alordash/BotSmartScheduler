@@ -549,7 +549,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                }
             } else {
                console.log(`schedulesCount = ${schedulesCount}`);
-               let i = 1;
+               let parsedDateIndex = 0;
                for (let parsedDate of parsedDates) {
                   let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
                   if (typeof (dateParams) != 'undefined') {
@@ -562,7 +562,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                         }
                      }
                      if (found) {
-                        let schedule = schedules[i];
+                        let schedule = schedules[i - 1];
                         if (!inGroup) {
                            reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
                         }
@@ -570,14 +570,14 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                         if (count + schedulesCount < global.MaximumCountOfSchedules) {
                            if (parsedDate.string.length > 0) {
                               if (parsedDates.length > 1) {
-                                 reply += `${i}. `;
+                                 reply += `${parsedDateIndex + 1}. `;
                               }
                               if (typeof (pendingSchedules[chatID]) == 'undefined') {
                                  pendingSchedules[chatID] = [];
                               }
                               let newSchedule = new Schedule(
                                  chatID,
-                                 schedules.length + 1,
+                                 schedules.length + parsedDateIndex + 1,
                                  parsedDate.string,
                                  username,
                                  dateParams.target_date,
@@ -600,7 +600,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                   if (!inGroup && !(await db.HasUserID(ctx.from.id))) {
                      shouldWarn = true;
                   }
-                  i++;
+                  parsedDateIndex++;
                }
             }
             if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
