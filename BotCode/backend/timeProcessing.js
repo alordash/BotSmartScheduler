@@ -150,6 +150,7 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
       target_date += period_time;
    } else if (TimeListIsEmpty(parsedDate.target_date) && !TimeListIsEmpty(parsedDate.max_date)) {
       parsedDate.target_date = SetTimeList(parsedDate.max_date, parsedDate.target_date);
+      parsedDate.max_date = new TimeList();
       target_date = dateValues.target_date.getTime().div(1000);
    }
    if (!parsedDate.target_date.isOffset) {
