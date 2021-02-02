@@ -4,8 +4,8 @@ const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('../replies/replies');
 const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
-const { parseString } = require('@alordash/parse-word-to-number');
-const { parseDate, TimeList } = require('@alordash/date-parser');
+const { arrayParseString } = require('@alordash/parse-word-to-number');
+const { wordsParseDate, TimeList } = require('@alordash/date-parser');
 const { FormStringFormatSchedule, FormDateStringFormat } = require('../formatting');
 const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
@@ -539,7 +539,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                username = ctx.from.username;
                //            prevalence = 60;
             }
-            let parsedDates = parseDate(parseString(msgText, 1), 1, prevalence);
+            let parsedDates = wordsParseDate(arrayParseString(msgText, 1), 1, prevalence, msgText);
             let count = 1;
             let shouldWarn = false;
             let schedulesCount = (await db.GetSchedules(chatID)).length;
