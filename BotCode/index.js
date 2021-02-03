@@ -8,7 +8,7 @@ console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 var SmartSchedulerBot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
 
 let dbUrl;
-if (process.env.IS_HEROKU) {
+if (process.env.IS_HEROKU == 'true') {
    dbUrl = new URL(process.env.DATABASE_URL);
 } else {
    dbUrl = new URL(process.env.SMART_SCHEDULER_DB_URL);
