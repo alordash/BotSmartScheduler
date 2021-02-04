@@ -55,5 +55,14 @@
         "dates": "days",
         "months": "months",
         "years": "years"
-    }
+    },
+    "daysOfWeek": [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday"
+    ]
 }

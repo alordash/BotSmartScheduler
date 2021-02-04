@@ -12,13 +12,6 @@ function LoadReplies(language) {
     return require(`${__dirname}/${language}.json`);
 }
 
-/**@param {Languages} language
- * @returns {Array.<String>}
- */
-function GetMonthsNames(language) {
-    return LoadReplies(language).months;
-}
-
 /**@param {Languages} language */
 function ListKeyboard(language) {
     const replies = LoadReplies(language);
@@ -125,7 +118,6 @@ function Scheduled(text, myFormattedDate, language) {
 module.exports = {
     Languages,
     LoadReplies,
-    GetMonthsNames,
     ListKeyboard,
     TzDeterminationKeyboard,
     TzDeterminationOnStartInlineKeyboard,
