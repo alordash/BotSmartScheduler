@@ -2,27 +2,33 @@ const { ParsedDate } = require('@alordash/date-parser');
 const { Schedule } = require('../backend/dataBase/db');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 const { TimeListIsEmpty } = require('../backend/timeProcessing');
-const { Language, GetMonthsNames, LoadReplies } = require('./replies/replies');
+const { Language, LoadReplies } = require('./replies/replies');
 
 /**@param {Date} date 
  * @param {Language} language 
+ * @param {Boolean} showDayOfWeek 
  * @returns {String} 
  */
-function FormDateStringFormat(date, language) {
+function FormDateStringFormat(date, language, showDayOfWeek) {
+   const replies = LoadReplies(language);
    let month = date.getMonth();
    let hour = date.getHours().toString(10),
       minute = date.getMinutes().toString(10);
    if (hour.length <= 1) {
-      hour = '0' + hour;
+      hour = `0${hour}`;
    }
    if (minute.length <= 1) {
-      minute = '0' + minute;
+      minute = `0${minute}`;
    }
    let year = '';
    if (date.getFullYear() != new Date().getFullYear()) {
-      year = ` ${date.getFullYear()} г.`;
+      year = ` ${date.getFullYear()} ${replies.year}`;
    }
-   return `${date.getDate()} ${GetMonthsNames(language)[month]} ${hour}:${minute}${year}`;
+   let dayOfWeek = '';
+   if(showDayOfWeek) {
+      dayOfWeek = ` (${replies.daysOfWeek[date.getDay()]})`;
+   }
+   return `${date.getDate()} ${replies.months[month]} ${hour}:${minute}${year}${dayOfWeek}`;
 }
 
 /**@param {Number} period_time 
@@ -50,9 +56,10 @@ function FormPeriodStringFormat(period_time, language) {
 /**@param {Schedule} schedule
  * @param {Number} tz 
  * @param {Language} language 
+ * @param {Boolean} showDayOfWeek 
  * @returns {String}
  */
-function FormStringFormatSchedule(schedule, tz, language) {
+function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek) {
    let period_time = schedule.period_time.div(1000);
    let target_date = new Date(schedule.target_date + tz * 1000);
    console.log(`FORMATTING target_date: ${schedule.target_date}, tz: ${tz}, will be: ${schedule.target_date + tz * 1000}`);
@@ -71,12 +78,8 @@ function FormStringFormatSchedule(schedule, tz, language) {
    if (schedule.username != 'none') {
       username = ` (<b>${schedule.username}</b>)`;
    }
-   let divider = ' ';
-   if (until != '' || period != '') {
-      divider = '\r\n      ';
-   }
    let file = (schedule.file_id != '~' && schedule.file_id != null) ? ' 💾' : '';
-   return `/${schedule.id}. <b>${FormDateStringFormat(target_date, language)}</b> "${schedule.text}"${file}${username}${until}${period}`;
+   return `/${schedule.id}. <b>${FormDateStringFormat(target_date, language, showDayOfWeek)}</b> "${schedule.text}"${file}${username}${until}${period}`;
 }
 
 module.exports = {
