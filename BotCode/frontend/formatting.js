@@ -24,8 +24,9 @@ function FormDateStringFormat(date, language, showDayOfWeek) {
    if (date.getFullYear() != new Date().getFullYear()) {
       year = ` ${date.getFullYear()} ${replies.year}`;
    }
+
    let dayOfWeek = '';
-   if(showDayOfWeek) {
+   if(showDayOfWeek && (date.getTime() - Date.now() > 24 * 60 * 60 * 1000)) {
       dayOfWeek = ` (${replies.daysOfWeek[date.getDay()]})`;
    }
    return `${date.getDate()} ${replies.months[month]} ${hour}:${minute}${year}${dayOfWeek}`;
