@@ -70,7 +70,7 @@ function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek) {
    let until = '';
    let period = '';
    if (max_date.getTime() >= Date.now()) {
-      until = `\r\n      ${replies.until} <b>${FormDateStringFormat(max_date, language)}</b>`;
+      until = `\r\n      ${replies.until} <b>${FormDateStringFormat(max_date, language, showDayOfWeek)}</b>`;
    }
    if (period_time >= 60) {
       period = `\r\n      ${replies.everyTime} <b>${FormPeriodStringFormat(period_time, language)}</b>`;

@@ -427,7 +427,7 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
 
          try {
             await db.AddSchedule(schedule);
-            let newText = text + '\r\n' + replies.remindSchedule + ' <b>' + FormDateStringFormat(new Date(target_date + tz * 1000), language) + '</b>';
+            let newText = text + '\r\n' + replies.remindSchedule + ' <b>' + FormDateStringFormat(new Date(target_date + tz * 1000), language, false) + '</b>';
             if (hasCaption) {
                ctx.editMessageCaption(newText, { parse_mode: 'HTML' });
             } else {
@@ -564,7 +564,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                      if (found) {
                         let schedule = schedules[i - 1];
                         if (!inGroup) {
-                           reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language), language);
+                           reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language, true), language);
                         }
                      } else {
                         if (count + schedulesCount < global.MaximumCountOfSchedules) {
