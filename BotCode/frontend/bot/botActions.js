@@ -385,7 +385,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
       try {
          return ctx.replyWithHTML(replies.tzInvalidInput, Extra.markup((m) =>
             m.inlineKeyboard([
-               m.callbackButton(replies.tzCancel, 'tz cancel')
+               m.callbackButton(replies.cancel, 'cancel')
             ]).oneTime()
          ));
       } catch (e) {
@@ -483,15 +483,16 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
  * @param {*} ctx 
  * @param {dbManagement} db 
  * @param {Array.<Number>} tzPendingConfirmationUsers 
+ * @param {Array.<Number>} trelloPendingConfirmationUsers 
  */
-async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
+async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers) {
    let chatID = FormatChatId(ctx.chat.id)
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
    if (typeof (msgText) == 'undefined') {
       msgText = ctx.message.caption;
    }
-   if (typeof (msgText) != 'undefined' && (!inGroup || (inGroup && typeof(ctx.message.forward_date) == 'undefined'))) {
+   if (typeof (msgText) != 'undefined' && (!inGroup || (inGroup && typeof (ctx.message.forward_date) == 'undefined'))) {
       const language = DetermineLanguage(msgText);
       ctx.from.language_code = language;
 
@@ -506,6 +507,8 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
       }
       if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
          ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers);
+      } else if (trelloPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
+         TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers)
       } else {
          let reply = '';
          if (msgText[0] == '/') {
@@ -557,7 +560,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                      let found = false;
                      let i = 0;
                      for (; !found && i < schedules.length; i++) {
-                        if(schedules[i].text == parsedDate.string) {
+                        if (schedules[i].text == parsedDate.string) {
                            found = true;
                         }
                      }
@@ -646,12 +649,22 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
 /**
  * @param {*} ctx 
  * @param {User} user
+ * @param {Array.<Number>} trelloPendingConfirmationUsers 
+ */
+async function TrelloCommand(user, ctx, trelloPendingConfirmationUsers) {
+   if (user.trello_token == null) {
+      trelloPendingConfirmationUsers.push(ctx.from.id);
+      await ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, "Smart Scheduler", user.lang),
+         rp.CancelKeyboard(user.lang));
+   }
+}
+
+/**
+ * @param {*} ctx 
  * @param {dbManagement} db 
  */
-async function TrelloCommand(bot, user, ctx, db) {
-   if(user.trello_token == null) {
-      await ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, "Smart Scheduler", user.lang));
-   }
+async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
+
 }
 
 module.exports = {

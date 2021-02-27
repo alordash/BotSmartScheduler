@@ -26,7 +26,7 @@ function TzDeterminationKeyboard(language) {
     return Markup
         .keyboard([
             [{ text: replies.tzUseLocation, request_location: true }, { text: replies.tzTypeManually }],
-            [{ text: replies.tzCancel }]
+            [{ text: replies.cancel }]
         ]).oneTime()
         .resize()
         .extra()
@@ -121,6 +121,17 @@ function TrelloAuthorizationMessage(trello_key, app_name, language) {
     return `${replies.trelloAuthenticate0}${link}${replies.trelloAuthenticate1}`;
 }
 
+/**@param {Languages} language */
+function CancelKeyboard(language) {
+    const replies = LoadReplies(language);
+    return Markup
+        .keyboard([
+            [{ text: replies.cancel }]
+        ]).oneTime()
+        .resize()
+        .extra()
+}
+
 module.exports = {
     Languages,
     LoadReplies,
@@ -132,5 +143,6 @@ module.exports = {
     TzLocation,
     TzCurrent,
     Scheduled,
-    TrelloAuthorizationMessage
+    TrelloAuthorizationMessage,
+    CancelKeyboard
 }

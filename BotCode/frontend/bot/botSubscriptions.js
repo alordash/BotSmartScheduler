@@ -12,6 +12,7 @@ const Markup = require('telegraf/markup');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 
 let tzPendingConfirmationUsers = [];
+let trelloPendingConfirmationUsers = [];
 
 /**
  * @param {Composer} bot 
@@ -70,7 +71,7 @@ exports.InitActions = function (bot, db) {
    bot.command('trello', async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
-         await botActions.TrelloCommand(bot, user, ctx, db);
+         await botActions.TrelloCommand(user, ctx, trelloPendingConfirmationUsers);
       } catch (e) {
          console.error(e);
       }
@@ -104,11 +105,15 @@ exports.InitActions = function (bot, db) {
                }
             });
          }
-         if (typeof (replies.tzCancel) != 'undefined') {
-            bot.hears(replies.tzCancel, async ctx => {
-               tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-               let reply = replies.tzCancelReponse;
-               if (!await db.HasUserID(ctx.from.id)) {
+         if (typeof (replies.cancel) != 'undefined') {
+            bot.hears(replies.cancel, async ctx => {
+               let tzIndex = tzPendingConfirmationUsers.indexOf(ctx.from.id)
+               if (tzIndex >= 0) {
+                  tzPendingConfirmationUsers.splice(tzIndex, 1);
+               }
+               let reply = replies.cancelReponse;
+               let user = await db.GetUserById(ctx.from.id);
+               if (typeof (user) == 'undefined' || user.tz == null) {
                   reply += '\r\n' + replies.tzCancelWarning;
                }
                try {
@@ -142,12 +147,16 @@ exports.InitActions = function (bot, db) {
       }
    }
 
-   bot.action('tz cancel', async ctx => {
+   bot.action('cancel', async ctx => {
       let language = await db.GetUserLanguage(ctx.from.id);
       const replies = LoadReplies(language);
-      tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-      let text = replies.tzCancelReponse;
-      if (!await db.HasUserID(ctx.from.id)) {
+      let tzIndex = tzPendingConfirmationUsers.indexOf(ctx.from.id);
+      if (tzIndex >= 0) {
+         tzPendingConfirmationUsers.splice(tzIndex, 1);
+      }
+      let text = replies.cancelReponse;
+      let user = await db.GetUserById(ctx.from.id);
+      if (typeof (user) == 'undefined' || user.tz == null) {
          text += '\r\n' + replies.tzCancelWarning;
       }
       try {
@@ -212,7 +221,7 @@ exports.InitActions = function (bot, db) {
                ctx.message.text = text;
                let language = await db.GetUserLanguage(ctx.from.id);
                ctx.from.language_code = language;
-               botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);
+               botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);
             }
          } else {
             try {
@@ -227,7 +236,7 @@ exports.InitActions = function (bot, db) {
    bot.on('message', async ctx => {
       console.log(`Received msg, text: ${ctx.message.text}`);
       try {
-         await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);
+         await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);
       } catch (e) {
          console.log(e)
       }
