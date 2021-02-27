@@ -40,6 +40,7 @@
     "trelloAuthenticate1": "\">this link 🔗</a>, then press the bottom button <b>[ Allow ]</b>.\r\nIn opened tab <b>copy</b> your token 🔐 and <b>send it</b> in message to bot.",
     "trelloValidToken": "🔒 Saved token.",
     "trelloShowBoards": "Your boards:",
+    "trelloShowBoardsEnd": "List of boards: /trello",
     "trelloWrongToken": "🚫 Please enter valid token.",
     "trelloChangedBoard": "🗃",
     "trelloPinnedBoard": "Pinned",

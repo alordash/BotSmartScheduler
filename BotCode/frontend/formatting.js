@@ -91,13 +91,14 @@ function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek) {
  * @param {User} user 
  */
 function FormBoardsList(boardsList, language, user) {
-   let reply = `${LoadReplies(language).trelloShowBoards}\r\n`;
+   const replies = LoadReplies(language);
+   let reply = `${replies.trelloShowBoards}\r\n`;
    let i = 1;
    for (const board of boardsList) {
       reply += `  ${trelloAddBoardCommand}${i} | <a href="${board.shortUrl}">${board.name}</a>${user.trello_boards.indexOf(board.id) >= 0 ? ' 📎' : ''}\r\n`;
       i++;
    }
-   return reply;
+   return `${reply}${replies.trelloShowBoardsEnd}`;
 }
 
 module.exports = {
