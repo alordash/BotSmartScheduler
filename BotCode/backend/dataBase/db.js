@@ -49,6 +49,8 @@ class User {
    lang;
    /**@type {Boolean} */
    subscribed;
+   /**@type {String} */
+   trello_token
 
    /**@param {Number} id 
     * @param {Number} tz 
@@ -387,7 +389,14 @@ class dbManagement {
       }
    }
 
-   async FixSchedulesTable() {
+   async ExpandSchedulesTable(column_name) {
+      const column = await this.Query(`SELECT column_name 
+      FROM information_schema.columns
+      WHERE table_name='schedules' AND column_name = '${column_name}'`);
+      if (column.rowCount > 0) {
+         return;
+      }
+
       let schedules = await this.GetAllSchedules();
       await this.Query(`ALTER TABLE schedules DROP COLUMN IF EXISTS ts`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS target_date BIGINT`);
@@ -395,7 +404,7 @@ class dbManagement {
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS max_date BIGINT`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS file_id TEXT`);
       for (let schedule of schedules) {
-         console.log(`Schedule with id: ${schedule.id} doesn't have file_id field`);
+         console.log(`Schedule with id: ${schedule.id} doesn't have '${column_name}' field`);
          await this.Query(
             `UPDATE schedules 
             SET file_id = '~'
@@ -404,46 +413,34 @@ class dbManagement {
       }
    }
 
-   async FixUsersIdsTable() {
+   async ExpandUsersIdsTable(column_name) {
+      const column = await this.Query(`SELECT column_name 
+      FROM information_schema.columns
+      WHERE table_name='userids' AND column_name = '${column_name}'`);
+      if (column.rowCount > 0) {
+         return;
+      }
+
       let users = await this.GetAllUsers();
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS lang TEXT`);
-      await this.Query(`ALTER TABLE userids DROP COLUMN subscribed`);
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS subscribed BOOLEAN`);
+      await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS trello_token TEXT`);
       for (let user of users) {
-         console.log(`User "${user.id}" doesn't have "subscribed" field`);
-         await this.Query(
+         console.log(`User "${user.id}" doesn't have '${column_name}' field`);
+         this.Query(
             `UPDATE userids 
-            SET lang = '${this.defaultUserLanguage}',
-            subscribed = true
+            SET lang = '${this.defaultUserLanguage}'
             WHERE id = ${user.id};`);
       }
    }
 
    async InitDB() {
-      const checkSchedules = await this.Query(`SELECT table_name 
-      FROM information_schema.tables
-      WHERE table_name='schedules'`);
-      if (checkSchedules.rowCount == 0) {
-         await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT)');
-      }
-      const checkUsers = await this.Query(`SELECT table_name 
-      FROM information_schema.tables
-      WHERE table_name='userids'`);
-      if (checkUsers.rowCount == 0) {
-         await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN)');
-      }
-      const checkSchedulesColumns = await this.Query(`SELECT column_name 
-      FROM information_schema.columns
-      WHERE table_name='schedules' AND column_name = 'file_id'`);
-      if (checkSchedulesColumns.rowCount === 0) {
-         await this.FixSchedulesTable();
-      }
-      const checkUsersColumns = await this.Query(`SELECT column_name 
-      FROM information_schema.columns
-      WHERE table_name='userids' AND column_name = 'subscribed'`);
-      if (checkUsersColumns.rowCount === 0) {
-         await this.FixUsersIdsTable();
-      }
+      await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT)');
+      await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN, trello_token TEXT)');
+      
+      await this.ExpandSchedulesTable('file_id');
+      
+      await this.ExpandUsersIdsTable('trello_token');
 
       if (process.env.SMART_SCHEDULER_ENCRYPT_SCHEDULES === 'true') {
          await this.EncryptSchedules();
