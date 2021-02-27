@@ -132,6 +132,15 @@ function CancelKeyboard(language) {
         .extra()
 }
 
+function CancelButton(language) {
+    const replies = LoadReplies(language);
+    return Extra.markup((m) =>
+    m.inlineKeyboard([
+       m.callbackButton(replies.cancel, 'cancel')
+    ]).oneTime()
+ )
+}
+
 module.exports = {
     Languages,
     LoadReplies,
@@ -144,5 +153,6 @@ module.exports = {
     TzCurrent,
     Scheduled,
     TrelloAuthorizationMessage,
-    CancelKeyboard
+    CancelKeyboard,
+    CancelButton
 }

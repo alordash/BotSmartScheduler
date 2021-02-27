@@ -30,6 +30,22 @@ function DetermineLanguage(string) {
    return ruCount > enCount ? Languages.RU : Languages.EN;
 }
 
+/**
+ * @param {Array.<Number>} tz 
+ * @param {Array.<Number>} trello 
+ * @param {Number} id 
+ */
+function ClearPendingConfirmation(tzs, trellos, id) {
+   let index = tzs.indexOf(id)
+   if (index >= 0) {
+      tzs.splice(index, 1);
+   }
+   index = trellos.indexOf(id);
+   if(index >= 0) {
+      trellos.splice(index, 1);
+   }
+}
+
 function GetDeletingIDsIndex(chatID, deletingIDs) {
    if (deletingIDs.length) {
       for (let i in deletingIDs) {
@@ -383,11 +399,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
    } else {
       console.log(`Can't determine tz in "${ctx.message.text}"`);
       try {
-         return ctx.replyWithHTML(replies.tzInvalidInput, Extra.markup((m) =>
-            m.inlineKeyboard([
-               m.callbackButton(replies.cancel, 'cancel')
-            ]).oneTime()
-         ));
+         return ctx.replyWithHTML(replies.tzInvalidInput, rp.CancelButton(ctx.from.language_code));
       } catch (e) {
          console.error(e);
       }
@@ -664,10 +676,11 @@ async function TrelloCommand(user, ctx, trelloPendingConfirmationUsers) {
  * @param {dbManagement} db 
  */
 async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
-
+   await ctx.reply("Waiting for token", rp.CancelButton(ctx.from.language_code));
 }
 
 module.exports = {
+   ClearPendingConfirmation,
    GetDeletingIDsIndex,
    FormatChatId,
    LoadSchedulesList,

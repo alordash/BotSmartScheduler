@@ -107,10 +107,7 @@ exports.InitActions = function (bot, db) {
          }
          if (typeof (replies.cancel) != 'undefined') {
             bot.hears(replies.cancel, async ctx => {
-               let tzIndex = tzPendingConfirmationUsers.indexOf(ctx.from.id)
-               if (tzIndex >= 0) {
-                  tzPendingConfirmationUsers.splice(tzIndex, 1);
-               }
+               botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
                let reply = replies.cancelReponse;
                let user = await db.GetUserById(ctx.from.id);
                if (typeof (user) == 'undefined' || user.tz == null) {
@@ -150,17 +147,13 @@ exports.InitActions = function (bot, db) {
    bot.action('cancel', async ctx => {
       let language = await db.GetUserLanguage(ctx.from.id);
       const replies = LoadReplies(language);
-      let tzIndex = tzPendingConfirmationUsers.indexOf(ctx.from.id);
-      if (tzIndex >= 0) {
-         tzPendingConfirmationUsers.splice(tzIndex, 1);
-      }
+      botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
       let text = replies.cancelReponse;
       let user = await db.GetUserById(ctx.from.id);
       if (typeof (user) == 'undefined' || user.tz == null) {
          text += '\r\n' + replies.tzCancelWarning;
       }
       try {
-         ctx.editMessageText('...');
          await ctx.answerCbQuery();
          const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
          await ctx.replyWithHTML(text,
@@ -188,6 +181,7 @@ exports.InitActions = function (bot, db) {
          }
          try {
             const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+            botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
             ctx.replyWithHTML(replies.tzDefined + '<b>' + rp.TzLocation(rawOffset) + '</b>',
                schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
          } catch (e) {
