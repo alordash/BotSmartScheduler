@@ -43,8 +43,8 @@
     "trelloShowBoardsEnd": "Список досок: /trello",
     "trelloWrongToken": "🚫 Пожалуйста введите верный токен.",
     "trelloChangedBoard": "🗃",
-    "trelloPinnedBoard": "Добавлена",
-    "trelloUnpinnedBoard": "Удалена",
+    "trelloPinnedBoard": "Закреплена",
+    "trelloUnpinnedBoard": "Откреплена",
     "trelloBoard": "доска",
     "trelloTooManyBoardsWarning": "⚠️ Слишком много закрепленных досок.\r\nМаксимальное количество:",
     "months": [
