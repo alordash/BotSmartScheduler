@@ -41,6 +41,7 @@
     "trelloValidToken": "🔒 Saved token.",
     "trelloShowBoards": "Your boards:",
     "trelloWrongToken": "🚫 Please enter valid token.",
+    "trelloAddedBoard": "🗃 Added board",
     "months": [
         "January",
         "February",

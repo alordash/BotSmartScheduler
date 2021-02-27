@@ -115,6 +115,11 @@ function Scheduled(text, myFormattedDate, language) {
     return `"${text}" ${replies.alreadyScheduled} <b>${myFormattedDate}</b>\r\n`;
 }
 
+/**
+ * @param {String} trello_key 
+ * @param {String} app_name 
+ * @param {Languages} language 
+ */
 function TrelloAuthorizationMessage(trello_key, app_name, language) {
     const replies = LoadReplies(language);
     let link = `https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=${app_name}&key=${trello_key}`;
@@ -132,6 +137,7 @@ function CancelKeyboard(language) {
         .extra()
 }
 
+/**@param {Languages} language */
 function CancelButton(language) {
     const replies = LoadReplies(language);
     return Extra.markup((m) =>
@@ -139,6 +145,11 @@ function CancelButton(language) {
        m.callbackButton(replies.cancel, 'cancel')
     ]).oneTime()
  )
+}
+
+function AddedBoard(language, board) {
+    const replies = LoadReplies(language);
+    return `${replies.trelloAddedBoard} "<a href="${board.shortUrl}">${board.name}</a>"`;
 }
 
 module.exports = {
@@ -154,5 +165,6 @@ module.exports = {
     Scheduled,
     TrelloAuthorizationMessage,
     CancelKeyboard,
-    CancelButton
+    CancelButton,
+    AddedBoard
 }

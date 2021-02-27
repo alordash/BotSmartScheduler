@@ -50,7 +50,9 @@ class User {
    /**@type {Boolean} */
    subscribed;
    /**@type {String} */
-   trello_token
+   trello_token;
+   /**@type {Array} */
+   trello_boards;
 
    /**@param {Number} id 
     * @param {Number} tz 
@@ -382,6 +384,14 @@ class dbManagement {
       );
    }
 
+   async AddTrelloBoardToUser(id, trello_board_id) {
+      return await this.Query(
+         `UPDATE userids
+         SET trello_boards = trello_boards || '{${trello_board_id}}'
+         WHERE id = ${id}`
+      );
+   }
+
    async EncryptSchedules() {
       let schedules = await this.GetAllSchedules();
       for (const schedule of schedules) {
@@ -441,22 +451,23 @@ class dbManagement {
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS lang TEXT`);
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS subscribed BOOLEAN`);
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS trello_token TEXT`);
+      await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS trello_boards TEXT[]`);
       for (let user of users) {
          console.log(`User "${user.id}" doesn't have '${column_name}' field`);
-         this.Query(
+/*         this.Query(
             `UPDATE userids 
             SET lang = '${this.defaultUserLanguage}'
-            WHERE id = ${user.id};`);
+            WHERE id = ${user.id};`);*/
       }
    }
 
    async InitDB() {
       await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT)');
-      await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN, trello_token TEXT)');
+      await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN, trello_token TEXT, trello_boards TEXT[])');
       
       await this.ExpandSchedulesTable('file_id');
-      
-      await this.ExpandUsersIdsTable('trello_token');
+
+      await this.ExpandUsersIdsTable('trello_boards');
 
       if (process.env.SMART_SCHEDULER_ENCRYPT_SCHEDULES === 'true') {
          await this.EncryptSchedules();

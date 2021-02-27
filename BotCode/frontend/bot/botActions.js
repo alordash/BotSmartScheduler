@@ -6,7 +6,7 @@ const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList } = require('@alordash/date-parser');
-const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList } = require('../formatting');
+const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList, trelloAddBoardCommand } = require('../formatting');
 const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
@@ -525,24 +525,30 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       } else {
          let reply = '';
          if (msgText[0] == '/') {
-            //#region DELETE CLICKED TASK 
-            let scheduleId = parseInt(msgText.substring(1, msgText.length));
-            if (!isNaN(scheduleId)) {
-               let schedule = await db.GetScheduleById(chatID, scheduleId);
-               await db.RemoveScheduleById(chatID, scheduleId);
-               await db.ReorderSchedules(chatID);
-               try {
-                  const text = rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
-                  if (schedule.file_id != '~' && schedule.file_id != null) {
-                     SendAttachment(bot, schedule, chatID, text, {});
-                  } else {
-                     ctx.replyWithHTML(text);
+            if (msgText.startsWith(trelloAddBoardCommand)) {
+               //#region ADD BOARD
+               TrelloAddBoard(ctx, db);
+               //#endregion
+            } else {
+               //#region DELETE CLICKED TASK 
+               let scheduleId = parseInt(msgText.substring(1, msgText.length));
+               if (!isNaN(scheduleId)) {
+                  let schedule = await db.GetScheduleById(chatID, scheduleId);
+                  await db.RemoveScheduleById(chatID, scheduleId);
+                  await db.ReorderSchedules(chatID);
+                  try {
+                     const text = rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
+                     if (schedule.file_id != '~' && schedule.file_id != null) {
+                        SendAttachment(bot, schedule, chatID, text, {});
+                     } else {
+                        ctx.replyWithHTML(text);
+                     }
+                  } catch (e) {
+                     console.error(e);
                   }
-               } catch (e) {
-                  console.error(e);
                }
+               //#endregion
             }
-            //#endregion
          } else {
             //#region PARSE SCHEDULE
             let file_id = GetAttachmentId(ctx.message);
@@ -673,7 +679,7 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
       let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
       let owner = await trelloManager.GetTokenOwner(user.trello_token);
       let boardsList = await trelloManager.GetUserBoards(owner.id);
-      
+
       const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
       ctx.replyWithHTML(FormBoardsList(boardsList, user.lang),
          schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
@@ -704,6 +710,24 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
    } else {
       ctx.replyWithHTML(replies.trelloWrongToken, rp.CancelButton(ctx.from.language_code));
    }
+}
+
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ */
+async function TrelloAddBoard(ctx, db) {
+   let user = await db.GetUserById(ctx.from.id);
+   let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+   let owner = await trelloManager.GetTokenOwner(user.trello_token);
+   let boardsList = await trelloManager.GetUserBoards(owner.id);
+
+   let text = ctx.message.text;
+   let i = +text.substring(trelloAddBoardCommand.length) - 1;
+
+   let targetBoard = boardsList[i];
+   await db.AddTrelloBoardToUser(ctx.from.id, targetBoard.id);
+   ctx.replyWithHTML(rp.AddedBoard(user.lang, targetBoard));
 }
 
 module.exports = {

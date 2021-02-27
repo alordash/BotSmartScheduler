@@ -4,6 +4,8 @@ const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 const { TimeListIsEmpty } = require('../backend/timeProcessing');
 const { Language, LoadReplies } = require('./replies/replies');
 
+const trelloAddBoardCommand = '/t';
+
 /**@param {Date} date 
  * @param {Language} language 
  * @param {Boolean} showDayOfWeek 
@@ -91,13 +93,14 @@ function FormBoardsList(boardsList, language) {
    let reply = `${LoadReplies(language).trelloShowBoards}\r\n`;
    let i = 1;
    for (const board of boardsList) {
-      reply += `  /t${i} | <a href="${board.shortUrl}">${board.name}</a>\r\n`;
+      reply += `  ${trelloAddBoardCommand}${i} | <a href="${board.shortUrl}">${board.name}</a>\r\n`;
       i++;
    }
    return reply;
 }
 
 module.exports = {
+   trelloAddBoardCommand,
    TimeListIsEmpty,
    FormDateStringFormat,
    FormPeriodStringFormat,
