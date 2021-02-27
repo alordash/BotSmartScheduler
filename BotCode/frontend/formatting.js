@@ -26,7 +26,7 @@ function FormDateStringFormat(date, language, showDayOfWeek) {
    }
 
    let dayOfWeek = '';
-   if(showDayOfWeek && (date.getTime() - Date.now() > 24 * 60 * 60 * 1000)) {
+   if (showDayOfWeek && (date.getTime() - Date.now() > 24 * 60 * 60 * 1000)) {
       dayOfWeek = ` (${replies.daysOfWeek[date.getDay()]})`;
    }
    return `${date.getDate()} ${replies.months[month]} ${hour}:${minute}${year}${dayOfWeek}`;
@@ -83,9 +83,24 @@ function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek) {
    return `/${schedule.id}. <b>${FormDateStringFormat(target_date, language, showDayOfWeek)}</b> "${schedule.text}"${file}${username}${until}${period}`;
 }
 
+/**
+ * @param {Array} boardsList 
+ * @param {String} language 
+ */
+function FormBoardsList(boardsList, language) {
+   let reply = `${LoadReplies(language).trelloShowBoards}\r\n`;
+   let i = 1;
+   for (const board of boardsList) {
+      reply += `  /t${i} | <a href="${board.shortUrl}">${board.name}</a>\r\n`;
+      i++;
+   }
+   return reply;
+}
+
 module.exports = {
    TimeListIsEmpty,
    FormDateStringFormat,
    FormPeriodStringFormat,
-   FormStringFormatSchedule
+   FormStringFormatSchedule,
+   FormBoardsList
 }

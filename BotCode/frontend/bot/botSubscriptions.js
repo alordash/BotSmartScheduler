@@ -71,7 +71,7 @@ exports.InitActions = function (bot, db) {
    bot.command('trello', async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
-         await botActions.TrelloCommand(user, ctx, trelloPendingConfirmationUsers);
+         await botActions.TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers);
       } catch (e) {
          console.error(e);
       }

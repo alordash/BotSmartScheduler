@@ -6,7 +6,7 @@ const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList } = require('@alordash/date-parser');
-const { FormStringFormatSchedule, FormDateStringFormat } = require('../formatting');
+const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList } = require('../formatting');
 const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
@@ -664,23 +664,19 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
  * @param {User} user
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
  */
-async function TrelloCommand(user, ctx, trelloPendingConfirmationUsers) {
-   if (user.trello_token == null
-      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\
-                  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!——
-                  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-      
-      || true
-      
-      
-      ) {
+async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
+   if (user.trello_token == null) {
       trelloPendingConfirmationUsers.push(ctx.from.id);
       await ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, "Smart Scheduler", user.lang),
          rp.CancelKeyboard(user.lang));
+   } else {
+      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+      let owner = await trelloManager.GetTokenOwner(user.trello_token);
+      let boardsList = await trelloManager.GetUserBoards(owner.id);
+      
+      const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+      ctx.replyWithHTML(FormBoardsList(boardsList, user.lang),
+         schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
    }
 }
 
@@ -697,16 +693,10 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       trelloPendingConfirmationUsers.splice(trelloPendingConfirmationUsers.indexOf(ctx.from.id), 1);
 
       let trelloManager = new TrelloManager(process.env.TRELLO_KEY, token);
-
       let owner = await trelloManager.GetTokenOwner(token);
       let boardsList = await trelloManager.GetUserBoards(owner.id);
-      let reply = `${replies.trelloValidToken}`;
 
-      let i = 1;
-      for(const board of boardsList) {
-         reply += `  /t${i} <a href="${board.shortUrl}">${board.name}</a>\r\n`;
-         i++;
-      }
+      let reply = `${replies.trelloValidToken}\r\n${FormBoardsList(boardsList, ctx.from.language_code)}`;
 
       const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
       ctx.replyWithHTML(reply,

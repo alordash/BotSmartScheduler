@@ -38,7 +38,8 @@
     "year": "",
     "trelloAuthenticate0": "🗄 Bot can duplicate reminds to Trello boards.\r\nFor integration with Trello open <a href=\"",
     "trelloAuthenticate1": "\">this link 🔗</a>, then press the bottom button <b>[ Allow ]</b>.\r\nIn opened tab <b>copy</b> your token 🔐 and <b>send it</b> in message to bot.",
-    "trelloValidToken": "🔒 Saved token.\r\nYour boards:\r\n",
+    "trelloValidToken": "🔒 Saved token.",
+    "trelloShowBoards": "Your boards:",
     "trelloWrongToken": "🚫 Please enter valid token.",
     "months": [
         "January",
