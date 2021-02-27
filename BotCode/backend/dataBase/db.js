@@ -1,6 +1,8 @@
 const { Pool } = require('pg');
 const { Encrypt, Decrypt } = require('../encryption/encrypt');
 
+const maximumAddedTrelloBoards = 10;
+
 class Schedule {
    /**@type {String} */
    chatid;
@@ -388,6 +390,14 @@ class dbManagement {
       return await this.Query(
          `UPDATE userids
          SET trello_boards = trello_boards || '{${trello_board_id}}'
+         WHERE id = ${id} AND cardinality(trello_boards) < ${maximumAddedTrelloBoards}`
+      );
+   }
+
+   async RemoveTrelloBoardFromUser(id, trello_board_id) {
+      return await this.Query(
+         `UPDATE userids
+         SET trello_boards = array_remove(trello_boards, '${trello_board_id}')
          WHERE id = ${id}`
       );
    }

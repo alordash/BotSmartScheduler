@@ -1,5 +1,5 @@
 const { ParsedDate } = require('@alordash/date-parser');
-const { Schedule } = require('../backend/dataBase/db');
+const { Schedule, User } = require('../backend/dataBase/db');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 const { TimeListIsEmpty } = require('../backend/timeProcessing');
 const { Language, LoadReplies } = require('./replies/replies');
@@ -88,12 +88,13 @@ function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek) {
 /**
  * @param {Array} boardsList 
  * @param {String} language 
+ * @param {User} user 
  */
-function FormBoardsList(boardsList, language) {
+function FormBoardsList(boardsList, language, user) {
    let reply = `${LoadReplies(language).trelloShowBoards}\r\n`;
    let i = 1;
    for (const board of boardsList) {
-      reply += `  ${trelloAddBoardCommand}${i} | <a href="${board.shortUrl}">${board.name}</a>\r\n`;
+      reply += `  ${trelloAddBoardCommand}${i} | <a href="${board.shortUrl}">${board.name}</a>${user.trello_boards.indexOf(board.id) >= 0 ? ' 📎' : ''}\r\n`;
       i++;
    }
    return reply;

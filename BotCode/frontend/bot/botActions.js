@@ -681,7 +681,7 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
       let boardsList = await trelloManager.GetUserBoards(owner.id);
 
       const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
-      ctx.replyWithHTML(FormBoardsList(boardsList, user.lang),
+      ctx.replyWithHTML(FormBoardsList(boardsList, user.lang, user),
          schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
    }
 }
@@ -702,7 +702,7 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       let owner = await trelloManager.GetTokenOwner(token);
       let boardsList = await trelloManager.GetUserBoards(owner.id);
 
-      let reply = `${replies.trelloValidToken}\r\n${FormBoardsList(boardsList, ctx.from.language_code)}`;
+      let reply = `${replies.trelloValidToken}\r\n${FormBoardsList(boardsList, ctx.from.language_code, user)}`;
 
       const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
       ctx.replyWithHTML(reply,
@@ -726,8 +726,15 @@ async function TrelloAddBoard(ctx, db) {
    let i = +text.substring(trelloAddBoardCommand.length) - 1;
 
    let targetBoard = boardsList[i];
-   await db.AddTrelloBoardToUser(ctx.from.id, targetBoard.id);
-   ctx.replyWithHTML(rp.AddedBoard(user.lang, targetBoard));
+   let found = typeof(user.trello_boards.find(x => {
+      return x == targetBoard.id;
+   })) != 'undefined';
+   if (found) {
+      await db.RemoveTrelloBoardFromUser(ctx.from.id, targetBoard.id);
+   } else {
+      await db.AddTrelloBoardToUser(ctx.from.id, targetBoard.id);
+   }
+   ctx.replyWithHTML(rp.ChangedBoard(user.lang, targetBoard, found));
 }
 
 module.exports = {

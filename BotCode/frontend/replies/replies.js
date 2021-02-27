@@ -147,9 +147,15 @@ function CancelButton(language) {
  )
 }
 
-function AddedBoard(language, board) {
+/**
+ * @param {Languages} language 
+ * @param {*} board 
+ * @param {Boolean} found 
+ */
+function ChangedBoard(language, board, found) {
     const replies = LoadReplies(language);
-    return `${replies.trelloAddedBoard} "<a href="${board.shortUrl}">${board.name}</a>"`;
+    let start = `${replies.trelloChangedBoard} ${found ? replies.trelloRemovedBoard : replies.trelloAddedBoard} ${replies.trelloBoard}`;
+    return `${start} "<a href="${board.shortUrl}">${board.name}</a>"`;
 }
 
 module.exports = {
@@ -166,5 +172,5 @@ module.exports = {
     TrelloAuthorizationMessage,
     CancelKeyboard,
     CancelButton,
-    AddedBoard
+    ChangedBoard
 }
