@@ -35,6 +35,9 @@
     "tzCancelWarning": "❗️ Please note that defining time zone increases time accuracy.",
     "unsubscribe": "🔕 Unsubscribe",
     "invite": "🏵 New major update is out!\r\n<b>List of changes:",
+    "year": "",
+    "trelloAuthenticate0": "🗄 Bot can duplicate reminds to Trello boards.\r\nFor integration with Trello open <a href=\"",
+    "trelloAuthenticate1": "\">this link 🔗</a>, then press the bottom button <b>[ Allow ]</b>.\r\nIn opened tab <b>copy</b> your token 🔐 and <b>send it</b> in message to bot.",
     "months": [
         "January",
         "February",

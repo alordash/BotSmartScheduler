@@ -67,9 +67,17 @@ exports.InitActions = function (bot, db) {
          console.error(e);
       }
    });
+   bot.command('trello', async ctx => {
+      try {
+         let user = await db.GetUserById(ctx.from.id);
+         await botActions.TrelloCommand(bot, user, ctx, db);
+      } catch (e) {
+         console.error(e);
+      }
+   });
    console.log('__dirname :>> ', __dirname);
-   //   let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
-   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
+   let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
+   //   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
    console.log('repliesFiles :>> ', repliesFiles);
    for (filename of repliesFiles) {
       if (path.extname(filename) == '.json') {

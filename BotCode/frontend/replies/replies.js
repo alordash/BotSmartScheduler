@@ -36,9 +36,9 @@ function TzDeterminationKeyboard(language) {
 function TzDeterminationOnStartInlineKeyboard(language) {
     const replies = LoadReplies(language);
     return Extra.markup((m) =>
-       m.inlineKeyboard([
-          m.callbackButton(replies.startTZ, `startTZ`)
-       ]).oneTime()
+        m.inlineKeyboard([
+            m.callbackButton(replies.startTZ, `startTZ`)
+        ]).oneTime()
     );
 }
 
@@ -115,6 +115,12 @@ function Scheduled(text, myFormattedDate, language) {
     return `"${text}" ${replies.alreadyScheduled} <b>${myFormattedDate}</b>\r\n`;
 }
 
+function TrelloAuthorizationMessage(trello_key, app_name, language) {
+    const replies = LoadReplies(language);
+    let link = `https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=${app_name}&key=${trello_key}`;
+    return `${replies.trelloAuthenticate0}${link}${replies.trelloAuthenticate1}`;
+}
+
 module.exports = {
     Languages,
     LoadReplies,
@@ -125,5 +131,6 @@ module.exports = {
     TzDetermined,
     TzLocation,
     TzCurrent,
-    Scheduled
+    Scheduled,
+    TrelloAuthorizationMessage
 }

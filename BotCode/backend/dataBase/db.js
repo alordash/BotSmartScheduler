@@ -358,6 +358,14 @@ class dbManagement {
       return await this.Query(`DELETE FROM userids WHERE id = ${id}`);
    }
 
+   /**@param {Number} id 
+    * @returns {User}
+    */
+   async GetUserById(id) {
+      let res = await this.Query(`SELECT * FROM userids where id = ${id}`);
+      return res.rows[0];
+   }
+
    /**@param {Number} id
     * @returns {Boolean}
     */

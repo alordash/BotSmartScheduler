@@ -642,7 +642,17 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
       }
    }
 }
-//#endregion
+
+/**
+ * @param {*} ctx 
+ * @param {User} user
+ * @param {dbManagement} db 
+ */
+async function TrelloCommand(bot, user, ctx, db) {
+   if(user.trello_token == null) {
+      await ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, "Smart Scheduler", user.lang));
+   }
+}
 
 module.exports = {
    GetDeletingIDsIndex,
@@ -652,5 +662,6 @@ module.exports = {
    StartTimeZoneDetermination,
    CheckExpiredSchedules,
    HandleCallbackQuery,
-   HandleTextMessage
+   HandleTextMessage,
+   TrelloCommand
 }
