@@ -676,7 +676,18 @@ async function TrelloCommand(user, ctx, trelloPendingConfirmationUsers) {
  * @param {dbManagement} db 
  */
 async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
-   await ctx.reply("Waiting for token", rp.CancelButton(ctx.from.language_code));
+   let text = ctx.message.text;
+   const replies = rp.LoadReplies(ctx.from.language_code);
+   let match = text.match(/^([a-zA-Z0-9]){64}$/);
+   if(match != null) {
+      db.SetUserTrelloToken(ctx.from.id, text);
+      trelloPendingConfirmationUsers.splice(trelloPendingConfirmationUsers.indexOf(ctx.from.id), 1);
+      const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+      ctx.replyWithHTML(replies.trelloValidToken,
+         schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
+   } else {
+      ctx.replyWithHTML(replies.trelloWrongToken, rp.CancelButton(ctx.from.language_code));
+   }
 }
 
 module.exports = {

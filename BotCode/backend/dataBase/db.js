@@ -374,6 +374,14 @@ class dbManagement {
       return typeof (res) != 'undefined' && res.rows.length > 0
    }
 
+   async SetUserTrelloToken(id, trello_token) {
+      return await this.Query(
+         `UPDATE userids 
+         SET trello_token = '${trello_token}'
+         WHERE id = ${id};`
+      );
+   }
+
    async EncryptSchedules() {
       let schedules = await this.GetAllSchedules();
       for (const schedule of schedules) {
