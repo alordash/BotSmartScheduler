@@ -1,7 +1,6 @@
 const { Pool } = require('pg');
 const { Encrypt, Decrypt } = require('../encryption/encrypt');
 
-const maximumAddedTrelloBoards = 10;
 
 class Schedule {
    /**@type {String} */
@@ -69,8 +68,13 @@ class User {
 }
 
 class dbManagement {
+   /**@type {String} */
    defaultUserLanguage = 'ru';
+   /**@type {Number} */
    defaultUserTimezone = 3 * 3600;
+   /**@type {Number} */
+   maximumAddedTrelloBoards = 10;
+
    constructor(options) {
       this.pool = new Pool(options);
       this.sending = false;
@@ -390,7 +394,7 @@ class dbManagement {
       return await this.Query(
          `UPDATE userids
          SET trello_boards = trello_boards || '{${trello_board_id}}'
-         WHERE id = ${id} AND cardinality(trello_boards) < ${maximumAddedTrelloBoards}`
+         WHERE id = ${id} AND cardinality(trello_boards) < ${this.maximumAddedTrelloBoards}`
       );
    }
 

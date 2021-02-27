@@ -45,6 +45,7 @@
     "trelloAddedBoard": "Добавлена",
     "trelloRemovedBoard": "Удалена",
     "trelloBoard": "доска",
+    "trelloTooManyBoardsWarning": "⚠️ Слишком много закрепленных досок.\r\nМаксимальное количество:",
     "months": [
         "Января",
         "Февраля",

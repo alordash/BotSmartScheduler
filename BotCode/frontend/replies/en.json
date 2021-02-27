@@ -42,9 +42,10 @@
     "trelloShowBoards": "Your boards:",
     "trelloWrongToken": "🚫 Please enter valid token.",
     "trelloChangedBoard": "🗃",
-    "trelloAddedBoard": "Added",
-    "trelloRemovedBoard": "Removed",
+    "trelloAddedBoard": "Pinned",
+    "trelloRemovedBoard": "Unpinned",
     "trelloBoard": "board",
+    "trelloTooManyBoardsWarning": "⚠️ Too many pinned boards.\r\nMaximum allowed count:",
     "months": [
         "January",
         "February",
