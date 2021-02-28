@@ -47,6 +47,9 @@
     "trelloBoard": "board",
     "trelloTooManyBoardsWarning": "⚠️ Too many pinned boards.\r\nMaximum allowed count:",
     "trelloBoardDoesNotExist": "⚠️ Board not found.",
+    "trelloBoardListsList0": "🗃 The board",
+    "trelloBoardListsList1": "has the following lists:",
+    "trelloBoardListsListEnd": "Choose in which list 📑 all reminds will be duplicated by pressing the command near it.",
     "months": [
         "January",
         "February",

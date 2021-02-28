@@ -5,6 +5,7 @@ let
     trelloInit = 'trello',
     trelloAddBoardCommand = '/t',
     trelloBindBoardCommand = '/trello_bind';
+    trelloAddListCommand = '/tl'
 
 module.exports = {
     listSchedules,
@@ -12,5 +13,6 @@ module.exports = {
     changeTimeZone,
     trelloInit,
     trelloAddBoardCommand,
-    trelloBindBoardCommand
+    trelloBindBoardCommand,
+    trelloAddListCommand
 }

@@ -6,7 +6,7 @@ const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList } = require('@alordash/date-parser');
-const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList } = require('../formatting');
+const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList, FormBoardListsList } = require('../formatting');
 const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
@@ -751,7 +751,9 @@ async function TrelloBindCommand(user, ctx) {
    let id = text.substring(trelloBindBoardCommand.length + 1);
 
    if(user.trello_boards.indexOf(id) >= 0) {
-      ctx.reply('ok');
+      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+      let board = await trelloManager.GetBoard(id);
+      ctx.replyWithHTML(FormBoardListsList(board, user.lang));
    } else {
       ctx.reply(replies.trelloBoardDoesNotExist);
    }

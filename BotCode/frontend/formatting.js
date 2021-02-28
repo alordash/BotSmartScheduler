@@ -3,7 +3,7 @@ const { Schedule, User } = require('../backend/dataBase/db');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 const { TimeListIsEmpty } = require('../backend/timeProcessing');
 const { Language, LoadReplies } = require('./replies/replies');
-const { trelloAddBoardCommand } = require('./bot/botCommands');
+const { trelloAddBoardCommand, trelloAddListCommand } = require('./bot/botCommands');
 
 /**@param {Date} date 
  * @param {Language} language 
@@ -105,10 +105,26 @@ function FormBoardsList(boardsList, language, user) {
    return reply;
 }
 
+/**
+ * @param {*} board 
+ * @param {Languages} language 
+ */
+function FormBoardListsList(board, language) {
+   const replies = LoadReplies(language);
+   let reply = `${replies.trelloBoardListsList0} "<a href="${board.shortUrl}">${board.name}</a>" ${replies.trelloBoardListsList1}\r\n`;
+   let i = 1;
+   for(const list of board.lists) {
+      reply += `${trelloAddListCommand}${i} | "<b>${list.name}</b>"\r\n`;
+      i++;
+   }
+   return `${reply}${replies.trelloBoardListsListEnd}`
+}
+
 module.exports = {
    TimeListIsEmpty,
    FormDateStringFormat,
    FormPeriodStringFormat,
    FormStringFormatSchedule,
-   FormBoardsList
+   FormBoardsList,
+   FormBoardListsList
 }
