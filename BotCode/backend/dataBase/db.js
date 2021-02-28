@@ -67,6 +67,21 @@ class User {
    }
 }
 
+class Chat {
+   /**@type {String} */
+   id;
+   /**@type {String} */
+   trello_board_id;
+   /**@type {String} */
+   trello_list_id;
+
+   constructor(id, trello_board_id, trello_list_id) {
+      this.id = id;
+      this.trello_board_id = trello_board_id;
+      this.trello_list_id = trello_list_id;
+   }
+}
+
 class dbManagement {
    /**@type {String} */
    defaultUserLanguage = 'ru';
@@ -370,15 +385,14 @@ class dbManagement {
     * @returns {User}
     */
    async GetUserById(id) {
-      let res = await this.Query(`SELECT * FROM userids where id = ${id}`);
-      return res.rows[0];
+      return (await this.Query(`SELECT * FROM userids WHERE id = ${id}`)).rows[0];
    }
 
    /**@param {Number} id
     * @returns {Boolean}
     */
    async HasUserID(id) {
-      let res = await this.Query(`SELECT * FROM userids where id = ${id}`);
+      let res = await this.Query(`SELECT * FROM userids WHERE id = ${id}`);
       return typeof (res) != 'undefined' && res.rows.length > 0
    }
 
@@ -403,6 +417,53 @@ class dbManagement {
          `UPDATE userids
          SET trello_boards = array_remove(trello_boards, '${trello_board_id}')
          WHERE id = ${id}`
+      );
+   }
+
+   /**
+    * @param {String} id 
+    * @param {String} trello_board_id 
+    */
+   async AddChat(id, trello_board_id) {
+      let query = `INSERT INTO chats VALUES ('${id}')`;
+      if(typeof(trello_board_id) != 'undefined') {
+         query = `INSERT INTO chats VALUES ('${id}', '${trello_board_id}')`;
+      }
+      return await this.Query(query);
+   }
+
+   /**
+    * @param {String} id 
+    * @returns {Chat} 
+    */
+   async GetChatById(id) {
+      return (await this.Query(
+         `SELECT * FROM chats
+         WHERE id = '${id}'`
+      )).rows[0];
+   }
+
+   /**
+    * @param {String} id 
+    * @param {String} trello_board_id 
+    */
+   async SetChatTrelloBoard(id, trello_board_id) {
+      return await this.Query(
+         `UPDATE chats
+         SET trello_board_id = '${trello_board_id}'
+         WHERE id = '${id}'`
+      );
+   }
+
+   /**
+    * @param {String} id 
+    * @param {String} trello_list_id 
+    */
+   async SetChatTrelloList(id, trello_list_id) {
+      return await this.Query(
+         `UPDATE chats
+         SET trello_list_id = '${trello_list_id}'
+         WHERE id = '${id}'`
       );
    }
 
@@ -468,20 +529,35 @@ class dbManagement {
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS trello_boards TEXT[]`);
       for (let user of users) {
          console.log(`User "${user.id}" doesn't have '${column_name}' field`);
-/*         this.Query(
-            `UPDATE userids 
-            SET lang = '${this.defaultUserLanguage}'
-            WHERE id = ${user.id};`);*/
+         /*         this.Query(
+                     `UPDATE userids 
+                     SET lang = '${this.defaultUserLanguage}'
+                     WHERE id = ${user.id};`);*/
       }
+   }
+
+   async ExpandChatsTable(column_name) {
+      const column = await this.Query(`SELECT column_name 
+      FROM information_schema.columns
+      WHERE table_name='chats' AND column_name = '${column_name}'`);
+      if (column.rowCount > 0) {
+         return;
+      }
+
+      await this.Query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS trello_board_id TEXT`);
+      await this.Query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS trello_list_id TEXT`);
    }
 
    async InitDB() {
       await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT)');
       await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN, trello_token TEXT, trello_boards TEXT[])');
-      
+      await this.Query('CREATE TABLE IF NOT EXISTS chats (id TEXT, trello_board_id TEXT, trello_list_id TEXT)');
+
       await this.ExpandSchedulesTable('file_id');
 
       await this.ExpandUsersIdsTable('trello_boards');
+
+      await this.ExpandChatsTable('trello_list_id');
 
       if (process.env.SMART_SCHEDULER_ENCRYPT_SCHEDULES === 'true') {
          await this.EncryptSchedules();
@@ -493,5 +569,6 @@ class dbManagement {
 module.exports = {
    dbManagement,
    Schedule,
-   User
+   User,
+   Chat
 };

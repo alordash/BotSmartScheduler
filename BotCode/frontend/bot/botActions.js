@@ -3,15 +3,15 @@ const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('../replies/replies');
 const rp = require('../replies/replies');
-const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
+const { dbManagement, Schedule, User, Chat } = require('../../backend/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList } = require('@alordash/date-parser');
-const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList, FormBoardListsList } = require('../formatting');
+const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList, FormBoardListsList, FormListBinded } = require('../formatting');
 const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
-const { trelloAddBoardCommand, trelloBindBoardCommand } = require('./botCommands');
+const { trelloAddBoardCommand, trelloBindBoardCommand, trelloAddListCommand } = require('./botCommands');
 
 let pendingSchedules = [];
 
@@ -529,29 +529,37 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
             let regExp = new RegExp(`^${trelloAddBoardCommand}[0-9]+$`);
             let match = msgText.match(regExp);
             if (match != null) {
-               //#region ADD BOARD
+               //#region ADD TRELLO BOARD
                TrelloAddBoard(ctx, db);
-               //#endregion
-            } else {
-               //#region DELETE CLICKED TASK 
-               let scheduleId = parseInt(msgText.substring(1, msgText.length));
-               if (!isNaN(scheduleId)) {
-                  let schedule = await db.GetScheduleById(chatID, scheduleId);
-                  await db.RemoveScheduleById(chatID, scheduleId);
-                  await db.ReorderSchedules(chatID);
-                  try {
-                     const text = rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
-                     if (schedule.file_id != '~' && schedule.file_id != null) {
-                        SendAttachment(bot, schedule, chatID, text, {});
-                     } else {
-                        ctx.replyWithHTML(text);
-                     }
-                  } catch (e) {
-                     console.error(e);
-                  }
-               }
+               return;
                //#endregion
             }
+            regExp = new RegExp(`^${trelloAddListCommand}[0-9]+$`);
+            match = msgText.match(regExp);
+            if (match != null) {
+               //#region ADD TRELLO LIST
+               TrelloAddList(ctx, db);
+               return;
+               //#endregion
+            }
+            //#region DELETE CLICKED TASK 
+            let scheduleId = parseInt(msgText.substring(1, msgText.length));
+            if (!isNaN(scheduleId)) {
+               let schedule = await db.GetScheduleById(chatID, scheduleId);
+               await db.RemoveScheduleById(chatID, scheduleId);
+               await db.ReorderSchedules(chatID);
+               try {
+                  const text = rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
+                  if (schedule.file_id != '~' && schedule.file_id != null) {
+                     SendAttachment(bot, schedule, chatID, text, {});
+                  } else {
+                     ctx.replyWithHTML(text);
+                  }
+               } catch (e) {
+                  console.error(e);
+               }
+            }
+            //#endregion
          } else {
             //#region PARSE SCHEDULE
             let file_id = GetAttachmentId(ctx.message);
@@ -717,13 +725,13 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
  * @param {dbManagement} db 
  */
 async function TrelloAddBoard(ctx, db) {
+   let text = ctx.message.text;
+   let i = +text.substring(trelloAddBoardCommand.length) - 1;
+
    let user = await db.GetUserById(ctx.from.id);
    let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
    let owner = await trelloManager.GetTokenOwner(user.trello_token);
    let boardsList = await trelloManager.GetUserBoards(owner.id);
-
-   let text = ctx.message.text;
-   let i = +text.substring(trelloAddBoardCommand.length) - 1;
 
    let targetBoard = boardsList[i];
    let found = typeof (user.trello_boards.find(x => {
@@ -743,20 +751,51 @@ async function TrelloAddBoard(ctx, db) {
 
 /**
  * @param {*} ctx 
+ * @param {dbManagement} db 
  * @param {User} user
  */
-async function TrelloBindCommand(user, ctx) {
+async function TrelloBindCommand(ctx, db, user) {
    const replies = rp.LoadReplies(user.lang);
    let text = ctx.message.text;
    let id = text.substring(trelloBindBoardCommand.length + 1);
 
-   if(user.trello_boards.indexOf(id) >= 0) {
+   if (user.trello_boards.indexOf(id) >= 0) {
+      let chat = await db.GetChatById(`${ctx.chat.id}`);
       let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+      let chatId = `${ctx.chat.id}`;
+      if (typeof (chat) == 'undefined') {
+         await db.AddChat(chatId, id);
+      } else {
+         await db.SetChatTrelloBoard(chatId, id);
+      }
       let board = await trelloManager.GetBoard(id);
       ctx.replyWithHTML(FormBoardListsList(board, user.lang));
    } else {
       ctx.reply(replies.trelloBoardDoesNotExist);
    }
+}
+
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ */
+async function TrelloAddList(ctx, db) {
+   let text = ctx.message.text;
+   let i = +text.substring(trelloAddListCommand.length) - 1;
+
+   let chatId = `${ctx.chat.id}`;
+   let user = await db.GetUserById(ctx.from.id);
+   const replies = rp.LoadReplies(user.lang);
+   let chat = await db.GetChatById(chatId);
+   if (chat.trello_board_id == null) {
+      ctx.reply(replies.trelloNoBoardBinded);
+      return;
+   }
+   let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+   let board = await trelloManager.GetBoard(chat.trello_board_id);
+   let target_list = board.lists[i];
+   await db.SetChatTrelloList(chatId, target_list.id);
+   ctx.replyWithHTML(FormListBinded(board, target_list, user.lang));
 }
 
 module.exports = {

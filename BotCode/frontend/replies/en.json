@@ -50,6 +50,9 @@
     "trelloBoardListsList0": "🗃 The board",
     "trelloBoardListsList1": "has the following lists:",
     "trelloBoardListsListEnd": "Choose in which list 📑 all reminds will be duplicated by pressing the command near it.",
+    "trelloNoBoardBinded": "⚠️ No trello board binded to this chat.",
+    "trelloListBinded0": "📑 All schedules from this chat will be also duplicated to list",
+    "trelloListBinded1": "of board",
     "months": [
         "January",
         "February",

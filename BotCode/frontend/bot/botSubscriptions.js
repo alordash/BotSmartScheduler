@@ -80,7 +80,7 @@ function InitActions (bot, db) {
    bot.command(trelloBindBoardCommand, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
-         await botActions.TrelloBindCommand(user, ctx);
+         await botActions.TrelloBindCommand(ctx, db, user);
       } catch (e) {
          console.error(e);
       }

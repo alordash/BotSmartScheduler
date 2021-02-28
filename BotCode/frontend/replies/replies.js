@@ -151,6 +151,7 @@ function CancelButton(language) {
  * @param {Languages} language 
  * @param {*} board 
  * @param {Boolean} found 
+ * @returns {String}
  */
 function ChangedBoard(language, board, found) {
     const replies = LoadReplies(language);

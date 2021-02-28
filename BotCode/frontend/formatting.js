@@ -88,6 +88,7 @@ function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek) {
  * @param {Array} boardsList 
  * @param {String} language 
  * @param {User} user 
+ * @return {String}
  */
 function FormBoardsList(boardsList, language, user) {
    const replies = LoadReplies(language);
@@ -108,6 +109,7 @@ function FormBoardsList(boardsList, language, user) {
 /**
  * @param {*} board 
  * @param {Languages} language 
+ * @return {String}
  */
 function FormBoardListsList(board, language) {
    const replies = LoadReplies(language);
@@ -120,11 +122,23 @@ function FormBoardListsList(board, language) {
    return `${reply}${replies.trelloBoardListsListEnd}`
 }
 
+/**
+ * @param {*} board 
+ * @param {*} list 
+ * @param {Language} language 
+ * @returns {String}
+ */
+function FormListBinded(board, list, language) {
+   const replies = LoadReplies(language);
+   return `${replies.trelloListBinded0} "<b>${list.name}</b>" ${replies.trelloListBinded1} <a href="${board.shortUrl}">${board.name}</a>.`;
+}
+
 module.exports = {
    TimeListIsEmpty,
    FormDateStringFormat,
    FormPeriodStringFormat,
    FormStringFormatSchedule,
    FormBoardsList,
-   FormBoardListsList
+   FormBoardListsList,
+   FormListBinded
 }
