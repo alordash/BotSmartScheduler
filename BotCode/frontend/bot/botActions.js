@@ -670,7 +670,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
  * @param {User} user
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
  */
-async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
+async function TrelloCommand(user, ctx, trelloPendingConfirmationUsers) {
    if (user.trello_token == null) {
       trelloPendingConfirmationUsers.push(ctx.from.id);
       await ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, "Smart Scheduler", user.lang),
@@ -687,6 +687,7 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
 /**
  * @param {*} ctx 
  * @param {dbManagement} db 
+ * @param {Array.<Number>} trelloPendingConfirmationUsers 
  */
 async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
    let token = ctx.message.text;
@@ -722,19 +723,27 @@ async function TrelloAddBoard(ctx, db) {
    let i = +text.substring(trelloAddBoardCommand.length) - 1;
 
    let targetBoard = boardsList[i];
-   let found = typeof(user.trello_boards.find(x => {
+   let found = typeof (user.trello_boards.find(x => {
       return x == targetBoard.id;
    })) != 'undefined';
    if (found) {
       console.log(`removed board :>> ${JSON.stringify(await db.RemoveTrelloBoardFromUser(ctx.from.id, targetBoard.id))}`);
    } else {
       let result = await db.AddTrelloBoardToUser(ctx.from.id, targetBoard.id);
-      if(result.rowCount == 0) {
+      if (result.rowCount == 0) {
          ctx.replyWithHTML(`${rp.LoadReplies(user.lang).trelloTooManyBoardsWarning} ${db.maximumAddedTrelloBoards}`);
          return;
       }
    }
    ctx.replyWithHTML(rp.ChangedBoard(user.lang, targetBoard, found));
+}
+
+/**
+ * @param {*} ctx 
+ * @param {User} user
+ */
+async function TrelloBindCommand(user, ctx) {
+   
 }
 
 module.exports = {
@@ -747,5 +756,6 @@ module.exports = {
    CheckExpiredSchedules,
    HandleCallbackQuery,
    HandleTextMessage,
-   TrelloCommand
+   TrelloCommand,
+   TrelloBindCommand
 }

@@ -155,7 +155,7 @@ function CancelButton(language) {
 function ChangedBoard(language, board, found) {
     const replies = LoadReplies(language);
     let start = `${replies.trelloChangedBoard} ${found ? replies.trelloUnpinnedBoard : replies.trelloPinnedBoard} ${replies.trelloBoard}`;
-    return `${start} "<a href="${board.shortUrl}">${board.name}</a>"`;
+    return `${start} "<a href="${board.shortUrl}">${board.name}</a>"\r\n${replies.trelloShowBoardsEnd}`;
 }
 
 module.exports = {

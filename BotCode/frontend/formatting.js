@@ -95,10 +95,15 @@ function FormBoardsList(boardsList, language, user) {
    let reply = `${replies.trelloShowBoards}\r\n`;
    let i = 1;
    for (const board of boardsList) {
-      reply += `  ${trelloAddBoardCommand}${i} | <a href="${board.shortUrl}">${board.name}</a>${user.trello_boards.indexOf(board.id) >= 0 ? ' 📎' : ''}\r\n`;
+      let extra = '';
+      if(user.trello_boards.indexOf(board.id) >= 0) {
+         extra = ` 📎
+   id: <b>${board.id}</b>`;
+      }
+      reply += `  ${trelloAddBoardCommand}${i} | <a href="${board.shortUrl}">${board.name}</a>${extra}\r\n`;
       i++;
    }
-   return `${reply}${replies.trelloShowBoardsEnd}`;
+   return reply;
 }
 
 module.exports = {
