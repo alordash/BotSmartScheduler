@@ -4,6 +4,8 @@ const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 const { TimeListIsEmpty } = require('../backend/timeProcessing');
 const { Language, LoadReplies } = require('./replies/replies');
 const { trelloAddBoardCommand, trelloAddListCommand } = require('./bot/botCommands');
+const { TrelloManager } = require('@alordash/node-js-trello');
+const { dbManagement } = require('../backend/dataBase/db');
 
 /**@param {Date} date 
  * @param {Language} language 
@@ -59,9 +61,10 @@ function FormPeriodStringFormat(period_time, language) {
  * @param {Number} tz 
  * @param {Language} language 
  * @param {Boolean} showDayOfWeek 
+ * @param {dbManagement} db
  * @returns {String}
  */
-function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek) {
+async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, db) {
    let period_time = schedule.period_time.div(1000);
    let target_date = new Date(schedule.target_date + tz * 1000);
    console.log(`FORMATTING target_date: ${schedule.target_date}, tz: ${tz}, will be: ${schedule.target_date + tz * 1000}`);
@@ -81,7 +84,21 @@ function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek) {
       username = ` (<b>${schedule.username}</b>)`;
    }
    let file = (schedule.file_id != '~' && schedule.file_id != null) ? ' 💾' : '';
-   return `/${schedule.id}. <b>${FormDateStringFormat(target_date, language, showDayOfWeek)}</b> "${schedule.text}"${file}${username}${until}${period}`;
+
+   let text = schedule.text;
+   if(schedule.trello_card_id != null) {
+      let chatID = schedule.chatid;
+      if(chatID[0] == '_') {
+         chatID = '-' + chatID.substring(1);
+      }
+      let chat = await db.GetChatById(chatID);
+      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+      let card = await trelloManager.GetCard(schedule.trello_card_id);
+      if(typeof(card) != 'undefined') {
+         text = `<a href="${card.shortUrl}">${text}</a>`;
+      }
+   }
+   return `/${schedule.id}. <b>${FormDateStringFormat(target_date, language, showDayOfWeek)}</b> "${text}"${file}${username}${until}${period}`;
 }
 
 /**

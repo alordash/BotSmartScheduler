@@ -25,31 +25,6 @@ Number.prototype.div = function (x) {
    return Math.floor(this / x);
 }
 
-/**
- * @param {*} ctx 
- * @param {dbManagement} db 
- */
-async function SaveToTrello(ctx, db, pendingSchedules, chatID) {
-   let chat = await db.GetChatById(`${ctx.chat.id}`);
-   if (typeof (chat) != 'undefined' && chat.trello_list_id != null) {
-      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
-      for (const si in pendingSchedules[chatID]) {
-         /**@type {Schedule} */
-         let schedule = pendingSchedules[chatID][si];
-         let text = schedule.text;
-         let i = text.indexOf(' ');
-         if (i < 0) {
-            i = undefined;
-         }
-         let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(schedule.target_date));
-
-         pendingSchedules[chatID][si].trello_card_id = card.id;
-         pendingSchedules[chatID][si].max_date = 0;
-         pendingSchedules[chatID][si].period_time = 0;
-      }
-   }
-}
-
 /**@param {String} string
  * @returns {Languages}
  */
@@ -157,7 +132,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
          schedule.target_date = +schedule.target_date;
          schedule.period_time = +schedule.period_time;
          schedule.max_date = +schedule.max_date;
-         let newAnswer = `${FormStringFormatSchedule(schedule, tsOffset, language, false)}\r\n`;
+         let newAnswer = `${await FormStringFormatSchedule(schedule, tsOffset, language, false, db)}\r\n`;
          if (answer.length + newAnswer.length > global.MaxMessageLength) {
             answers.push(answer);
             answer = newAnswer;
@@ -632,6 +607,23 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
             } else {
                console.log(`schedulesCount = ${schedulesCount}`);
                let parsedDateIndex = 0;
+               let chat = await db.GetChatById(`${ctx.chat.id}`);
+               let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
+               let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+               for (const si in pendingSchedules[chatID]) {
+                  /**@type {Schedule} */
+                  let schedule = pendingSchedules[chatID][si];
+                  let text = schedule.text;
+                  let i = text.indexOf(' ');
+                  if (i < 0) {
+                     i = undefined;
+                  }
+                  let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(schedule.target_date));
+
+                  pendingSchedules[chatID][si].trello_card_id = card.id;
+                  pendingSchedules[chatID][si].max_date = 0;
+                  pendingSchedules[chatID][si].period_time = 0;
+               }
                for (let parsedDate of parsedDates) {
                   let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
                   if (typeof (dateParams) != 'undefined') {
@@ -666,9 +658,21 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                                  dateParams.period_time,
                                  dateParams.max_date,
                                  file_id);
+                              if (trelloIsOk) {
+                                 let text = newSchedule.text;
+                                 let i = text.indexOf(' ');
+                                 if (i < 0) {
+                                    i = undefined;
+                                 }
+                                 let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(newSchedule.target_date));
+
+                                 newSchedule.trello_card_id = card.id;
+                                 newSchedule.max_date = 0;
+                                 newSchedule.period_time = 0;
+                              }
                               pendingSchedules[chatID].push(newSchedule);
                               count++;
-                              reply += FormStringFormatSchedule(newSchedule, tz, language, true) + `\r\n`;
+                              reply += await FormStringFormatSchedule(newSchedule, tz, language, true, db) + `\r\n`;
                            } else if (!inGroup) {
                               reply += replies.emptyString + '\r\n';
                            }
@@ -686,7 +690,6 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                }
             }
             if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-               await SaveToTrello(ctx, db, pendingSchedules, chatID);
                await db.AddSchedules(chatID, pendingSchedules[chatID]);
                pendingSchedules[chatID] = [];
             }
