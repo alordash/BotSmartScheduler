@@ -130,7 +130,7 @@ function FormBoardListsList(board, language) {
  */
 function FormListBinded(board, list, language) {
    const replies = LoadReplies(language);
-   return `${replies.trelloListBinded0} "<b>${list.name}</b>" ${replies.trelloListBinded1} <a href="${board.shortUrl}">${board.name}</a>.`;
+   return `${replies.trelloListBinded0} "<b>${list.name}</b>" ${replies.trelloListBinded1} "<a href="${board.shortUrl}">${board.name}</a>".`;
 }
 
 module.exports = {
