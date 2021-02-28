@@ -42,9 +42,8 @@
     "trelloShowBoards": "🗄 Your boards:",
     "trelloShowBoardsEnd": "List of boards: /trello",
     "trelloWrongToken": "🚫 Please enter valid token.",
-    "trelloChangedBoard": "🗃",
-    "trelloPinnedBoard": "Pinned",
-    "trelloUnpinnedBoard": "Unpinned",
+    "trelloPinnedBoard": "🔖 Pinned",
+    "trelloUnpinnedBoard": "📌 Unpinned",
     "trelloBoard": "board",
     "trelloTooManyBoardsWarning": "⚠️ Too many pinned boards.\r\nMaximum allowed count:",
     "months": [
