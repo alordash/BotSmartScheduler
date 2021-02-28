@@ -10,7 +10,7 @@ const { dbManagement, User } = require('../../backend/dataBase/db');
 const { speechToText } = require('../../backend/stt/stt');
 const Markup = require('telegraf/markup');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
-const { listSchedules, deleteSchedules, changeTimeZone, trelloInit, trelloBindBoardCommand } = require('./botCommands');
+const cms = require('./botCommands');
 
 let tzPendingConfirmationUsers = [];
 let trelloPendingConfirmationUsers = [];
@@ -19,7 +19,7 @@ let trelloPendingConfirmationUsers = [];
  * @param {Composer} bot 
  * @param {dbManagement} db 
  */
-function InitActions (bot, db) {
+function InitActions(bot, db) {
    bot.start(async ctx => {
       const replies = LoadReplies(Languages.general);
       try {
@@ -42,7 +42,7 @@ function InitActions (bot, db) {
       }
    });
 
-   bot.command(listSchedules, async ctx => {
+   bot.command(cms.listSchedules, async ctx => {
       let tz = await db.GetUserTZ(ctx.from.id);
       let language = await db.GetUserLanguage(ctx.from.id);
       let chatID = FormatChatId(ctx.chat.id);
@@ -55,34 +55,42 @@ function InitActions (bot, db) {
          }
       }
    });
-   bot.command(deleteSchedules, async ctx => {
+   bot.command(cms.deleteSchedules, async ctx => {
       let language = await db.GetUserLanguage(ctx.from.id);
       ctx.from.language_code = language;
-      await botActions.DeleteSchedules(ctx, db);
+      botActions.DeleteSchedules(ctx, db);
    });
-   bot.command(changeTimeZone, async ctx => {
+   bot.command(cms.changeTimeZone, async ctx => {
       try {
          let language = await db.GetUserLanguage(ctx.from.id);
          ctx.from.language_code = language;
-         await botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
+         botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
       } catch (e) {
          console.error(e);
       }
    });
-   bot.command(trelloInit, async ctx => {
+   bot.command(cms.trelloInit, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
-         await botActions.TrelloCommand(user, ctx, trelloPendingConfirmationUsers);
+         botActions.TrelloCommand(user, ctx, trelloPendingConfirmationUsers);
       } catch (e) {
          console.error(e);
       }
    });
-   bot.command(trelloBindBoardCommand, async ctx => {
+   bot.command(cms.trelloBindBoardCommand, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
-         await botActions.TrelloBindCommand(ctx, db, user);
+         botActions.TrelloBindCommand(ctx, db, user);
       } catch (e) {
          console.error(e);
+      }
+   });
+   bot.command(cms.trelloUnbindBoardCommand, async ctx => {
+      try {
+         let user = await db.GetUserById(ctx.from.id);
+         botActions.TrelloUnbindCommand(ctx, db, user);
+      } catch (e) {
+         console.log(e);
       }
    });
    console.log('__dirname :>> ', __dirname);
