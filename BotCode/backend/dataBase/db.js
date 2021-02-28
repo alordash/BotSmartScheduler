@@ -413,7 +413,7 @@ class dbManagement {
       return await this.Query(
          `UPDATE userids
          SET trello_boards = trello_boards || '{${trello_board_id}}'
-         WHERE id = ${id} AND (cardinality(trello_boards) < ${this.maximumAddedTrelloBoards} OR trello_boards = NULL)`
+         WHERE id = ${id} AND (array_length(trello_boards, 1) < ${this.maximumAddedTrelloBoards} OR trello_boards IS NULL)`
       );
    }
 
