@@ -86,16 +86,18 @@ async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, d
    let file = (schedule.file_id != '~' && schedule.file_id != null) ? ' 💾' : '';
 
    let text = schedule.text;
-   if(schedule.trello_card_id != null) {
+   if (schedule.trello_card_id != null) {
       let chatID = schedule.chatid;
-      if(chatID[0] == '_') {
+      if (chatID[0] == '_') {
          chatID = '-' + chatID.substring(1);
       }
       let chat = await db.GetChatById(chatID);
-      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
-      let card = await trelloManager.GetCard(schedule.trello_card_id);
-      if(typeof(card) != 'undefined') {
-         text = `<a href="${card.shortUrl}">${text}</a>`;
+      if (chat.trello_token != null) {
+         let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+         let card = await trelloManager.GetCard(schedule.trello_card_id);
+         if (typeof (card) != 'undefined') {
+            text = `<a href="${card.shortUrl}">${text}</a>`;
+         }
       }
    }
    return `/${schedule.id}. <b>${FormDateStringFormat(target_date, language, showDayOfWeek)}</b> "${text}"${file}${username}${until}${period}`;
@@ -113,7 +115,7 @@ function FormBoardsList(boardsList, language, user) {
    let i = 1;
    for (const board of boardsList) {
       let extra = '';
-      if(user.trello_boards.indexOf(board.id) >= 0) {
+      if (user.trello_boards.indexOf(board.id) >= 0) {
          extra = ` 📌
    id: <b>${board.id}</b>`;
       }
@@ -132,7 +134,7 @@ function FormBoardListsList(board, language) {
    const replies = LoadReplies(language);
    let reply = `${replies.trelloBoardListsList0} "<a href="${board.shortUrl}">${board.name}</a>" ${replies.trelloBoardListsList1}\r\n`;
    let i = 1;
-   for(const list of board.lists) {
+   for (const list of board.lists) {
       reply += `${trelloAddListCommand}${i} | "<b>${list.name}</b>"\r\n`;
       i++;
    }
@@ -150,6 +152,16 @@ function FormListBinded(board, list, language) {
    return `${replies.trelloListBinded0} "<b>${list.name}</b>" ${replies.trelloListBinded1} "<a href="${board.shortUrl}">${board.name}</a>".`;
 }
 
+/**
+ * @param {*} board 
+ * @param {Languages} language 
+ * @returns {String}
+ */
+function FormBoardUnbinded(board, language) {
+   const replies = LoadReplies(language);
+   return `${replies.trelloBoardUnbinded0} "<a href="${board.shortUrl}">${board.name}</a>" ${replies.trelloBoardUnbinded1}`;
+}
+
 module.exports = {
    TimeListIsEmpty,
    FormDateStringFormat,
@@ -157,5 +169,6 @@ module.exports = {
    FormStringFormatSchedule,
    FormBoardsList,
    FormBoardListsList,
-   FormListBinded
+   FormListBinded,
+   FormBoardUnbinded
 }
