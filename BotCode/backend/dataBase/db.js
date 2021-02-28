@@ -19,6 +19,8 @@ class Schedule {
    username;
    /**@type {Number} */
    file_id;
+   /**@type {String} */
+   trello_card_id;
 
    /**@param {String} chatid 
     * @param {Number} id 
@@ -74,11 +76,14 @@ class Chat {
    trello_board_id;
    /**@type {String} */
    trello_list_id;
+   /**@type {String} */
+   trello_token;
 
-   constructor(id, trello_board_id, trello_list_id) {
+   constructor(id, trello_board_id, trello_list_id, trello_token) {
       this.id = id;
       this.trello_board_id = trello_board_id;
       this.trello_list_id = trello_list_id;
+      this.trello_token = trello_token;
    }
 }
 
@@ -459,10 +464,11 @@ class dbManagement {
     * @param {String} id 
     * @param {String} trello_list_id 
     */
-   async SetChatTrelloList(id, trello_list_id) {
+   async SetChatTrelloList(id, trello_list_id, trello_token) {
       return await this.Query(
          `UPDATE chats
-         SET trello_list_id = '${trello_list_id}'
+         SET trello_list_id = '${trello_list_id}',
+         trello_token = '${trello_token}'
          WHERE id = '${id}'`
       );
    }
@@ -498,20 +504,12 @@ class dbManagement {
          return;
       }
 
-      let schedules = await this.GetAllSchedules();
       await this.Query(`ALTER TABLE schedules DROP COLUMN IF EXISTS ts`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS target_date BIGINT`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS period_time BIGINT`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS max_date BIGINT`);
       await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS file_id TEXT`);
-      for (let schedule of schedules) {
-         console.log(`Schedule with id: ${schedule.id} doesn't have '${column_name}' field`);
-         await this.Query(
-            `UPDATE schedules 
-            SET file_id = '~'
-            WHERE id = ${schedule.id};`
-         );
-      }
+      await this.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS trello_card_id TEXT`);
    }
 
    async ExpandUsersIdsTable(column_name) {
@@ -546,18 +544,19 @@ class dbManagement {
 
       await this.Query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS trello_board_id TEXT`);
       await this.Query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS trello_list_id TEXT`);
+      await this.Query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS trello_token TEXT`);
    }
 
    async InitDB() {
-      await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT)');
+      await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT, trello_card_id TEXT)');
       await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN, trello_token TEXT, trello_boards TEXT[])');
-      await this.Query('CREATE TABLE IF NOT EXISTS chats (id TEXT, trello_board_id TEXT, trello_list_id TEXT)');
+      await this.Query('CREATE TABLE IF NOT EXISTS chats (id TEXT, trello_board_id TEXT, trello_list_id TEXT, trello_token TEXT)');
 
-      await this.ExpandSchedulesTable('file_id');
+      await this.ExpandSchedulesTable('trello_card_id');
 
       await this.ExpandUsersIdsTable('trello_boards');
 
-      await this.ExpandChatsTable('trello_list_id');
+      await this.ExpandChatsTable('trello_token');
 
       if (process.env.SMART_SCHEDULER_ENCRYPT_SCHEDULES === 'true') {
          await this.EncryptSchedules();

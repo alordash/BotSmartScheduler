@@ -13,6 +13,7 @@ const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProce
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { trelloAddBoardCommand, trelloBindBoardCommand, trelloAddListCommand } = require('./botCommands');
 
+/**@type {Array.<Array.<Schedule>>} */
 let pendingSchedules = [];
 
 /**
@@ -637,6 +638,22 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                }
             }
             if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
+               let chat = await db.GetChatById(`${ctx.chat.id}`);
+               if(typeof(chat) != 'undefined' && chat.trello_list_id != null) {
+                  let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+                  for(const si in pendingSchedules[chatID]) {
+                     /**@type {Schedule} */
+                     let schedule = pendingSchedules[chatID][si];
+                     let text = schedule.text;
+                     let i = text.indexOf(' ');
+                     if(i < 0) {
+                        i = undefined;
+                     }
+                     let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(schedule.target_date));
+
+                     pendingSchedules[chatID][si].trello_card_id = card.id;
+                  }
+               }
                await db.AddSchedules(chatID, pendingSchedules[chatID]);
                pendingSchedules[chatID] = [];
             }
@@ -794,7 +811,7 @@ async function TrelloAddList(ctx, db) {
    let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
    let board = await trelloManager.GetBoard(chat.trello_board_id);
    let target_list = board.lists[i];
-   await db.SetChatTrelloList(chatId, target_list.id);
+   await db.SetChatTrelloList(chatId, target_list.id, user.trello_token);
    ctx.replyWithHTML(FormListBinded(board, target_list, user.lang));
 }
 
