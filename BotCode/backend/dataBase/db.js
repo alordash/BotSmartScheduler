@@ -229,7 +229,7 @@ class dbManagement {
       let schedules = await this.GetAllSchedules();
       for (let schedule of schedules) {
          console.log(`schedule = ${JSON.stringify(schedule)}, tsNow = ${tsNow}`);
-         if (schedule.target_date <= tsNow) {
+         if (schedule.target_date <= tsNow || schedule.trello_card_id != null) {
             expiredSchedules.push(schedule);
          }
       }

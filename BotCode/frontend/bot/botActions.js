@@ -12,6 +12,7 @@ const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { trelloAddBoardCommand, trelloBindBoardCommand, trelloAddListCommand } = require('./botCommands');
+const { type } = require('os');
 
 /**@type {Array.<Array.<Schedule>>} */
 let pendingSchedules = [];
@@ -30,19 +31,21 @@ Number.prototype.div = function (x) {
  */
 async function SaveToTrello(ctx, db, pendingSchedules, chatID) {
    let chat = await db.GetChatById(`${ctx.chat.id}`);
-   if(typeof(chat) != 'undefined' && chat.trello_list_id != null) {
+   if (typeof (chat) != 'undefined' && chat.trello_list_id != null) {
       let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
-      for(const si in pendingSchedules[chatID]) {
+      for (const si in pendingSchedules[chatID]) {
          /**@type {Schedule} */
          let schedule = pendingSchedules[chatID][si];
          let text = schedule.text;
          let i = text.indexOf(' ');
-         if(i < 0) {
+         if (i < 0) {
             i = undefined;
          }
          let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(schedule.target_date));
 
          pendingSchedules[chatID][si].trello_card_id = card.id;
+         pendingSchedules[chatID][si].max_date = 0;
+         pendingSchedules[chatID][si].period_time = 0;
       }
    }
 }
@@ -276,7 +279,8 @@ async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
 async function CheckExpiredSchedules(bot, db) {
    console.log('Checking expired schedules ' + new Date());
    db.sending = true;
-   let expiredSchedules = await db.CheckActiveSchedules(Date.now());
+   let now = Date.now();
+   let expiredSchedules = await db.CheckActiveSchedules(now);
    if (expiredSchedules.length > 0) {
       console.log(`expiredSchedules = ${JSON.stringify(expiredSchedules)}`);
       let ChatIDs = [];
@@ -285,6 +289,26 @@ async function CheckExpiredSchedules(bot, db) {
          let chatID = schedule.chatid;
          if (chatID[0] == '_') {
             chatID = '-' + chatID.substring(1, chatID.length);
+         }
+         let expired = true;
+         if (schedule.trello_card_id != null) {
+            try {
+               let chat = await db.GetChatById(chatID);
+               let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+               let card = await trelloManager.GetCard(schedule.trello_card_id);
+               if (typeof (card) != 'undefined' && typeof (card.due) != 'undefined') {
+                  let dueTime = new Date(card.due).getTime();
+                  if (now < dueTime) {
+                     expired = false;
+                     db.SetScheduleTargetDate(schedule.chatid, schedule.id, dueTime);
+                  }
+               }
+            } catch (e) {
+               console.log(e);
+            }
+         }
+         if (!expired) {
+            continue;
          }
          console.log(`Expired schedule = ${JSON.stringify(schedule)}`);
          if (!ChatIDs.includes(schedule.chatid)) {
