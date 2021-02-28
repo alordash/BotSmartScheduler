@@ -525,7 +525,9 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       } else {
          let reply = '';
          if (msgText[0] == '/') {
-            if (msgText.startsWith(trelloAddBoardCommand)) {
+            let regExp = new RegExp(`^${trelloAddBoardCommand}[0-9]+$`);
+            let match = msgText.match(regExp);
+            if (match != null) {
                //#region ADD BOARD
                TrelloAddBoard(ctx, db);
                //#endregion
@@ -743,7 +745,7 @@ async function TrelloAddBoard(ctx, db) {
  * @param {User} user
  */
 async function TrelloBindCommand(user, ctx) {
-   
+
 }
 
 module.exports = {
