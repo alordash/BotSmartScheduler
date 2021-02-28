@@ -4,8 +4,9 @@ let
     changeTimeZone = 'tz',
     trelloInit = 'trello',
     trelloAddBoardCommand = '/t',
-    trelloBindBoardCommand = '/trello_bind';
-    trelloAddListCommand = '/tl'
+    trelloBindBoardCommand = '/trello_bind',
+    trelloUnbindBoardCommand = '/trello_unbind',
+    trelloAddListCommand = '/tl';
 
 module.exports = {
     listSchedules,
@@ -14,5 +15,6 @@ module.exports = {
     trelloInit,
     trelloAddBoardCommand,
     trelloBindBoardCommand,
+    trelloUnbindBoardCommand,
     trelloAddListCommand
 }
