@@ -46,6 +46,7 @@
     "trelloUnpinnedBoard": "📌 Unpinned",
     "trelloBoard": "board",
     "trelloTooManyBoardsWarning": "⚠️ Too many pinned boards.\r\nMaximum allowed count:",
+    "trelloBoardDoesNotExist": "⚠️ Board not found.",
     "months": [
         "January",
         "February",

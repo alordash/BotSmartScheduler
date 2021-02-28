@@ -746,8 +746,15 @@ async function TrelloAddBoard(ctx, db) {
  * @param {User} user
  */
 async function TrelloBindCommand(user, ctx) {
+   const replies = rp.LoadReplies(user.lang);
    let text = ctx.message.text;
    let id = text.substring(trelloBindBoardCommand.length + 1);
+
+   if(user.trello_boards.indexOf(id) >= 0) {
+      ctx.reply('ok');
+   } else {
+      ctx.reply(replies.trelloBoardDoesNotExist);
+   }
 }
 
 module.exports = {
