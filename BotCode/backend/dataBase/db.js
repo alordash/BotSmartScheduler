@@ -473,6 +473,16 @@ class dbManagement {
       );
    }
 
+   async ClearChatFromTrello(id) {
+      return await this.Query(
+         `UPDATE chats
+         SET trello_board_id = NULL,
+         trello_list_id = NULL,
+         trello_token = NULL
+         WHERE id = '${id}'`
+      );
+   }
+
    async EncryptSchedules() {
       let schedules = await this.GetAllSchedules();
       for (const schedule of schedules) {
