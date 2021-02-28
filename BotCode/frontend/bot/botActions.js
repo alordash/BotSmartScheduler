@@ -801,7 +801,7 @@ async function TrelloAddBoard(ctx, db) {
    let boardsList = await trelloManager.GetUserBoards(owner.id);
 
    let targetBoard = boardsList[i];
-   let found = typeof (user.trello_boards.find(x => {
+   let found = user.trello_boards != null && typeof (user.trello_boards.find(x => {
       return x == targetBoard.id;
    })) != 'undefined';
    if (found) {
