@@ -115,7 +115,7 @@ function FormBoardsList(boardsList, language, user) {
    let i = 1;
    for (const board of boardsList) {
       let extra = '';
-      if (user.trello_boards.indexOf(board.id) >= 0) {
+      if (user.trello_boards != null && user.trello_boards.indexOf(board.id) >= 0) {
          extra = ` 📌
    id: <b>${board.id}</b>`;
       }
