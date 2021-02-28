@@ -775,6 +775,9 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       let trelloManager = new TrelloManager(process.env.TRELLO_KEY, token);
       let owner = await trelloManager.GetTokenOwner(token);
       let boardsList = await trelloManager.GetUserBoards(owner.id);
+      let user = {
+         trello_boards: []
+      };
 
       let reply = `${replies.trelloValidToken}\r\n${FormBoardsList(boardsList, ctx.from.language_code, user)}`;
 
