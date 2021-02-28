@@ -10,6 +10,7 @@ const { dbManagement, User } = require('../../backend/dataBase/db');
 const { speechToText } = require('../../backend/stt/stt');
 const Markup = require('telegraf/markup');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
+const { trelloAddBoardCommand, trelloBindBoardCommand } = require('./botCommands');
 
 let tzPendingConfirmationUsers = [];
 let trelloPendingConfirmationUsers = [];
@@ -18,7 +19,7 @@ let trelloPendingConfirmationUsers = [];
  * @param {Composer} bot 
  * @param {dbManagement} db 
  */
-exports.InitActions = function (bot, db) {
+function InitActions (bot, db) {
    bot.start(async ctx => {
       const replies = LoadReplies(Languages.general);
       try {
@@ -76,7 +77,7 @@ exports.InitActions = function (bot, db) {
          console.error(e);
       }
    });
-   bot.command('trello_bind', async ctx => {
+   bot.command(trelloBindBoardCommand, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
          await botActions.TrelloBindCommand(user, ctx);
@@ -243,4 +244,8 @@ exports.InitActions = function (bot, db) {
          console.log(e)
       }
    });
+}
+
+module.exports = {
+   InitActions
 }

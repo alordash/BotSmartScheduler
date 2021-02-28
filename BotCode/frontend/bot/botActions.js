@@ -6,11 +6,12 @@ const rp = require('../replies/replies');
 const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList } = require('@alordash/date-parser');
-const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList, trelloAddBoardCommand } = require('../formatting');
+const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList } = require('../formatting');
 const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
+const { trelloAddBoardCommand, trelloBindBoardCommand } = require('./botCommands');
 
 let pendingSchedules = [];
 
@@ -745,7 +746,8 @@ async function TrelloAddBoard(ctx, db) {
  * @param {User} user
  */
 async function TrelloBindCommand(user, ctx) {
-
+   let text = ctx.message.text;
+   let id = text.substring(trelloBindBoardCommand.length + 1);
 }
 
 module.exports = {
