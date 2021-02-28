@@ -3,14 +3,18 @@ const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('../replies/replies');
 const rp = require('../replies/replies');
-const { dbManagement, Schedule, User } = require('../../backend/dataBase/db');
+const { dbManagement, Schedule, User, Chat } = require('../../backend/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList } = require('@alordash/date-parser');
-const { FormStringFormatSchedule, FormDateStringFormat } = require('../formatting');
+const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList, FormBoardListsList, FormListBinded, FormBoardUnbinded } = require('../formatting');
 const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
+const { TrelloManager } = require('@alordash/node-js-trello');
+const { trelloAddBoardCommand, trelloBindBoardCommand, trelloAddListCommand } = require('./botCommands');
+const { type } = require('os');
 
+/**@type {Array.<Array.<Schedule>>} */
 let pendingSchedules = [];
 
 /**
@@ -28,6 +32,22 @@ function DetermineLanguage(string) {
    let ruCount = [...string.matchAll(/[А-Яа-я]/g)].length;
    let enCount = [...string.matchAll(/[A-Za-z]/g)].length;
    return ruCount > enCount ? Languages.RU : Languages.EN;
+}
+
+/**
+ * @param {Array.<Number>} tz 
+ * @param {Array.<Number>} trello 
+ * @param {Number} id 
+ */
+function ClearPendingConfirmation(tzs, trellos, id) {
+   let index = tzs.indexOf(id)
+   if (index >= 0) {
+      tzs.splice(index, 1);
+   }
+   index = trellos.indexOf(id);
+   if (index >= 0) {
+      trellos.splice(index, 1);
+   }
 }
 
 function GetDeletingIDsIndex(chatID, deletingIDs) {
@@ -112,7 +132,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
          schedule.target_date = +schedule.target_date;
          schedule.period_time = +schedule.period_time;
          schedule.max_date = +schedule.max_date;
-         let newAnswer = `${FormStringFormatSchedule(schedule, tsOffset, language, false)}\r\n`;
+         let newAnswer = `${await FormStringFormatSchedule(schedule, tsOffset, language, false, db)}\r\n`;
          if (answer.length + newAnswer.length > global.MaxMessageLength) {
             answers.push(answer);
             answer = newAnswer;
@@ -234,7 +254,8 @@ async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
 async function CheckExpiredSchedules(bot, db) {
    console.log('Checking expired schedules ' + new Date());
    db.sending = true;
-   let expiredSchedules = await db.CheckActiveSchedules(Date.now());
+   let now = Date.now();
+   let expiredSchedules = await db.CheckActiveSchedules(now);
    if (expiredSchedules.length > 0) {
       console.log(`expiredSchedules = ${JSON.stringify(expiredSchedules)}`);
       let ChatIDs = [];
@@ -243,6 +264,26 @@ async function CheckExpiredSchedules(bot, db) {
          let chatID = schedule.chatid;
          if (chatID[0] == '_') {
             chatID = '-' + chatID.substring(1, chatID.length);
+         }
+         let expired = true;
+         if (schedule.trello_card_id != null) {
+            try {
+               let chat = await db.GetChatById(chatID);
+               let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+               let card = await trelloManager.GetCard(schedule.trello_card_id);
+               if (typeof (card) != 'undefined' && typeof (card.due) != 'undefined') {
+                  let dueTime = new Date(card.due).getTime();
+                  if (now < dueTime) {
+                     expired = false;
+                     db.SetScheduleTargetDate(schedule.chatid, schedule.id, dueTime);
+                  }
+               }
+            } catch (e) {
+               console.log(e);
+            }
+         }
+         if (!expired) {
+            continue;
          }
          console.log(`Expired schedule = ${JSON.stringify(schedule)}`);
          if (!ChatIDs.includes(schedule.chatid)) {
@@ -383,11 +424,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
    } else {
       console.log(`Can't determine tz in "${ctx.message.text}"`);
       try {
-         return ctx.replyWithHTML(replies.tzInvalidInput, Extra.markup((m) =>
-            m.inlineKeyboard([
-               m.callbackButton(replies.tzCancel, 'tz cancel')
-            ]).oneTime()
-         ));
+         return ctx.replyWithHTML(replies.tzInvalidInput, rp.CancelButton(ctx.from.language_code));
       } catch (e) {
          console.error(e);
       }
@@ -452,6 +489,18 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
          }
          break;
       case 'delete':
+         try {
+            let chat = await db.GetChatById(`${ctx.chat.id}`);
+            if (typeof (chat) != 'undefined' && chat.trello_list_id != null) {
+               let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+               for (const schedule of pendingSchedules[chatID]) {
+                  trelloManager.DeleteCard(schedule.trello_card_id);
+               }
+            }
+         } catch (e) {
+            console.log(e);
+         }
+         pendingSchedules[chatID] = [];
          ctx.deleteMessage();
          break;
       case 'unsubscribe':
@@ -483,15 +532,16 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
  * @param {*} ctx 
  * @param {dbManagement} db 
  * @param {Array.<Number>} tzPendingConfirmationUsers 
+ * @param {Array.<Number>} trelloPendingConfirmationUsers 
  */
-async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
+async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers) {
    let chatID = FormatChatId(ctx.chat.id)
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
    if (typeof (msgText) == 'undefined') {
       msgText = ctx.message.caption;
    }
-   if (typeof (msgText) != 'undefined' && (!inGroup || (inGroup && typeof(ctx.message.forward_date) == 'undefined'))) {
+   if (typeof (msgText) != 'undefined' && (!inGroup || (inGroup && typeof (ctx.message.forward_date) == 'undefined'))) {
       const language = DetermineLanguage(msgText);
       ctx.from.language_code = language;
 
@@ -506,9 +556,27 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
       }
       if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
          ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers);
+      } else if (trelloPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
+         TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers)
       } else {
          let reply = '';
          if (msgText[0] == '/') {
+            let regExp = new RegExp(`^${trelloAddBoardCommand}[0-9]+`);
+            let match = msgText.match(regExp);
+            if (match != null) {
+               //#region ADD TRELLO BOARD
+               TrelloAddBoard(ctx, db);
+               return;
+               //#endregion
+            }
+            regExp = new RegExp(`^${trelloAddListCommand}[0-9]+`);
+            match = msgText.match(regExp);
+            if (match != null) {
+               //#region ADD TRELLO LIST
+               TrelloAddList(ctx, db);
+               return;
+               //#endregion
+            }
             //#region DELETE CLICKED TASK 
             let scheduleId = parseInt(msgText.substring(1, msgText.length));
             if (!isNaN(scheduleId)) {
@@ -550,6 +618,23 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
             } else {
                console.log(`schedulesCount = ${schedulesCount}`);
                let parsedDateIndex = 0;
+               let chat = await db.GetChatById(`${ctx.chat.id}`);
+               let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
+               let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+               for (const si in pendingSchedules[chatID]) {
+                  /**@type {Schedule} */
+                  let schedule = pendingSchedules[chatID][si];
+                  let text = schedule.text;
+                  let i = text.indexOf(' ');
+                  if (i < 0) {
+                     i = undefined;
+                  }
+                  let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(schedule.target_date));
+
+                  pendingSchedules[chatID][si].trello_card_id = card.id;
+                  pendingSchedules[chatID][si].max_date = 0;
+                  pendingSchedules[chatID][si].period_time = 0;
+               }
                for (let parsedDate of parsedDates) {
                   let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
                   if (typeof (dateParams) != 'undefined') {
@@ -557,7 +642,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                      let found = false;
                      let i = 0;
                      for (; !found && i < schedules.length; i++) {
-                        if(schedules[i].text == parsedDate.string) {
+                        if (schedules[i].text == parsedDate.string) {
                            found = true;
                         }
                      }
@@ -584,9 +669,21 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
                                  dateParams.period_time,
                                  dateParams.max_date,
                                  file_id);
+                              if (trelloIsOk) {
+                                 let text = newSchedule.text;
+                                 let i = text.indexOf(' ');
+                                 if (i < 0) {
+                                    i = undefined;
+                                 }
+                                 let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(newSchedule.target_date));
+
+                                 newSchedule.trello_card_id = card.id;
+                                 newSchedule.max_date = 0;
+                                 newSchedule.period_time = 0;
+                              }
                               pendingSchedules[chatID].push(newSchedule);
                               count++;
-                              reply += FormStringFormatSchedule(newSchedule, tz, language, true) + `\r\n`;
+                              reply += await FormStringFormatSchedule(newSchedule, tz, language, true, db) + `\r\n`;
                            } else if (!inGroup) {
                               reply += replies.emptyString + '\r\n';
                            }
@@ -642,9 +739,146 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers) {
       }
    }
 }
-//#endregion
+
+/**
+ * @param {*} ctx 
+ * @param {User} user
+ * @param {Array.<Number>} trelloPendingConfirmationUsers 
+ */
+async function TrelloCommand(user, ctx, trelloPendingConfirmationUsers) {
+   if (user.trello_token == null) {
+      trelloPendingConfirmationUsers.push(ctx.from.id);
+      await ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, "Smart Scheduler", user.lang),
+         rp.CancelKeyboard(user.lang));
+   } else {
+      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+      let owner = await trelloManager.GetTokenOwner(user.trello_token);
+      let boardsList = await trelloManager.GetUserBoards(owner.id);
+
+      ctx.replyWithHTML(FormBoardsList(boardsList, user.lang, user));
+   }
+}
+
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ * @param {Array.<Number>} trelloPendingConfirmationUsers 
+ */
+async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
+   let token = ctx.message.text;
+   const replies = rp.LoadReplies(ctx.from.language_code);
+   let match = token.match(/^([a-zA-Z0-9]){64}$/);
+   if (match != null) {
+      db.SetUserTrelloToken(ctx.from.id, token);
+      trelloPendingConfirmationUsers.splice(trelloPendingConfirmationUsers.indexOf(ctx.from.id), 1);
+
+      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, token);
+      let owner = await trelloManager.GetTokenOwner(token);
+      let boardsList = await trelloManager.GetUserBoards(owner.id);
+
+      let reply = `${replies.trelloValidToken}\r\n${FormBoardsList(boardsList, ctx.from.language_code, user)}`;
+
+      ctx.replyWithHTML(reply);
+   } else {
+      ctx.replyWithHTML(replies.trelloWrongToken, rp.CancelButton(ctx.from.language_code));
+   }
+}
+
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ */
+async function TrelloAddBoard(ctx, db) {
+   let text = ctx.message.text;
+   let i = +text.substring(trelloAddBoardCommand.length) - 1;
+
+   let user = await db.GetUserById(ctx.from.id);
+   let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+   let owner = await trelloManager.GetTokenOwner(user.trello_token);
+   let boardsList = await trelloManager.GetUserBoards(owner.id);
+
+   let targetBoard = boardsList[i];
+   let found = typeof (user.trello_boards.find(x => {
+      return x == targetBoard.id;
+   })) != 'undefined';
+   if (found) {
+      console.log(`removed board :>> ${JSON.stringify(await db.RemoveTrelloBoardFromUser(ctx.from.id, targetBoard.id))}`);
+   } else {
+      let result = await db.AddTrelloBoardToUser(ctx.from.id, targetBoard.id);
+      if (result.rowCount == 0) {
+         ctx.replyWithHTML(`${rp.LoadReplies(user.lang).trelloTooManyBoardsWarning} ${db.maximumAddedTrelloBoards}`);
+         return;
+      }
+   }
+   ctx.replyWithHTML(rp.ChangedBoard(user.lang, targetBoard, found));
+}
+
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ * @param {User} user
+ */
+async function TrelloBindCommand(ctx, db, user) {
+   const replies = rp.LoadReplies(user.lang);
+   let text = ctx.message.text;
+   let id = text.substring(trelloBindBoardCommand.length + 1);
+
+   if (user.trello_boards.indexOf(id) >= 0) {
+      let chat = await db.GetChatById(`${ctx.chat.id}`);
+      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+      let chatId = `${ctx.chat.id}`;
+      if (typeof (chat) == 'undefined') {
+         await db.AddChat(chatId, id);
+      } else {
+         await db.SetChatTrelloBoard(chatId, id);
+      }
+      let board = await trelloManager.GetBoard(id);
+      ctx.replyWithHTML(FormBoardListsList(board, user.lang));
+   } else {
+      ctx.reply(replies.trelloBoardDoesNotExist);
+   }
+}
+
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ */
+async function TrelloAddList(ctx, db) {
+   let text = ctx.message.text;
+   let i = parseInt(text.substring(trelloAddListCommand.length)) - 1;
+
+   let chatId = `${ctx.chat.id}`;
+   let user = await db.GetUserById(ctx.from.id);
+   const replies = rp.LoadReplies(user.lang);
+   let chat = await db.GetChatById(chatId);
+   if (chat.trello_board_id == null) {
+      ctx.reply(replies.trelloNoBoardBinded);
+      return;
+   }
+   let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+   let board = await trelloManager.GetBoard(chat.trello_board_id);
+   let target_list = board.lists[i];
+   await db.SetChatTrelloList(chatId, target_list.id, user.trello_token);
+   ctx.replyWithHTML(FormListBinded(board, target_list, user.lang));
+}
+
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ * @param {User} user 
+ */
+async function TrelloUnbindCommand(ctx, db, user) {
+   let chat = await db.GetChatById(ctx.chat.id);
+   db.ClearChatFromTrello(ctx.chat.id);
+   if (chat.trello_token != null) {
+      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+      let board = await trelloManager.GetBoard(chat.trello_board_id);
+      ctx.replyWithHTML(FormBoardUnbinded(board, user.lang));
+   }
+}
 
 module.exports = {
+   ClearPendingConfirmation,
    GetDeletingIDsIndex,
    FormatChatId,
    LoadSchedulesList,
@@ -652,5 +886,8 @@ module.exports = {
    StartTimeZoneDetermination,
    CheckExpiredSchedules,
    HandleCallbackQuery,
-   HandleTextMessage
+   HandleTextMessage,
+   TrelloCommand,
+   TrelloBindCommand,
+   TrelloUnbindCommand
 }

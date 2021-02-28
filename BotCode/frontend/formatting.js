@@ -1,8 +1,11 @@
 const { ParsedDate } = require('@alordash/date-parser');
-const { Schedule } = require('../backend/dataBase/db');
+const { Schedule, User } = require('../backend/dataBase/db');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 const { TimeListIsEmpty } = require('../backend/timeProcessing');
 const { Language, LoadReplies } = require('./replies/replies');
+const { trelloAddBoardCommand, trelloAddListCommand } = require('./bot/botCommands');
+const { TrelloManager } = require('@alordash/node-js-trello');
+const { dbManagement } = require('../backend/dataBase/db');
 
 /**@param {Date} date 
  * @param {Language} language 
@@ -26,7 +29,7 @@ function FormDateStringFormat(date, language, showDayOfWeek) {
    }
 
    let dayOfWeek = '';
-   if(showDayOfWeek && (date.getTime() - Date.now() > 24 * 60 * 60 * 1000)) {
+   if (showDayOfWeek && (date.getTime() - Date.now() > 24 * 60 * 60 * 1000)) {
       dayOfWeek = ` (${replies.daysOfWeek[date.getDay()]})`;
    }
    return `${date.getDate()} ${replies.months[month]} ${hour}:${minute}${year}${dayOfWeek}`;
@@ -58,9 +61,10 @@ function FormPeriodStringFormat(period_time, language) {
  * @param {Number} tz 
  * @param {Language} language 
  * @param {Boolean} showDayOfWeek 
+ * @param {dbManagement} db
  * @returns {String}
  */
-function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek) {
+async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, db) {
    let period_time = schedule.period_time.div(1000);
    let target_date = new Date(schedule.target_date + tz * 1000);
    console.log(`FORMATTING target_date: ${schedule.target_date}, tz: ${tz}, will be: ${schedule.target_date + tz * 1000}`);
@@ -80,12 +84,91 @@ function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek) {
       username = ` (<b>${schedule.username}</b>)`;
    }
    let file = (schedule.file_id != '~' && schedule.file_id != null) ? ' 💾' : '';
-   return `/${schedule.id}. <b>${FormDateStringFormat(target_date, language, showDayOfWeek)}</b> "${schedule.text}"${file}${username}${until}${period}`;
+
+   let text = schedule.text;
+   if (schedule.trello_card_id != null) {
+      let chatID = schedule.chatid;
+      if (chatID[0] == '_') {
+         chatID = '-' + chatID.substring(1);
+      }
+      let chat = await db.GetChatById(chatID);
+      if (chat.trello_token != null) {
+         let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+         let card = await trelloManager.GetCard(schedule.trello_card_id);
+         if (typeof (card) != 'undefined') {
+            text = `<a href="${card.shortUrl}">${text}</a>`;
+         }
+      }
+   }
+   return `/${schedule.id}. <b>${FormDateStringFormat(target_date, language, showDayOfWeek)}</b> "${text}"${file}${username}${until}${period}`;
+}
+
+/**
+ * @param {Array} boardsList 
+ * @param {String} language 
+ * @param {User} user 
+ * @return {String}
+ */
+function FormBoardsList(boardsList, language, user) {
+   const replies = LoadReplies(language);
+   let reply = `${replies.trelloShowBoards}\r\n`;
+   let i = 1;
+   for (const board of boardsList) {
+      let extra = '';
+      if (user.trello_boards.indexOf(board.id) >= 0) {
+         extra = ` 📌
+   id: <b>${board.id}</b>`;
+      }
+      reply += `  ${trelloAddBoardCommand}${i} | <a href="${board.shortUrl}">${board.name}</a>${extra}\r\n`;
+      i++;
+   }
+   return reply;
+}
+
+/**
+ * @param {*} board 
+ * @param {Languages} language 
+ * @return {String}
+ */
+function FormBoardListsList(board, language) {
+   const replies = LoadReplies(language);
+   let reply = `${replies.trelloBoardListsList0} "<a href="${board.shortUrl}">${board.name}</a>" ${replies.trelloBoardListsList1}\r\n`;
+   let i = 1;
+   for (const list of board.lists) {
+      reply += `${trelloAddListCommand}${i} | "<b>${list.name}</b>"\r\n`;
+      i++;
+   }
+   return `${reply}${replies.trelloBoardListsListEnd}`
+}
+
+/**
+ * @param {*} board 
+ * @param {*} list 
+ * @param {Language} language 
+ * @returns {String}
+ */
+function FormListBinded(board, list, language) {
+   const replies = LoadReplies(language);
+   return `${replies.trelloListBinded0} "<b>${list.name}</b>" ${replies.trelloListBinded1} "<a href="${board.shortUrl}">${board.name}</a>".`;
+}
+
+/**
+ * @param {*} board 
+ * @param {Languages} language 
+ * @returns {String}
+ */
+function FormBoardUnbinded(board, language) {
+   const replies = LoadReplies(language);
+   return `${replies.trelloBoardUnbinded0} "<a href="${board.shortUrl}">${board.name}</a>" ${replies.trelloBoardUnbinded1}`;
 }
 
 module.exports = {
    TimeListIsEmpty,
    FormDateStringFormat,
    FormPeriodStringFormat,
-   FormStringFormatSchedule
+   FormStringFormatSchedule,
+   FormBoardsList,
+   FormBoardListsList,
+   FormListBinded,
+   FormBoardUnbinded
 }

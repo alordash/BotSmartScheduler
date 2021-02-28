@@ -10,14 +10,16 @@ const { dbManagement, User } = require('../../backend/dataBase/db');
 const { speechToText } = require('../../backend/stt/stt');
 const Markup = require('telegraf/markup');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
+const cms = require('./botCommands');
 
 let tzPendingConfirmationUsers = [];
+let trelloPendingConfirmationUsers = [];
 
 /**
  * @param {Composer} bot 
  * @param {dbManagement} db 
  */
-exports.InitActions = function (bot, db) {
+function InitActions(bot, db) {
    bot.start(async ctx => {
       const replies = LoadReplies(Languages.general);
       try {
@@ -40,7 +42,7 @@ exports.InitActions = function (bot, db) {
       }
    });
 
-   bot.command('list', async ctx => {
+   bot.command(cms.listSchedules, async ctx => {
       let tz = await db.GetUserTZ(ctx.from.id);
       let language = await db.GetUserLanguage(ctx.from.id);
       let chatID = FormatChatId(ctx.chat.id);
@@ -53,22 +55,46 @@ exports.InitActions = function (bot, db) {
          }
       }
    });
-   bot.command('del', async ctx => {
+   bot.command(cms.deleteSchedules, async ctx => {
       let language = await db.GetUserLanguage(ctx.from.id);
       ctx.from.language_code = language;
-      await botActions.DeleteSchedules(ctx, db);
+      botActions.DeleteSchedules(ctx, db);
    });
-   bot.command('tz', async ctx => {
+   bot.command(cms.changeTimeZone, async ctx => {
       try {
          let language = await db.GetUserLanguage(ctx.from.id);
          ctx.from.language_code = language;
-         await botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
+         botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
       } catch (e) {
          console.error(e);
       }
    });
+   bot.command(cms.trelloInit, async ctx => {
+      try {
+         let user = await db.GetUserById(ctx.from.id);
+         botActions.TrelloCommand(user, ctx, trelloPendingConfirmationUsers);
+      } catch (e) {
+         console.error(e);
+      }
+   });
+   bot.command(cms.trelloBindBoardCommand, async ctx => {
+      try {
+         let user = await db.GetUserById(ctx.from.id);
+         botActions.TrelloBindCommand(ctx, db, user);
+      } catch (e) {
+         console.error(e);
+      }
+   });
+   bot.command(cms.trelloUnbindBoardCommand, async ctx => {
+      try {
+         let user = await db.GetUserById(ctx.from.id);
+         botActions.TrelloUnbindCommand(ctx, db, user);
+      } catch (e) {
+         console.log(e);
+      }
+   });
    console.log('__dirname :>> ', __dirname);
-   //   let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
+   //let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
    let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
    console.log('repliesFiles :>> ', repliesFiles);
    for (filename of repliesFiles) {
@@ -96,11 +122,12 @@ exports.InitActions = function (bot, db) {
                }
             });
          }
-         if (typeof (replies.tzCancel) != 'undefined') {
-            bot.hears(replies.tzCancel, async ctx => {
-               tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-               let reply = replies.tzCancelReponse;
-               if (!await db.HasUserID(ctx.from.id)) {
+         if (typeof (replies.cancel) != 'undefined') {
+            bot.hears(replies.cancel, async ctx => {
+               botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
+               let reply = replies.cancelReponse;
+               let user = await db.GetUserById(ctx.from.id);
+               if (typeof (user) == 'undefined' || user.tz == null) {
                   reply += '\r\n' + replies.tzCancelWarning;
                }
                try {
@@ -134,16 +161,16 @@ exports.InitActions = function (bot, db) {
       }
    }
 
-   bot.action('tz cancel', async ctx => {
+   bot.action('cancel', async ctx => {
       let language = await db.GetUserLanguage(ctx.from.id);
       const replies = LoadReplies(language);
-      tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
-      let text = replies.tzCancelReponse;
-      if (!await db.HasUserID(ctx.from.id)) {
+      botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
+      let text = replies.cancelReponse;
+      let user = await db.GetUserById(ctx.from.id);
+      if (typeof (user) == 'undefined' || user.tz == null) {
          text += '\r\n' + replies.tzCancelWarning;
       }
       try {
-         ctx.editMessageText('...');
          await ctx.answerCbQuery();
          const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
          await ctx.replyWithHTML(text,
@@ -171,6 +198,7 @@ exports.InitActions = function (bot, db) {
          }
          try {
             const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+            botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
             ctx.replyWithHTML(replies.tzDefined + '<b>' + rp.TzLocation(rawOffset) + '</b>',
                schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
          } catch (e) {
@@ -204,7 +232,7 @@ exports.InitActions = function (bot, db) {
                ctx.message.text = text;
                let language = await db.GetUserLanguage(ctx.from.id);
                ctx.from.language_code = language;
-               botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);
+               botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);
             }
          } else {
             try {
@@ -219,9 +247,13 @@ exports.InitActions = function (bot, db) {
    bot.on('message', async ctx => {
       console.log(`Received msg, text: ${ctx.message.text}`);
       try {
-         await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers);
+         await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);
       } catch (e) {
          console.log(e)
       }
    });
+}
+
+module.exports = {
+   InitActions
 }

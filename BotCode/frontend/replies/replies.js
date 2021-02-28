@@ -26,7 +26,7 @@ function TzDeterminationKeyboard(language) {
     return Markup
         .keyboard([
             [{ text: replies.tzUseLocation, request_location: true }, { text: replies.tzTypeManually }],
-            [{ text: replies.tzCancel }]
+            [{ text: replies.cancel }]
         ]).oneTime()
         .resize()
         .extra()
@@ -36,9 +36,9 @@ function TzDeterminationKeyboard(language) {
 function TzDeterminationOnStartInlineKeyboard(language) {
     const replies = LoadReplies(language);
     return Extra.markup((m) =>
-       m.inlineKeyboard([
-          m.callbackButton(replies.startTZ, `startTZ`)
-       ]).oneTime()
+        m.inlineKeyboard([
+            m.callbackButton(replies.startTZ, `startTZ`)
+        ]).oneTime()
     );
 }
 
@@ -115,6 +115,50 @@ function Scheduled(text, myFormattedDate, language) {
     return `"${text}" ${replies.alreadyScheduled} <b>${myFormattedDate}</b>\r\n`;
 }
 
+/**
+ * @param {String} trello_key 
+ * @param {String} app_name 
+ * @param {Languages} language 
+ */
+function TrelloAuthorizationMessage(trello_key, app_name, language) {
+    const replies = LoadReplies(language);
+    let link = `https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=${app_name}&key=${trello_key}`;
+    return `${replies.trelloAuthenticate0}${link}${replies.trelloAuthenticate1}`;
+}
+
+/**@param {Languages} language */
+function CancelKeyboard(language) {
+    const replies = LoadReplies(language);
+    return Markup
+        .keyboard([
+            [{ text: replies.cancel }]
+        ]).oneTime()
+        .resize()
+        .extra()
+}
+
+/**@param {Languages} language */
+function CancelButton(language) {
+    const replies = LoadReplies(language);
+    return Extra.markup((m) =>
+    m.inlineKeyboard([
+       m.callbackButton(replies.cancel, 'cancel')
+    ]).oneTime()
+ )
+}
+
+/**
+ * @param {Languages} language 
+ * @param {*} board 
+ * @param {Boolean} found 
+ * @returns {String}
+ */
+function ChangedBoard(language, board, found) {
+    const replies = LoadReplies(language);
+    let start = `${found ? replies.trelloUnpinnedBoard : replies.trelloPinnedBoard} ${replies.trelloBoard}`;
+    return `${start} "<a href="${board.shortUrl}">${board.name}</a>"\r\n${replies.trelloShowBoardsEnd}`;
+}
+
 module.exports = {
     Languages,
     LoadReplies,
@@ -125,5 +169,9 @@ module.exports = {
     TzDetermined,
     TzLocation,
     TzCurrent,
-    Scheduled
+    Scheduled,
+    TrelloAuthorizationMessage,
+    CancelKeyboard,
+    CancelButton,
+    ChangedBoard
 }
