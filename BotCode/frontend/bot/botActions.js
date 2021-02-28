@@ -24,6 +24,29 @@ Number.prototype.div = function (x) {
    return Math.floor(this / x);
 }
 
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ */
+async function SaveToTrello(ctx, db, pendingSchedules, chatID) {
+   let chat = await db.GetChatById(`${ctx.chat.id}`);
+   if(typeof(chat) != 'undefined' && chat.trello_list_id != null) {
+      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+      for(const si in pendingSchedules[chatID]) {
+         /**@type {Schedule} */
+         let schedule = pendingSchedules[chatID][si];
+         let text = schedule.text;
+         let i = text.indexOf(' ');
+         if(i < 0) {
+            i = undefined;
+         }
+         let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(schedule.target_date));
+
+         pendingSchedules[chatID][si].trello_card_id = card.id;
+      }
+   }
+}
+
 /**@param {String} string
  * @returns {Languages}
  */
@@ -455,6 +478,7 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
       case 'confirm':
          try {
             if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
+               await SaveToTrello(ctx, db, pendingSchedules, chatID);
                await db.AddSchedules(chatID, pendingSchedules[chatID]);
             }
          } catch (e) {
@@ -527,7 +551,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       } else {
          let reply = '';
          if (msgText[0] == '/') {
-            let regExp = new RegExp(`^${trelloAddBoardCommand}[0-9]+$`);
+            let regExp = new RegExp(`^${trelloAddBoardCommand}[0-9]+`);
             let match = msgText.match(regExp);
             if (match != null) {
                //#region ADD TRELLO BOARD
@@ -535,7 +559,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                return;
                //#endregion
             }
-            regExp = new RegExp(`^${trelloAddListCommand}[0-9]+$`);
+            regExp = new RegExp(`^${trelloAddListCommand}[0-9]+`);
             match = msgText.match(regExp);
             if (match != null) {
                //#region ADD TRELLO LIST
@@ -638,22 +662,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                }
             }
             if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-               let chat = await db.GetChatById(`${ctx.chat.id}`);
-               if(typeof(chat) != 'undefined' && chat.trello_list_id != null) {
-                  let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
-                  for(const si in pendingSchedules[chatID]) {
-                     /**@type {Schedule} */
-                     let schedule = pendingSchedules[chatID][si];
-                     let text = schedule.text;
-                     let i = text.indexOf(' ');
-                     if(i < 0) {
-                        i = undefined;
-                     }
-                     let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(schedule.target_date));
-
-                     pendingSchedules[chatID][si].trello_card_id = card.id;
-                  }
-               }
+               await SaveToTrello(ctx, db, pendingSchedules, chatID);
                await db.AddSchedules(chatID, pendingSchedules[chatID]);
                pendingSchedules[chatID] = [];
             }
@@ -798,7 +807,7 @@ async function TrelloBindCommand(ctx, db, user) {
  */
 async function TrelloAddList(ctx, db) {
    let text = ctx.message.text;
-   let i = +text.substring(trelloAddListCommand.length) - 1;
+   let i = parseInt(text.substring(trelloAddListCommand.length)) - 1;
 
    let chatId = `${ctx.chat.id}`;
    let user = await db.GetUserById(ctx.from.id);
