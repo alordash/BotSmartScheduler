@@ -126,7 +126,7 @@ class dbManagement {
             schedule.username = 'none';
          }
          const text = Encrypt(schedule.text, schedule.chatid);
-         queryString += `('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, '${schedule.file_id}'), `;
+         queryString += `('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, '${schedule.file_id}', '${schedule.trello_card_id}'), `;
          id++;
       }
       queryString = queryString.substring(0, queryString.length - 2);
