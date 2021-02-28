@@ -97,7 +97,7 @@ function FormBoardsList(boardsList, language, user) {
    for (const board of boardsList) {
       let extra = '';
       if(user.trello_boards.indexOf(board.id) >= 0) {
-         extra = ` 📎
+         extra = ` 📌
    id: <b>${board.id}</b>`;
       }
       reply += `  ${trelloAddBoardCommand}${i} | <a href="${board.shortUrl}">${board.name}</a>${extra}\r\n`;
