@@ -44,7 +44,7 @@
     "trelloWrongToken": "🚫 Please enter valid token.",
     "trelloChangedBoard": "🗃",
     "trelloPinnedBoard": "Pinned",
-    "trelloUnpinneddBoard": "Unpinned",
+    "trelloUnpinnedBoard": "Unpinned",
     "trelloBoard": "board",
     "trelloTooManyBoardsWarning": "⚠️ Too many pinned boards.\r\nMaximum allowed count:",
     "months": [
