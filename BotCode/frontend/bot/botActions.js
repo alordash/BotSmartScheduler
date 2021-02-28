@@ -477,7 +477,6 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
       case 'confirm':
          try {
             if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-               await SaveToTrello(ctx, db, pendingSchedules, chatID);
                await db.AddSchedules(chatID, pendingSchedules[chatID]);
             }
          } catch (e) {
@@ -490,6 +489,18 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
          }
          break;
       case 'delete':
+         try {
+            let chat = await db.GetChatById(`${ctx.chat.id}`);
+            if (typeof (chat) != 'undefined' && chat.trello_list_id != null) {
+               let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+               for (const schedule of pendingSchedules[chatID]) {
+                  trelloManager.DeleteCard(schedule.trello_card_id);
+               }
+            }
+         } catch (e) {
+            console.log(e);
+         }
+         pendingSchedules[chatID] = [];
          ctx.deleteMessage();
          break;
       case 'unsubscribe':
