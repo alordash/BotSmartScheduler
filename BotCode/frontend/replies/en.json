@@ -53,6 +53,8 @@
     "trelloNoBoardBinded": "⚠️ No trello board binded to this chat.",
     "trelloListBinded0": "📑 All schedules from this chat will be also duplicated to list",
     "trelloListBinded1": "of board",
+    "trelloBoardUnbinded0": "🧹 Board",
+    "trelloBoardUnbinded1": "unpinned from this chat.",
     "months": [
         "January",
         "February",
