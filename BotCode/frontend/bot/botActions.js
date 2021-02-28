@@ -6,7 +6,7 @@ const rp = require('../replies/replies');
 const { dbManagement, Schedule, User, Chat } = require('../../backend/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList } = require('@alordash/date-parser');
-const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList, FormBoardListsList, FormListBinded } = require('../formatting');
+const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList, FormBoardListsList, FormListBinded, FormBoardUnbinded } = require('../formatting');
 const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
@@ -862,6 +862,21 @@ async function TrelloAddList(ctx, db) {
    ctx.replyWithHTML(FormListBinded(board, target_list, user.lang));
 }
 
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ * @param {User} user 
+ */
+async function TrelloUnbindCommand(ctx, db, user) {
+   let chat = await db.GetChatById(ctx.chat.id);
+   db.ClearChatFromTrello(ctx.chat.id);
+   if (chat.trello_token != null) {
+      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+      let board = await trelloManager.GetBoard(chat.trello_board_id);
+      ctx.replyWithHTML(FormBoardUnbinded(board, user.lang));
+   }
+}
+
 module.exports = {
    ClearPendingConfirmation,
    GetDeletingIDsIndex,
@@ -873,5 +888,6 @@ module.exports = {
    HandleCallbackQuery,
    HandleTextMessage,
    TrelloCommand,
-   TrelloBindCommand
+   TrelloBindCommand,
+   TrelloUnbindCommand
 }
