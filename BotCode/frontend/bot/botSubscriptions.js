@@ -86,8 +86,8 @@ function InitActions (bot, db) {
       }
    });
    console.log('__dirname :>> ', __dirname);
-   let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
-   //   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
+   //let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
+   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
    console.log('repliesFiles :>> ', repliesFiles);
    for (filename of repliesFiles) {
       if (path.extname(filename) == '.json') {
