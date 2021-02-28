@@ -3,6 +3,7 @@ const { Schedule, User } = require('../backend/dataBase/db');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 const { TimeListIsEmpty } = require('../backend/timeProcessing');
 const { Language, LoadReplies } = require('./replies/replies');
+const { trelloAddBoardCommand } = require('./bot/botCommands');
 
 /**@param {Date} date 
  * @param {Language} language 

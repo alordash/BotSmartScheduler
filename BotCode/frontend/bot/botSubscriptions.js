@@ -10,7 +10,7 @@ const { dbManagement, User } = require('../../backend/dataBase/db');
 const { speechToText } = require('../../backend/stt/stt');
 const Markup = require('telegraf/markup');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
-const { trelloAddBoardCommand, trelloBindBoardCommand } = require('./botCommands');
+const { listSchedules, deleteSchedules, changeTimeZone, trelloInit, trelloBindBoardCommand } = require('./botCommands');
 
 let tzPendingConfirmationUsers = [];
 let trelloPendingConfirmationUsers = [];
@@ -42,7 +42,7 @@ function InitActions (bot, db) {
       }
    });
 
-   bot.command('list', async ctx => {
+   bot.command(listSchedules, async ctx => {
       let tz = await db.GetUserTZ(ctx.from.id);
       let language = await db.GetUserLanguage(ctx.from.id);
       let chatID = FormatChatId(ctx.chat.id);
@@ -55,12 +55,12 @@ function InitActions (bot, db) {
          }
       }
    });
-   bot.command('del', async ctx => {
+   bot.command(deleteSchedules, async ctx => {
       let language = await db.GetUserLanguage(ctx.from.id);
       ctx.from.language_code = language;
       await botActions.DeleteSchedules(ctx, db);
    });
-   bot.command('tz', async ctx => {
+   bot.command(changeTimeZone, async ctx => {
       try {
          let language = await db.GetUserLanguage(ctx.from.id);
          ctx.from.language_code = language;
@@ -69,7 +69,7 @@ function InitActions (bot, db) {
          console.error(e);
       }
    });
-   bot.command('trello', async ctx => {
+   bot.command(trelloInit, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
          await botActions.TrelloCommand(user, ctx, trelloPendingConfirmationUsers);
