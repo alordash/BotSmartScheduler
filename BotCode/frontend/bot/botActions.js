@@ -11,7 +11,7 @@ const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
-const { trelloBindBoardCommand, trelloAddListCommand } = require('./botCommands');
+const { trelloBindBoardCommand, trelloAddListCommand, trelloClear } = require('./botCommands');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../backend/nicknamesExtraction');
 
 /**@type {Array.<Array.<Schedule>>} */
@@ -737,12 +737,15 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
  */
 async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
-   if (user.trello_token == null) {
+   const replies = LoadReplies(user.lang);
+   if (ctx.message.text.indexOf(trelloClear) >= 0 && ctx.chat.id >= 0) {
+      db.ClearUserTrelloToken(ctx.from.id);
+      ctx.reply(replies.trelloRemovedToken);
+   } else if (user.trello_token == null) {
       trelloPendingConfirmationUsers.push(ctx.from.id);
       await ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, "Smart Scheduler", user.lang),
          rp.CancelKeyboard(user.lang));
    } else {
-      const replies = LoadReplies(user.lang);
       let reply = '';
 
       let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
@@ -766,7 +769,7 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
          reply = `${replies.trelloNoBoardBinded}\r\n`;
       }
 
-      if(ctx.chat.id >= 0) {
+      if (ctx.chat.id >= 0) {
          reply = `${reply}${FormBoardsList(boardsList, user.lang)}`;
       }
       ctx.replyWithHTML(reply);
@@ -790,9 +793,15 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       let owner = await trelloManager.GetTokenOwner(token);
       let boardsList = await trelloManager.GetUserBoards(owner.id);
 
-      let reply = `${replies.trelloValidToken}\r\n${FormBoardsList(boardsList, ctx.from.language_code)}`;
+      let reply = `${replies.trelloSavedToken}\r\n${FormBoardsList(boardsList, ctx.from.language_code)}`;
 
-      ctx.replyWithHTML(reply);
+      let chatID = `${ctx.chat.id}`;
+      if(chatID[0] == '-') {
+         chatID = `_${chatID.substring(1)}`;
+      }
+      const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+      ctx.replyWithHTML(reply, 
+         schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
    } else {
       ctx.replyWithHTML(replies.trelloWrongToken, rp.CancelButton(ctx.from.language_code));
    }

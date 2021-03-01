@@ -399,10 +399,25 @@ class dbManagement {
       return typeof (res) != 'undefined' && res.rows.length > 0
    }
 
+   /**
+    * @param {Number} id 
+    * @param {String} trello_token 
+    */
    async SetUserTrelloToken(id, trello_token) {
       return await this.Query(
          `UPDATE userids 
          SET trello_token = '${trello_token}'
+         WHERE id = ${id};`
+      );
+   }
+
+   /**
+    * @param {Number} id 
+    */
+   async ClearUserTrelloToken(id) {
+      return await this.Query(
+         `UPDATE userids 
+         SET trello_token = NULL
          WHERE id = ${id};`
       );
    }
