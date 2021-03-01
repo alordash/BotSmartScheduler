@@ -104,16 +104,24 @@ async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, d
 }
 
 /**
+ * @param {*} board 
+ * @returns {String}
+ */
+function FormBoardLink(board) {
+   return `<a href="${board.shortUrl}">${board.name}</a>`;
+}
+
+/**
  * @param {Array} boardsList 
  * @param {String} language 
- * @return {String}
+ * @returns {String}
  */
 function FormBoardsList(boardsList, language) {
    const replies = LoadReplies(language);
    let reply = `${replies.trelloShowBoards}\r\n`;
    let i = 1;
    for (const board of boardsList) {
-      reply += `<a href="${board.shortUrl}">${board.name}</a>
+      reply += `• ${FormBoardLink(board)}
    id: <b>${board.id}</b>\r\n`;
       i++;
    }
@@ -123,11 +131,11 @@ function FormBoardsList(boardsList, language) {
 /**
  * @param {*} board 
  * @param {Languages} language 
- * @return {String}
+ * @returns {String}
  */
 function FormBoardListsList(board, language) {
    const replies = LoadReplies(language);
-   let reply = `${replies.trelloBoardListsList0} "<a href="${board.shortUrl}">${board.name}</a>" ${replies.trelloBoardListsList1}\r\n`;
+   let reply = `${replies.trelloBoardListsList0} "${FormBoardLink(board)}" ${replies.trelloBoardListsList1}\r\n`;
    let i = 1;
    for (const list of board.lists) {
       reply += `${trelloAddListCommand}${i} | "<b>${list.name}</b>"\r\n`;
@@ -144,7 +152,7 @@ function FormBoardListsList(board, language) {
  */
 function FormListBinded(board, list, language) {
    const replies = LoadReplies(language);
-   return `${replies.trelloListBinded0} "<b>${list.name}</b>" ${replies.trelloListBinded1} "<a href="${board.shortUrl}">${board.name}</a>".`;
+   return `${replies.trelloListBinded0} "<b>${list.name}</b>" ${replies.trelloListBinded1} "${FormBoardLink(board)}".`;
 }
 
 /**
@@ -154,7 +162,12 @@ function FormListBinded(board, list, language) {
  */
 function FormBoardUnbinded(board, language) {
    const replies = LoadReplies(language);
-   return `${replies.trelloBoardUnbinded0} "<a href="${board.shortUrl}">${board.name}</a>" ${replies.trelloBoardUnbinded1}`;
+   return `${replies.trelloBoardUnbinded0} "${FormBoardLink(board)}" ${replies.trelloBoardUnbinded1}`;
+}
+
+function FormAlreadyBoardBinded(board, list, language) {
+   const replies = LoadReplies(language);
+   return `${replies.trelloBoardAlreadyBinded0} "${FormBoardLink(board)}"\r\n${replies.trelloBoardAlreadyBinded1} "<b>${list.name}</b>"`;
 }
 
 module.exports = {
@@ -165,5 +178,6 @@ module.exports = {
    FormBoardsList,
    FormBoardListsList,
    FormListBinded,
-   FormBoardUnbinded
+   FormBoardUnbinded,
+   FormAlreadyBoardBinded
 }
