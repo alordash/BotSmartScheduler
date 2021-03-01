@@ -269,14 +269,18 @@ async function CheckExpiredSchedules(bot, db) {
          if (schedule.trello_card_id != null) {
             try {
                let chat = await db.GetChatById(chatID);
-               let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
-               let card = await trelloManager.GetCard(schedule.trello_card_id);
-               if (typeof (card) != 'undefined' && typeof (card.due) != 'undefined') {
-                  let dueTime = new Date(card.due).getTime();
-                  if (now < dueTime) {
-                     expired = false;
-                     db.SetScheduleTargetDate(schedule.chatid, schedule.id, dueTime);
+               if (typeof (chat) != 'undefined' && chat.trello_token != null) {
+                  let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+                  let card = await trelloManager.GetCard(schedule.trello_card_id);
+                  if (typeof (card) != 'undefined' && typeof (card.due) != 'undefined') {
+                     let dueTime = new Date(card.due).getTime();
+                     if (now < dueTime) {
+                        expired = false;
+                        db.SetScheduleTargetDate(schedule.chatid, schedule.id, dueTime);
+                     }
                   }
+               } else {
+                  expired = now >= schedule.target_date;
                }
             } catch (e) {
                console.log(e);
