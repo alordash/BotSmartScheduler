@@ -589,7 +589,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                await db.ReorderSchedules(chatID);
                try {
                   const text = rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
-                  if (schedule.file_id != '~' && schedule.file_id != null) {
+                  if (typeof(schedule) != 'undefined' && schedule.file_id != '~' && schedule.file_id != null) {
                      SendAttachment(bot, schedule, chatID, text, {});
                   } else {
                      ctx.replyWithHTML(text);
