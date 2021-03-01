@@ -585,15 +585,17 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
             let scheduleId = parseInt(msgText.substring(1, msgText.length));
             if (!isNaN(scheduleId)) {
                let schedule = await db.GetScheduleById(chatID, scheduleId);
-               await db.RemoveScheduleById(chatID, scheduleId);
-               await db.ReorderSchedules(chatID);
                try {
                   const text = rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
-                  if (typeof(schedule) != 'undefined' && schedule.file_id != '~' && schedule.file_id != null) {
-                     SendAttachment(bot, schedule, chatID, text, {});
-                  } else {
-                     ctx.replyWithHTML(text);
+                  if (typeof (schedule) != 'undefined') {
+                     await db.RemoveScheduleById(chatID, scheduleId);
+                     await db.ReorderSchedules(chatID);
+                     if (schedule.file_id != '~' && schedule.file_id != null) {
+                        SendAttachment(bot, schedule, chatID, text, {});
+                        return;
+                     }
                   }
+                  ctx.replyWithHTML(text);
                } catch (e) {
                   console.error(e);
                }
