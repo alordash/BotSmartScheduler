@@ -620,21 +620,6 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                let parsedDateIndex = 0;
                let chat = await db.GetChatById(`${ctx.chat.id}`);
                let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
-               let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
-               for (const si in pendingSchedules[chatID]) {
-                  /**@type {Schedule} */
-                  let schedule = pendingSchedules[chatID][si];
-                  let text = schedule.text;
-                  let i = text.indexOf(' ');
-                  if (i < 0) {
-                     i = undefined;
-                  }
-                  let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(schedule.target_date));
-
-                  pendingSchedules[chatID][si].trello_card_id = card.id;
-                  pendingSchedules[chatID][si].max_date = 0;
-                  pendingSchedules[chatID][si].period_time = 0;
-               }
                for (let parsedDate of parsedDates) {
                   let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
                   if (typeof (dateParams) != 'undefined') {
@@ -675,6 +660,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                                  if (i < 0) {
                                     i = undefined;
                                  }
+                                 let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
                                  let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(newSchedule.target_date));
 
                                  newSchedule.trello_card_id = card.id;
