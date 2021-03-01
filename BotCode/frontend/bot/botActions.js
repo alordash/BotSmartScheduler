@@ -11,7 +11,7 @@ const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
-const { trelloAddBoardCommand, trelloBindBoardCommand, trelloAddListCommand } = require('./botCommands');
+const { trelloBindBoardCommand, trelloAddListCommand } = require('./botCommands');
 const { type } = require('os');
 
 /**@type {Array.<Array.<Schedule>>} */
@@ -565,16 +565,8 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       } else {
          let reply = '';
          if (msgText[0] == '/') {
-            let regExp = new RegExp(`^${trelloAddBoardCommand}[0-9]+`);
+            let regExp = new RegExp(`^${trelloAddListCommand}[0-9]+`);
             let match = msgText.match(regExp);
-            if (match != null) {
-               //#region ADD TRELLO BOARD
-               TrelloAddBoard(ctx, db);
-               return;
-               //#endregion
-            }
-            regExp = new RegExp(`^${trelloAddListCommand}[0-9]+`);
-            match = msgText.match(regExp);
             if (match != null) {
                //#region ADD TRELLO LIST
                TrelloAddList(ctx, db);
@@ -747,7 +739,7 @@ async function TrelloCommand(user, ctx, trelloPendingConfirmationUsers) {
       let owner = await trelloManager.GetTokenOwner(user.trello_token);
       let boardsList = await trelloManager.GetUserBoards(owner.id);
 
-      ctx.replyWithHTML(FormBoardsList(boardsList, user.lang, user));
+      ctx.replyWithHTML(FormBoardsList(boardsList, user.lang));
    }
 }
 
@@ -767,45 +759,13 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       let trelloManager = new TrelloManager(process.env.TRELLO_KEY, token);
       let owner = await trelloManager.GetTokenOwner(token);
       let boardsList = await trelloManager.GetUserBoards(owner.id);
-      let user = {
-         trello_boards: []
-      };
 
-      let reply = `${replies.trelloValidToken}\r\n${FormBoardsList(boardsList, ctx.from.language_code, user)}`;
+      let reply = `${replies.trelloValidToken}\r\n${FormBoardsList(boardsList, ctx.from.language_code)}`;
 
       ctx.replyWithHTML(reply);
    } else {
       ctx.replyWithHTML(replies.trelloWrongToken, rp.CancelButton(ctx.from.language_code));
    }
-}
-
-/**
- * @param {*} ctx 
- * @param {dbManagement} db 
- */
-async function TrelloAddBoard(ctx, db) {
-   let text = ctx.message.text;
-   let i = +text.substring(trelloAddBoardCommand.length) - 1;
-
-   let user = await db.GetUserById(ctx.from.id);
-   let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
-   let owner = await trelloManager.GetTokenOwner(user.trello_token);
-   let boardsList = await trelloManager.GetUserBoards(owner.id);
-
-   let targetBoard = boardsList[i];
-   let found = user.trello_boards != null && typeof (user.trello_boards.find(x => {
-      return x == targetBoard.id;
-   })) != 'undefined';
-   if (found) {
-      console.log(`removed board :>> ${JSON.stringify(await db.RemoveTrelloBoardFromUser(ctx.from.id, targetBoard.id))}`);
-   } else {
-      let result = await db.AddTrelloBoardToUser(ctx.from.id, targetBoard.id);
-      if (result.rowCount == 0) {
-         ctx.replyWithHTML(`${rp.LoadReplies(user.lang).trelloTooManyBoardsWarning} ${db.maximumAddedTrelloBoards}`);
-         return;
-      }
-   }
-   ctx.replyWithHTML(rp.ChangedBoard(user.lang, targetBoard, found));
 }
 
 /**
@@ -818,16 +778,17 @@ async function TrelloBindCommand(ctx, db, user) {
    let text = ctx.message.text;
    let id = text.substring(trelloBindBoardCommand.length + 1);
 
-   if (user.trello_boards.indexOf(id) >= 0) {
-      let chat = await db.GetChatById(`${ctx.chat.id}`);
-      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+   let chat = await db.GetChatById(`${ctx.chat.id}`);
+   let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+   let board = await trelloManager.GetBoard(id);
+
+   if (typeof(board) != 'undefined') {
       let chatId = `${ctx.chat.id}`;
       if (typeof (chat) == 'undefined') {
          await db.AddChat(chatId, id);
       } else {
          await db.SetChatTrelloBoard(chatId, id);
       }
-      let board = await trelloManager.GetBoard(id);
       ctx.replyWithHTML(FormBoardListsList(board, user.lang));
    } else {
       ctx.reply(replies.trelloBoardDoesNotExist);

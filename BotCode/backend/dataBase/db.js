@@ -54,8 +54,6 @@ class User {
    subscribed;
    /**@type {String} */
    trello_token;
-   /**@type {Array} */
-   trello_boards;
 
    /**@param {Number} id 
     * @param {Number} tz 
@@ -409,22 +407,6 @@ class dbManagement {
       );
    }
 
-   async AddTrelloBoardToUser(id, trello_board_id) {
-      return await this.Query(
-         `UPDATE userids
-         SET trello_boards = trello_boards || '{${trello_board_id}}'
-         WHERE id = ${id} AND (array_length(trello_boards, 1) < ${this.maximumAddedTrelloBoards} OR trello_boards IS NULL)`
-      );
-   }
-
-   async RemoveTrelloBoardFromUser(id, trello_board_id) {
-      return await this.Query(
-         `UPDATE userids
-         SET trello_boards = array_remove(trello_boards, '${trello_board_id}')
-         WHERE id = ${id}`
-      );
-   }
-
    /**
     * @param {String} id 
     * @param {String} trello_board_id 
@@ -534,7 +516,6 @@ class dbManagement {
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS lang TEXT`);
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS subscribed BOOLEAN`);
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS trello_token TEXT`);
-      await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS trello_boards TEXT[]`);
       for (let user of users) {
          console.log(`User "${user.id}" doesn't have '${column_name}' field`);
          /*         this.Query(
@@ -559,12 +540,12 @@ class dbManagement {
 
    async InitDB() {
       await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT, trello_card_id TEXT)');
-      await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN, trello_token TEXT, trello_boards TEXT[])');
+      await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN, trello_token TEXT)');
       await this.Query('CREATE TABLE IF NOT EXISTS chats (id TEXT, trello_board_id TEXT, trello_list_id TEXT, trello_token TEXT)');
 
       await this.ExpandSchedulesTable('trello_card_id');
 
-      await this.ExpandUsersIdsTable('trello_boards');
+      await this.ExpandUsersIdsTable('trello_token');
 
       await this.ExpandChatsTable('trello_token');
 

@@ -3,7 +3,7 @@ const { Schedule, User } = require('../backend/dataBase/db');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
 const { TimeListIsEmpty } = require('../backend/timeProcessing');
 const { Language, LoadReplies } = require('./replies/replies');
-const { trelloAddBoardCommand, trelloAddListCommand } = require('./bot/botCommands');
+const { trelloAddListCommand } = require('./bot/botCommands');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { dbManagement } = require('../backend/dataBase/db');
 
@@ -106,20 +106,15 @@ async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, d
 /**
  * @param {Array} boardsList 
  * @param {String} language 
- * @param {User} user 
  * @return {String}
  */
-function FormBoardsList(boardsList, language, user) {
+function FormBoardsList(boardsList, language) {
    const replies = LoadReplies(language);
    let reply = `${replies.trelloShowBoards}\r\n`;
    let i = 1;
    for (const board of boardsList) {
-      let extra = '';
-      if (user.trello_boards != null && user.trello_boards.indexOf(board.id) >= 0) {
-         extra = ` 📌
-   id: <b>${board.id}</b>`;
-      }
-      reply += `  ${trelloAddBoardCommand}${i} | <a href="${board.shortUrl}">${board.name}</a>${extra}\r\n`;
+      reply += `<a href="${board.shortUrl}">${board.name}</a>
+   id: <b>${board.id}</b>\r\n`;
       i++;
    }
    return reply;
