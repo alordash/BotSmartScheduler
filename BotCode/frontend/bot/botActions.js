@@ -6,7 +6,7 @@ const rp = require('../replies/replies');
 const { dbManagement, Schedule, User, Chat } = require('../../backend/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList } = require('@alordash/date-parser');
-const { FormStringFormatSchedule, FormDateStringFormat, FormBoardsList, FormBoardListsList, FormListBinded, FormBoardUnbinded, FormAlreadyBoardBinded } = require('../formatting');
+const Format = require('../formatting');
 const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
@@ -132,7 +132,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
          schedule.target_date = +schedule.target_date;
          schedule.period_time = +schedule.period_time;
          schedule.max_date = +schedule.max_date;
-         let newAnswer = `${await FormStringFormatSchedule(schedule, tsOffset, language, false, db)}\r\n`;
+         let newAnswer = `${await Format.FormStringFormatSchedule(schedule, tsOffset, language, false, db)}\r\n`;
          if (answer.length + newAnswer.length > global.MaxMessageLength) {
             answers.push(answer);
             answer = newAnswer;
@@ -468,7 +468,7 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
 
          try {
             await db.AddSchedule(schedule);
-            let newText = text + '\r\n' + replies.remindSchedule + ' <b>' + FormDateStringFormat(new Date(target_date + tz * 1000), language, false) + '</b>';
+            let newText = text + '\r\n' + replies.remindSchedule + ' <b>' + Format.FormDateStringFormat(new Date(target_date + tz * 1000), language, false) + '</b>';
             if (hasCaption) {
                ctx.editMessageCaption(newText, { parse_mode: 'HTML' });
             } else {
@@ -632,7 +632,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                      if (found) {
                         let schedule = schedules[i - 1];
                         if (!inGroup) {
-                           reply += rp.Scheduled(schedule.text, FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language, true), language);
+                           reply += rp.Scheduled(schedule.text, Format.FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language, true), language);
                         }
                      } else {
                         if (count + schedulesCount < global.MaximumCountOfSchedules) {
@@ -673,7 +673,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                               }
                               pendingSchedules[chatID].push(newSchedule);
                               count++;
-                              reply += await FormStringFormatSchedule(newSchedule, tz, language, true, db) + `\r\n`;
+                              reply += await Format.FormStringFormatSchedule(newSchedule, tz, language, true, db) + `\r\n`;
                            } else if (!inGroup) {
                               reply += replies.emptyString + '\r\n';
                            }
@@ -761,7 +761,7 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
          let list = board.lists.find(x => x.id == chat.trello_list_id);
 
          if (board != null && list != null) {
-            reply = `${FormAlreadyBoardBinded(board, list, user.lang)}\r\n`;
+            reply = `${Format.FormAlreadyBoardBinded(board, list, user.lang)}\r\n`;
          } else {
             reply = `${replies.trelloNoBoardBinded}\r\n`;
          }
@@ -770,7 +770,7 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
       }
 
       if (ctx.chat.id >= 0) {
-         reply = `${reply}${FormBoardsList(boardsList, user.lang)}`;
+         reply = `${reply}${Format.FormBoardsList(boardsList, user.lang)}`;
       }
       ctx.replyWithHTML(reply);
    }
@@ -793,7 +793,7 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       let owner = await trelloManager.GetTokenOwner(token);
       let boardsList = await trelloManager.GetUserBoards(owner.id);
 
-      let reply = `${replies.trelloSavedToken}\r\n${FormBoardsList(boardsList, ctx.from.language_code)}`;
+      let reply = `${replies.trelloSavedToken}\r\n${Format.FormBoardsList(boardsList, ctx.from.language_code)}`;
 
       let chatID = `${ctx.chat.id}`;
       if(chatID[0] == '-') {
@@ -828,7 +828,7 @@ async function TrelloBindCommand(ctx, db, user) {
       } else {
          await db.SetChatTrelloBoard(chatId, id);
       }
-      ctx.replyWithHTML(FormBoardListsList(board, user.lang));
+      ctx.replyWithHTML(Format.FormBoardListsList(board, user.lang));
    } else {
       ctx.reply(replies.trelloBoardDoesNotExist);
    }
@@ -854,7 +854,7 @@ async function TrelloAddList(ctx, db) {
    let board = await trelloManager.GetBoard(chat.trello_board_id);
    let target_list = board.lists[i];
    await db.SetChatTrelloList(chatId, target_list.id, user.trello_token);
-   ctx.replyWithHTML(FormListBinded(board, target_list, user.lang));
+   ctx.replyWithHTML(Format.FormListBinded(board, target_list, user.lang));
 }
 
 /**
@@ -868,7 +868,7 @@ async function TrelloUnbindCommand(ctx, db, user) {
    if (chat.trello_token != null) {
       let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
       let board = await trelloManager.GetBoard(chat.trello_board_id);
-      ctx.replyWithHTML(FormBoardUnbinded(board, user.lang));
+      ctx.replyWithHTML(Format.FormBoardUnbinded(board, user.lang));
    }
 }
 
