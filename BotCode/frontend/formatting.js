@@ -92,7 +92,7 @@ async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, d
          chatID = '-' + chatID.substring(1);
       }
       let chat = await db.GetChatById(chatID);
-      if (chat.trello_token != null) {
+      if (typeof(chat) != 'undefined' && chat.trello_token != null) {
          let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
          let card = await trelloManager.GetCard(schedule.trello_card_id);
          if (typeof (card) != 'undefined') {
