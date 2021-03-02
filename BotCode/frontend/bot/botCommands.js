@@ -1,14 +1,17 @@
 let
+    help = 'help',
     listSchedules = 'list',
     deleteSchedules = 'del',
     changeTimeZone = 'tz',
     trelloInit = 'trello',
     trelloClear = 'clear',
-    trelloBindBoardCommand = '/trello_bind',
-    trelloUnbindBoardCommand = '/trello_unbind',
-    trelloAddListCommand = '/tl';
+    trelloBindBoardCommand = '/trello_pin',
+    trelloUnbindBoardCommand = '/trello_unpin',
+    trelloAddListCommand = '/tl',
+    trelloHelp = 'trello';
 
 module.exports = {
+    help,
     listSchedules,
     deleteSchedules,
     changeTimeZone,
@@ -16,5 +19,6 @@ module.exports = {
     trelloClear,
     trelloBindBoardCommand,
     trelloUnbindBoardCommand,
-    trelloAddListCommand
+    trelloAddListCommand,
+    trelloHelp
 }

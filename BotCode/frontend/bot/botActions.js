@@ -11,7 +11,7 @@ const path = require('path');
 const { Encrypt, Decrypt } = require('../../backend/encryption/encrypt');
 const { TimeListFromDate, ProcessParsedDate } = require('../../backend/timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
-const { trelloBindBoardCommand, trelloAddListCommand, trelloClear } = require('./botCommands');
+const { help, trelloBindBoardCommand, trelloAddListCommand, trelloClear, trelloHelp } = require('./botCommands');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../backend/nicknamesExtraction');
 const { type } = require('os');
 
@@ -566,6 +566,10 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       } else {
          let reply = '';
          if (msgText[0] == '/') {
+            if(msgText.startsWith(`/${help}`)) {
+               HelpCommand(ctx, db);
+               return;
+            }
             let regExp = new RegExp(`^${trelloAddListCommand}[0-9]+`);
             let match = msgText.match(regExp);
             if (match != null) {
@@ -733,6 +737,25 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
 
 /**
  * @param {*} ctx 
+ * @param {dbManagement} db 
+ */
+async function HelpCommand(ctx, db) {
+   let language = await db.GetUserLanguage(ctx.from.id);
+   const replies = LoadReplies(language);
+   const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+   let keyboard = schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard();
+   keyboard['disable_web_page_preview'] = true;
+   let reply;
+   if(ctx.message.text.indexOf(trelloHelp) >= 0) {
+      reply = `${replies.trelloHelp}\r\n${rp.TrelloInfoLink(language, process.env.SMART_SCHEDULER_INVITE)}`;
+   } else {
+      reply = replies.commands;
+   }
+   ctx.replyWithHTML(reply, keyboard);
+}
+
+/**
+ * @param {*} ctx 
  * @param {User} user 
  * @param {dbManagement} db 
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
@@ -822,7 +845,7 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
  * @param {dbManagement} db 
  * @param {User} user
  */
-async function TrelloBindCommand(ctx, db, user) {
+async function TrelloPinCommand(ctx, db, user) {
    const replies = rp.LoadReplies(user.lang);
    let text = ctx.message.text;
    let id = text.substring(trelloBindBoardCommand.length + 1);
@@ -872,7 +895,7 @@ async function TrelloAddList(ctx, db) {
  * @param {dbManagement} db 
  * @param {User} user 
  */
-async function TrelloUnbindCommand(ctx, db, user) {
+async function TrelloUnpinCommand(ctx, db, user) {
    let chat = await db.GetChatById(ctx.chat.id);
    db.ClearChatFromTrello(ctx.chat.id);
    if (chat.trello_token != null) {
@@ -892,7 +915,8 @@ module.exports = {
    CheckExpiredSchedules,
    HandleCallbackQuery,
    HandleTextMessage,
+   HelpCommand,
    TrelloCommand,
-   TrelloBindCommand,
-   TrelloUnbindCommand
+   TrelloPinCommand,
+   TrelloUnpinCommand
 }

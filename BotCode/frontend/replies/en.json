@@ -1,5 +1,5 @@
 {
-    "commands": "<b>Available commands:</b>\r\n🗓 /list\r\n    Shows active tasks for this chat.\r\n🗑 /del <b>1, 2, ...id</b>\r\n    Deletes tasks by id.\r\n🗑 /del <b>1-10, A-B</b>\r\n    Deletes all tasks within range.\r\n#️⃣ /N\r\n    Deletes N-th task.\r\n🌐 /tz\r\n    Configures time zone.",
+    "commands": "<b>Available commands:</b>\r\n🗓 /list\r\n    Shows active tasks for this chat.\r\n🗑 /del <b>1, 2, ...id</b>\r\n    Deletes tasks by id.\r\n🗑 /del <b>1-10, A-B</b>\r\n    Deletes all tasks within range.\r\n#️⃣ /N\r\n    Deletes N-th task.\r\n🌐 /tz\r\n    Configures time zone.\r\n<b>This bot can duplicate reminds to</b> <a href=\"https://trello.com/\">🗄 Trello</a>.\r\nDetailed information: /help_trello",
     "voiceMessageTooBig": "⚠️ Voice message duration should be less than 30 seconds.",
     "showListAction": "🗓 Show list",
     "alreadyScheduled": "already scheduled at:",
@@ -36,7 +36,7 @@
     "unsubscribe": "🔕 Unsubscribe",
     "invite": "🏵 New major update is out!\r\n<b>List of changes:",
     "year": "",
-    "trelloAuthenticate0": "🗄 Bot can duplicate reminds to Trello boards.\r\nFor integration with Trello open <a href=\"",
+    "trelloAuthenticate0": "For integration with Trello open <a href=\"",
     "trelloAuthenticate1": "\">this link 🔗</a>, then press the bottom button <b>[ Allow ]</b>.\r\nIn opened tab <b>copy</b> your token 🔐 and <b>send it</b> in message to bot.",
     "trelloSavedToken": "🔒 Saved token.",
     "trelloRemovedToken": "🗑 Removed token.",
@@ -50,7 +50,7 @@
     "trelloBoardDoesNotExist": "⚠️ Board not found.",
     "trelloBoardListsList0": "🗃 The board",
     "trelloBoardListsList1": "has the following lists:",
-    "trelloBoardListsListEnd": "Choose in which list 📑 all reminds will be duplicated by pressing the command near it.",
+    "trelloBoardListsListEnd": "Choose to which list 📑 all reminds will be duplicated by pressing the command near it.",
     "trelloNoBoardBinded": "📌 No trello board binded to this chat.",
     "trelloListBinded0": "📑 All schedules from this chat will be also duplicated to list",
     "trelloListBinded1": "of board",
@@ -58,6 +58,8 @@
     "trelloBoardUnbinded1": "unpinned from this chat.",
     "trelloBoardAlreadyBinded0": "🔖 Pinned board:",
     "trelloBoardAlreadyBinded1": "List:",
+    "trelloHelp": "⚙️ There are three steps to integrate your schedules with Trello:\r\n1. Authorize your Trello account.\r\n    <i>By sending command /trello</i>\r\n2. Pin one of your boards to current chat.\r\n    <i>By sending command /trello_pin &lt;id_of_board&gt;</i>\r\n3. Choose to which list of that board reminds will be duplicated.\r\n    <i>By clicking the command near required list.</i>\r\n\r\n<b>Full list of commands:</b>\r\n🗄 /trello\r\n    Authorizes user and displays all his boards with their id.\r\n🔖 /trello_pin &lt;id_of_board&gt;\r\n    Pins entered board to current chat.\r\n📌 /trello_unpin\r\n    Unpins board from current chat.\r\n<i>To deauthorize your Trello account from bot send:\r\n/trello clear</i>",
+    "trelloInfoLink": "All features of working with Trello are described here:",
     "months": [
         "January",
         "February",

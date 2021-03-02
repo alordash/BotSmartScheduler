@@ -31,12 +31,8 @@ function InitActions(bot, db) {
       }
    });
    bot.help(async ctx => {
-      let language = await db.GetUserLanguage(ctx.from.id);
-      const replies = LoadReplies(language);
       try {
-         const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
-         ctx.replyWithHTML(replies.commands,
-            schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
+         botActions.HelpCommand(ctx, db);
       } catch (e) {
          console.error(e);
       }
@@ -80,7 +76,7 @@ function InitActions(bot, db) {
    bot.command(cms.trelloBindBoardCommand, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
-         botActions.TrelloBindCommand(ctx, db, user);
+         botActions.TrelloPinCommand(ctx, db, user);
       } catch (e) {
          console.error(e);
       }
@@ -88,7 +84,7 @@ function InitActions(bot, db) {
    bot.command(cms.trelloUnbindBoardCommand, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
-         botActions.TrelloUnbindCommand(ctx, db, user);
+         botActions.TrelloUnpinCommand(ctx, db, user);
       } catch (e) {
          console.log(e);
       }

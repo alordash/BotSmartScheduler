@@ -159,6 +159,16 @@ function ChangedBoard(language, board, found) {
     return `${start} "<a href="${board.shortUrl}">${board.name}</a>"\r\n${replies.trelloShowBoardsEnd}`;
 }
 
+/**
+ * @param {String} language 
+ * @param {String} link 
+ * @returns {String} 
+ */
+function TrelloInfoLink(language, link) {
+    const replies = LoadReplies(language);
+    return `${replies.trelloInfoLink} ${link}`;
+}
+
 module.exports = {
     Languages,
     LoadReplies,
@@ -173,5 +183,6 @@ module.exports = {
     TrelloAuthorizationMessage,
     CancelKeyboard,
     CancelButton,
-    ChangedBoard
+    ChangedBoard,
+    TrelloInfoLink
 }
