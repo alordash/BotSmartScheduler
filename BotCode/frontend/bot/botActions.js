@@ -752,8 +752,9 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
       let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
       let owner = await trelloManager.GetTokenOwner(user.trello_token);
       let noBoardBinded = false;
+      let boardsList = [];
       if (typeof (owner) != 'undefined') {
-         let boardsList = await trelloManager.GetUserBoards(owner.id);
+         boardsList = await trelloManager.GetUserBoards(owner.id);
          let chat = await db.GetChatById(ctx.chat.id);
          if (typeof (chat) != 'undefined'
             && chat.trello_board_id != null
@@ -769,12 +770,12 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
                noBoardBinded = true;
             }
          } else {
-            noBoardBinded= true;
+            noBoardBinded = true;
          }
       } else {
          noBoardBinded = true;
       }
-      if(noBoardBinded) {
+      if (noBoardBinded) {
          reply = `${replies.trelloNoBoardBinded}\r\n`;
       }
 
