@@ -29,6 +29,9 @@ Smart Scheduler supports recurring reminders (e.g. «every 5 minutes») and also
 Smart Scheduler supports pictures, videos and files 💾 in reminders.  
 Smart Scheduler stores tasks **separately** for every chat and can work in conversations.  
 
+Smart Scheduler can be integrated to your [Trello](https://trello.com/) board!  
+More details: /help_trello  
+
 ### Supported commands:
 
 - 🗓 **/list** - Shows active tasks for current chat.
@@ -40,6 +43,8 @@ Smart Scheduler stores tasks **separately** for every chat and can work in conve
 - #️⃣ **_/N_** - Deletes N-th task.
 
 - 🌐 **_/tz_** - Configures time zone.
+
+- 🗄 **_/help_trello_** - Guide to working with [Trello](https://trello.com/).
 
 and /start with /help of course.
 
