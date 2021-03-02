@@ -624,7 +624,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                let chat = await db.GetChatById(`${ctx.chat.id}`);
                let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
                for (let parsedDate of parsedDates) {
-                  let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
+                  let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned && !trelloIsOk);
                   if (typeof (dateParams) != 'undefined') {
                      let schedules = await db.GetSchedules(chatID);
                      let found = false;
