@@ -566,7 +566,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       } else {
          let reply = '';
          if (msgText[0] == '/') {
-            if(msgText.startsWith(`/${help}`)) {
+            if (msgText.startsWith(`/${help}`)) {
                HelpCommand(ctx, db);
                return;
             }
@@ -704,6 +704,8 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                if (shouldWarn) {
                   reply += replies.tzWarning;
                }
+               let answers = Format.SplitBigMessage(reply);
+               let options = [];
                try {
                   if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
                      let keyboard;
@@ -715,7 +717,9 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                            ]).oneTime()
                         )
                      }
-                     let msg = await ctx.replyWithHTML(reply, keyboard);
+                     options[answers.length - 1] = keyboard;
+                     let results = await ReplyMultipleMessages(ctx, answers, options);
+                     let msg = results[results.length - 1];
                      setTimeout(function (ctx, msg) {
                         if (typeof (msg) != 'undefined') {
                            let chatID = FormatChatId(msg.chat.id);
@@ -724,7 +728,8 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
                         }
                      }, repeatScheduleTime, ctx, msg);
                   } else {
-                     ctx.replyWithHTML(reply, schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
+                     options[answers.length - 1] = schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard();
+                     ReplyMultipleMessages(ctx, answers, options);
                   }
                } catch (e) {
                   console.error(e);
@@ -746,7 +751,7 @@ async function HelpCommand(ctx, db) {
    let keyboard = schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard();
    keyboard['disable_web_page_preview'] = true;
    let reply;
-   if(ctx.message.text.indexOf(trelloHelp) >= 0) {
+   if (ctx.message.text.indexOf(trelloHelp) >= 0) {
       reply = `${replies.trelloHelp}\r\n${rp.TrelloInfoLink(language, process.env.SMART_SCHEDULER_INVITE)}`;
    } else {
       reply = replies.commands;
@@ -805,7 +810,8 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
       if (ctx.chat.id >= 0) {
          reply = `${reply}${Format.FormBoardsList(boardsList, user.lang)}`;
       }
-      ctx.replyWithHTML(reply);
+      let answers = Format.SplitBigMessage(reply);
+      ReplyMultipleMessages(ctx, answers);
    }
 }
 
@@ -833,8 +839,10 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
          chatID = `_${chatID.substring(1)}`;
       }
       const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
-      ctx.replyWithHTML(reply,
-         schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
+      let replies = Format.SplitBigMessage(reply);
+      let options = [];
+      options[replies.length - 1] = schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard();
+      ReplyMultipleMessages(ctx, replies, options);
    } else {
       ctx.replyWithHTML(replies.trelloWrongToken, rp.CancelButton(ctx.from.language_code));
    }
@@ -861,7 +869,8 @@ async function TrelloPinCommand(ctx, db, user) {
       } else {
          await db.SetChatTrelloBoard(chatId, id);
       }
-      ctx.replyWithHTML(Format.FormBoardListsList(board, user.lang));
+      let replies = Format.SplitBigMessage(Format.FormBoardListsList(board, user.lang));
+      await ReplyMultipleMessages(ctx, replies);
    } else {
       ctx.reply(replies.trelloBoardDoesNotExist);
    }
@@ -903,6 +912,29 @@ async function TrelloUnpinCommand(ctx, db, user) {
       let board = await trelloManager.GetBoard(chat.trello_board_id);
       ctx.replyWithHTML(Format.FormBoardUnbinded(board, user.lang));
    }
+}
+
+/**
+ * @param {*} ctx 
+ * @param {Array.<String>} replies 
+ * @param {Array.<Object>} options 
+ * @returns {Array.<Object>}
+ */
+async function ReplyMultipleMessages(ctx, replies, options) {
+   let results = [];
+   if (typeof (options) == 'undefined') {
+      options = [];
+   }
+   try {
+      for (const i in replies) {
+         let reply = replies[i];
+         let option = options[i] || {};
+         results.push(await ctx.replyWithHTML(reply, option));
+      }
+   } catch (e) {
+      console.log(e);
+   }
+   return results;
 }
 
 module.exports = {

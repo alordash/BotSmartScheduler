@@ -92,7 +92,7 @@ async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, d
          chatID = '-' + chatID.substring(1);
       }
       let chat = await db.GetChatById(chatID);
-      if (typeof(chat) != 'undefined' && chat.trello_token != null) {
+      if (typeof (chat) != 'undefined' && chat.trello_token != null) {
          let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
          let card = await trelloManager.GetCard(schedule.trello_card_id);
          if (typeof (card) != 'undefined') {
@@ -119,11 +119,9 @@ function FormBoardLink(board) {
 function FormBoardsList(boardsList, language) {
    const replies = LoadReplies(language);
    let reply = `${replies.trelloShowBoards}\r\n`;
-   let i = 1;
    for (const board of boardsList) {
       reply += `• ${FormBoardLink(board)}
    id: <b>${board.id}</b>\r\n`;
-      i++;
    }
    return reply;
 }
@@ -170,6 +168,20 @@ function FormAlreadyBoardBinded(board, list, language) {
    return `${replies.trelloBoardAlreadyBinded0} "${FormBoardLink(board)}"\r\n${replies.trelloBoardAlreadyBinded1} "<b>${list.name}</b>"`;
 }
 
+/**
+ * @param {String} text 
+ * @returns {Array.<String>}
+ */
+function SplitBigMessage(text) {
+   let answers = [];
+   while (text.length > global.MaxMessageLength) {
+      answers.push(text.substring(0, global.MaxMessageLength - 1));
+      text = text.slice(global.MaxMessageLength);
+   }
+   answers.push(text);
+   return answers;
+}
+
 module.exports = {
    TimeListIsEmpty,
    FormDateStringFormat,
@@ -179,5 +191,6 @@ module.exports = {
    FormBoardListsList,
    FormListBinded,
    FormBoardUnbinded,
-   FormAlreadyBoardBinded
+   FormAlreadyBoardBinded,
+   SplitBigMessage
 }
