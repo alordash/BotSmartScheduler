@@ -232,7 +232,7 @@ async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
    if (isPrivateChat) {
       reply += replies.tzConfiguration + '\r\n' + replies.tzViaLoc + '\r\n' + replies.tzManually;
       try {
-         return ctx.replyWithHTML(reply, rp.TzDeterminationKeyboard(language));
+         return await ctx.replyWithHTML(reply, rp.TzDeterminationKeyboard(language));
       } catch (e) {
          console.error(e);
       }
@@ -517,7 +517,7 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
             ctx.editMessageReplyMarkup(Extra.markup((m) =>
                m.inlineKeyboard([]).removeKeyboard()
             ));
-            await StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
+            StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
          } catch (e) {
             console.error(e);
          }

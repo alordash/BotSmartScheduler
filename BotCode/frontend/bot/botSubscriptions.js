@@ -151,7 +151,7 @@ function InitActions(bot, db) {
          }
          if (typeof (replies.changeTimeZoneAction) != 'undefined') {
             bot.hears(replies.changeTimeZoneAction, async ctx => {
-               return await botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
+               botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
             });
          }
       }
