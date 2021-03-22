@@ -42,7 +42,7 @@ function sendNotification(bot, inviteLink, users) {
             sendNotification(bot, inviteLink, users);
          } else {
             try {
-               await bot.telegram.sendMessage(process.env.SMART_SCHEDULER_ADMIN, `Sent all invites, errors count: ${errorsCount}`);
+               bot.telegram.sendMessage(process.env.SMART_SCHEDULER_ADMIN, `Sent all invites, errors count: ${errorsCount}`);
             } catch (e) {
                console.error(e);
             }

@@ -25,7 +25,7 @@ function InitActions(bot, db) {
       try {
          let inlineKeyboard = rp.TzDeterminationOnStartInlineKeyboard(Languages.general);
          inlineKeyboard['disable_web_page_preview'] = true;
-         await ctx.replyWithHTML(replies.start, inlineKeyboard);
+         ctx.replyWithHTML(replies.start, inlineKeyboard);
       } catch (e) {
          console.error(e);
       }
@@ -45,7 +45,7 @@ function InitActions(bot, db) {
       let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
       for (const answer of answers) {
          try {
-            await ctx.replyWithHTML(answer, { disable_web_page_preview: true });
+            ctx.replyWithHTML(answer, { disable_web_page_preview: true });
          } catch (e) {
             console.error(e);
          }
@@ -142,7 +142,7 @@ function InitActions(bot, db) {
                let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
                for (const answer of answers) {
                   try {
-                     await ctx.replyWithHTML(answer, { disable_web_page_preview: true });
+                     ctx.replyWithHTML(answer, { disable_web_page_preview: true });
                   } catch (e) {
                      console.error(e);
                   }

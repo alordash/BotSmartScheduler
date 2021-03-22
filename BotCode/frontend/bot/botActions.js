@@ -161,7 +161,7 @@ async function DeleteSchedules(ctx, db) {
    const replies = LoadReplies(ctx.from.language_code);
    if (msgText.indexOf('all') == "/del ".length) {
       await db.ClearAllSchedules(chatID);
-      await ctx.replyWithHTML(replies.cleared);
+      ctx.replyWithHTML(replies.cleared);
    } else {
       let nums = msgText.match(/[0-9]+/g);
       let ranges = msgText.match(/[0-9]+-[0-9]+/g);
@@ -771,7 +771,7 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
       ctx.reply(replies.trelloRemovedToken);
    } else if (user.trello_token == null && ctx.chat.id >= 0) {
       trelloPendingConfirmationUsers.push(ctx.from.id);
-      await ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, "Smart Scheduler", user.lang),
+      ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, "Smart Scheduler", user.lang),
          rp.CancelKeyboard(user.lang));
    } else {
       let reply = '';
