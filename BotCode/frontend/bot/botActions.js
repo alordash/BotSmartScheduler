@@ -629,9 +629,6 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
             } else {
                if (count + schedulesCount < global.MaximumCountOfSchedules) {
                   if (parsedDate.string.length > 0) {
-                     if (parsedDates.length > 1) {
-                        reply += `${parsedDateIndex + 1}. `;
-                     }
                      if (typeof (pendingSchedules[chatID]) == 'undefined') {
                         pendingSchedules[chatID] = [];
                      }
