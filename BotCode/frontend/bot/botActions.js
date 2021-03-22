@@ -428,7 +428,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
    } else {
       console.log(`Can't determine tz in "${ctx.message.text}"`);
       try {
-         return ctx.replyWithHTML(replies.tzInvalidInput, rp.CancelButton(ctx.from.language_code));
+         ctx.replyWithHTML(replies.tzInvalidInput, rp.CancelButton(ctx.from.language_code));
       } catch (e) {
          console.error(e);
       }
