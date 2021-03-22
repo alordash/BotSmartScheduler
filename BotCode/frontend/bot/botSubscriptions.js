@@ -45,7 +45,7 @@ function InitActions(bot, db) {
       let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
       for (const answer of answers) {
          try {
-            await ctx.replyWithHTML(answer);
+            await ctx.replyWithHTML(answer, { disable_web_page_preview: true });
          } catch (e) {
             console.error(e);
          }
@@ -142,7 +142,7 @@ function InitActions(bot, db) {
                let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
                for (const answer of answers) {
                   try {
-                     await ctx.replyWithHTML(answer);
+                     await ctx.replyWithHTML(answer, { disable_web_page_preview: true });
                   } catch (e) {
                      console.error(e);
                   }
