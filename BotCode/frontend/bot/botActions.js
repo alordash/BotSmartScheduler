@@ -532,6 +532,199 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
    }
 }
 
+/** 
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ * @param {String} chatID 
+ * @param {String} msgText 
+ * @returns 
+ */
+async function HandleCommandMessage(bot, ctx, db, chatID, msgText) {
+   if (msgText.startsWith(`/${help}`)) {
+      HelpCommand(ctx, db);
+      return;
+   }
+   let regExp = new RegExp(`^${trelloAddListCommand}[0-9]+`);
+   let match = msgText.match(regExp);
+   if (match != null) {
+      //#region ADD TRELLO LIST
+      TrelloAddList(ctx, db);
+      return;
+      //#endregion
+   }
+   //#region DELETE CLICKED TASK 
+   let scheduleId = parseInt(msgText.substring(1, msgText.length));
+   if (isNaN(scheduleId)) {
+      return;
+   }
+   let schedule = await db.GetScheduleById(chatID, scheduleId);
+   try {
+      const text = rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
+      if (typeof (schedule) != 'undefined') {
+         await db.RemoveScheduleById(chatID, scheduleId);
+         await db.ReorderSchedules(chatID);
+         if (schedule.file_id != '~' && schedule.file_id != null) {
+            SendAttachment(bot, schedule, chatID, text, {});
+            return;
+         }
+      }
+      ctx.replyWithHTML(text);
+   } catch (e) {
+      console.error(e);
+   }
+   //#endregion
+}
+
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ * @param {String} chatID 
+ * @param {Boolean} inGroup 
+ * @param {String} msgText 
+ * @param {Languages} language 
+ * @param {Boolean} mentioned 
+ */
+async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned) {
+   let reply = '';
+   let file_id = GetAttachmentId(ctx.message);
+   await db.SetUserLanguage(ctx.from.id, language);
+   const replies = LoadReplies(language);
+   let tz = await db.GetUserTZ(ctx.from.id);
+   //#region PARSE SCHEDULE
+   let prevalence = 50;
+   let username = 'none';
+   if (inGroup) {
+      username = ctx.from.username;
+      //prevalence = 60;
+   }
+   let parsedDates = wordsParseDate(arrayParseString(msgText, 1), 1, prevalence, msgText);
+   let count = 1;
+   let shouldWarn = false;
+   let schedulesCount = (await db.GetSchedules(chatID)).length;
+   if (parsedDates.length == 0) {
+      if (!inGroup) {
+         reply += replies.errorScheduling;
+      }
+   } else {
+      console.log(`schedulesCount = ${schedulesCount}`);
+      let parsedDateIndex = 0;
+      let chat = await db.GetChatById(`${ctx.chat.id}`);
+      let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
+      for (let parsedDate of parsedDates) {
+         let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned && !trelloIsOk);
+         if (typeof (dateParams) != 'undefined') {
+            let schedules = await db.GetSchedules(chatID);
+            let found = false;
+            let i = 0;
+            for (; !found && i < schedules.length; i++) {
+               if (schedules[i].text == parsedDate.string) {
+                  found = true;
+               }
+            }
+            if (found) {
+               let schedule = schedules[i - 1];
+               if (!inGroup) {
+                  reply += rp.Scheduled(schedule.text, Format.FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language, true), language);
+               }
+            } else {
+               if (count + schedulesCount < global.MaximumCountOfSchedules) {
+                  if (parsedDate.string.length > 0) {
+                     if (parsedDates.length > 1) {
+                        reply += `${parsedDateIndex + 1}. `;
+                     }
+                     if (typeof (pendingSchedules[chatID]) == 'undefined') {
+                        pendingSchedules[chatID] = [];
+                     }
+                     let newSchedule = new Schedule(
+                        chatID,
+                        schedules.length + parsedDateIndex + 1,
+                        parsedDate.string,
+                        username,
+                        dateParams.target_date,
+                        dateParams.period_time,
+                        dateParams.max_date,
+                        file_id);
+                     if (trelloIsOk) {
+                        let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+
+                        let nickExtractionResult = ExtractNicknames(newSchedule.text);
+                        let ids = await GetUsersIDsFromNicknames(nickExtractionResult.nicks, trelloManager);
+                        newSchedule.text = nickExtractionResult.string;
+
+                        let text = newSchedule.text;
+                        let i = text.indexOf(' ');
+                        if (i < 0) {
+                           i = undefined;
+                        }
+
+                        let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(newSchedule.target_date), ids);
+
+                        newSchedule.trello_card_id = card.id;
+                        newSchedule.max_date = 0;
+                        newSchedule.period_time = 0;
+                     }
+                     pendingSchedules[chatID].push(newSchedule);
+                     count++;
+                     reply += await Format.FormStringFormatSchedule(newSchedule, tz, language, true, db) + `\r\n`;
+                  } else if (!inGroup) {
+                     reply += replies.emptyString + '\r\n';
+                  }
+               } else {
+                  reply += replies.shouldRemove + '\r\n' + replies.maximumSchedulesCount + ` <b>${global.MaximumCountOfSchedules}</b>.`;
+               }
+            }
+         } else if (!inGroup) {
+            reply += replies.errorScheduling + '\r\n';
+         }
+         if (!inGroup && !(await db.HasUserID(ctx.from.id))) {
+            shouldWarn = true;
+         }
+         parsedDateIndex++;
+      }
+   }
+   if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
+      await db.AddSchedules(chatID, pendingSchedules[chatID]);
+      pendingSchedules[chatID] = [];
+   }
+   //#endregion
+   if (reply == '') {
+      return;
+   }
+   if (shouldWarn) {
+      reply += replies.tzWarning;
+   }
+   let answers = Format.SplitBigMessage(reply);
+   let options = [];
+   try {
+      if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
+         let keyboard;
+         if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
+            keyboard = Extra.markup((m) =>
+               m.inlineKeyboard([
+                  m.callbackButton(replies.confirmSchedule, `confirm`),
+                  m.callbackButton(replies.declineSchedule, `delete`)
+               ]).oneTime()
+            )
+         }
+         options[answers.length - 1] = keyboard;
+         let results = await ReplyMultipleMessages(ctx, answers, options);
+         let msg = results[results.length - 1];
+         setTimeout(function (ctx, msg) {
+            if (typeof (msg) != 'undefined') {
+               let chatID = FormatChatId(msg.chat.id);
+               ctx.telegram.deleteMessage(msg.chat.id, msg.message_id);
+               pendingSchedules[chatID] = [];
+            }
+         }, repeatScheduleTime, ctx, msg);
+      } else {
+         options[answers.length - 1] = schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard();
+         ReplyMultipleMessages(ctx, answers, options);
+      }
+   } catch (e) {
+      console.error(e);
+   }
+}
+
 /**
  * @param {*} ctx 
  * @param {dbManagement} db 
@@ -545,198 +738,35 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
    if (typeof (msgText) == 'undefined') {
       msgText = ctx.message.caption;
    }
-   if (typeof (msgText) != 'undefined' && (!inGroup || (inGroup && typeof (ctx.message.forward_date) == 'undefined'))) {
-      const language = DetermineLanguage(msgText);
-      ctx.from.language_code = language;
+   if (typeof (msgText) == 'undefined' || (inGroup && typeof (ctx.message.forward_date) != 'undefined')) {
+      return;
+   }
+   const language = DetermineLanguage(msgText);
+   ctx.from.language_code = language;
 
-      const mentionText = `@${ctx.me}`;
-      const mentionIndex = msgText.indexOf(mentionText);
-      const mentioned = mentionIndex != -1;
-      if (mentioned) {
-         msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + mentionText.length);
-         if (msgText[mentionIndex - 1] == ' ' && msgText[mentionIndex] == ' ') {
-            msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + 1);
-         }
-      }
-      if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
-         ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers);
-      } else if (trelloPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
-         TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers)
-      } else {
-         let reply = '';
-         if (msgText[0] == '/') {
-            if (msgText.startsWith(`/${help}`)) {
-               HelpCommand(ctx, db);
-               return;
-            }
-            let regExp = new RegExp(`^${trelloAddListCommand}[0-9]+`);
-            let match = msgText.match(regExp);
-            if (match != null) {
-               //#region ADD TRELLO LIST
-               TrelloAddList(ctx, db);
-               return;
-               //#endregion
-            }
-            //#region DELETE CLICKED TASK 
-            let scheduleId = parseInt(msgText.substring(1, msgText.length));
-            if (!isNaN(scheduleId)) {
-               let schedule = await db.GetScheduleById(chatID, scheduleId);
-               try {
-                  const text = rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
-                  if (typeof (schedule) != 'undefined') {
-                     await db.RemoveScheduleById(chatID, scheduleId);
-                     await db.ReorderSchedules(chatID);
-                     if (schedule.file_id != '~' && schedule.file_id != null) {
-                        SendAttachment(bot, schedule, chatID, text, {});
-                        return;
-                     }
-                  }
-                  ctx.replyWithHTML(text);
-               } catch (e) {
-                  console.error(e);
-               }
-            }
-            //#endregion
-         } else {
-            //#region PARSE SCHEDULE
-            let file_id = GetAttachmentId(ctx.message);
-            await db.SetUserLanguage(ctx.from.id, language);
-            const replies = LoadReplies(language);
-            let tz = await db.GetUserTZ(ctx.from.id);
-            let prevalence = 50;
-            let username = 'none';
-            if (inGroup) {
-               username = ctx.from.username;
-               //            prevalence = 60;
-            }
-            let parsedDates = wordsParseDate(arrayParseString(msgText, 1), 1, prevalence, msgText);
-            let count = 1;
-            let shouldWarn = false;
-            let schedulesCount = (await db.GetSchedules(chatID)).length;
-            if (parsedDates.length == 0) {
-               if (!inGroup) {
-                  reply += replies.errorScheduling;
-               }
-            } else {
-               console.log(`schedulesCount = ${schedulesCount}`);
-               let parsedDateIndex = 0;
-               let chat = await db.GetChatById(`${ctx.chat.id}`);
-               let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
-               for (let parsedDate of parsedDates) {
-                  let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned && !trelloIsOk);
-                  if (typeof (dateParams) != 'undefined') {
-                     let schedules = await db.GetSchedules(chatID);
-                     let found = false;
-                     let i = 0;
-                     for (; !found && i < schedules.length; i++) {
-                        if (schedules[i].text == parsedDate.string) {
-                           found = true;
-                        }
-                     }
-                     if (found) {
-                        let schedule = schedules[i - 1];
-                        if (!inGroup) {
-                           reply += rp.Scheduled(schedule.text, Format.FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language, true), language);
-                        }
-                     } else {
-                        if (count + schedulesCount < global.MaximumCountOfSchedules) {
-                           if (parsedDate.string.length > 0) {
-                              if (parsedDates.length > 1) {
-                                 reply += `${parsedDateIndex + 1}. `;
-                              }
-                              if (typeof (pendingSchedules[chatID]) == 'undefined') {
-                                 pendingSchedules[chatID] = [];
-                              }
-                              let newSchedule = new Schedule(
-                                 chatID,
-                                 schedules.length + parsedDateIndex + 1,
-                                 parsedDate.string,
-                                 username,
-                                 dateParams.target_date,
-                                 dateParams.period_time,
-                                 dateParams.max_date,
-                                 file_id);
-                              if (trelloIsOk) {
-                                 let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
-
-                                 let nickExtractionResult = ExtractNicknames(newSchedule.text);
-                                 let ids = await GetUsersIDsFromNicknames(nickExtractionResult.nicks, trelloManager);
-                                 newSchedule.text = nickExtractionResult.string;
-
-                                 let text = newSchedule.text;
-                                 let i = text.indexOf(' ');
-                                 if (i < 0) {
-                                    i = undefined;
-                                 }
-
-                                 let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(newSchedule.target_date), ids);
-
-                                 newSchedule.trello_card_id = card.id;
-                                 newSchedule.max_date = 0;
-                                 newSchedule.period_time = 0;
-                              }
-                              pendingSchedules[chatID].push(newSchedule);
-                              count++;
-                              reply += await Format.FormStringFormatSchedule(newSchedule, tz, language, true, db) + `\r\n`;
-                           } else if (!inGroup) {
-                              reply += replies.emptyString + '\r\n';
-                           }
-                        } else {
-                           reply += replies.shouldRemove + '\r\n' + replies.maximumSchedulesCount + ` <b>${global.MaximumCountOfSchedules}</b>.`;
-                        }
-                     }
-                  } else if (!inGroup) {
-                     reply += replies.errorScheduling + '\r\n';
-                  }
-                  if (!inGroup && !(await db.HasUserID(ctx.from.id))) {
-                     shouldWarn = true;
-                  }
-                  parsedDateIndex++;
-               }
-            }
-            if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-               await db.AddSchedules(chatID, pendingSchedules[chatID]);
-               pendingSchedules[chatID] = [];
-            }
-            //#endregion
-            if (reply != '') {
-               if (shouldWarn) {
-                  reply += replies.tzWarning;
-               }
-               let answers = Format.SplitBigMessage(reply);
-               let options = [];
-               try {
-                  if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
-                     let keyboard;
-                     if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-                        keyboard = Extra.markup((m) =>
-                           m.inlineKeyboard([
-                              m.callbackButton(replies.confirmSchedule, `confirm`),
-                              m.callbackButton(replies.declineSchedule, `delete`)
-                           ]).oneTime()
-                        )
-                     }
-                     options[answers.length - 1] = keyboard;
-                     let results = await ReplyMultipleMessages(ctx, answers, options);
-                     let msg = results[results.length - 1];
-                     setTimeout(function (ctx, msg) {
-                        if (typeof (msg) != 'undefined') {
-                           let chatID = FormatChatId(msg.chat.id);
-                           ctx.telegram.deleteMessage(msg.chat.id, msg.message_id);
-                           pendingSchedules[chatID] = [];
-                        }
-                     }, repeatScheduleTime, ctx, msg);
-                  } else {
-                     options[answers.length - 1] = schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard();
-                     ReplyMultipleMessages(ctx, answers, options);
-                  }
-               } catch (e) {
-                  console.error(e);
-               }
-            }
-         }
+   const mentionText = `@${ctx.me}`;
+   const mentionIndex = msgText.indexOf(mentionText);
+   const mentioned = mentionIndex != -1;
+   if (mentioned) {
+      msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + mentionText.length);
+      if (msgText[mentionIndex - 1] == ' ' && msgText[mentionIndex] == ' ') {
+         msgText = msgText.substring(0, mentionIndex) + msgText.substring(mentionIndex + 1);
       }
    }
+   if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
+      ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers);
+      return;
+   }
+   if (trelloPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
+      TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers);
+      return;
+   }
+
+   if (msgText[0] == '/') {
+      HandleCommandMessage(bot, ctx, db, chatID, msgText);
+      return;
+   }
+   ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned);
 }
 
 /**
