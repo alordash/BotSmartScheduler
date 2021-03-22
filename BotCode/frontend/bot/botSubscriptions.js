@@ -167,8 +167,8 @@ function InitActions(bot, db) {
          text += '\r\n' + replies.tzCancelWarning;
       }
       try {
-         await ctx.answerCbQuery();
          const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+         await ctx.answerCbQuery();
          await ctx.replyWithHTML(text,
             schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
          await ctx.deleteMessage();
