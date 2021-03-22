@@ -73,7 +73,7 @@ function InitActions(bot, db) {
          console.error(e);
       }
    });
-   bot.command(cms.trelloBindBoardCommand, async ctx => {
+   bot.command(cms.trelloPinBoardCommand, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
          botActions.TrelloPinCommand(ctx, db, user);
@@ -81,7 +81,7 @@ function InitActions(bot, db) {
          console.error(e);
       }
    });
-   bot.command(cms.trelloUnbindBoardCommand, async ctx => {
+   bot.command(cms.trelloUnpinBoardCommand, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
          botActions.TrelloUnpinCommand(ctx, db, user);
