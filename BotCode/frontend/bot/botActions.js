@@ -14,9 +14,6 @@ const { TrelloManager } = require('@alordash/node-js-trello');
 const { help, trelloAddListCommand, trelloClear, trelloHelp } = require('./botCommands');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../backend/nicknamesExtraction');
 
-/**@type {Array.<Array.<Schedule>>} */
-let pendingSchedules = [];
-
 /**
  * @param {Number} x 
  * @returns {Number} 
@@ -446,8 +443,9 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
  * @param {*} ctx 
  * @param {dbManagement} db 
  * @param {Array.<Number>} tzPendingConfirmationUsers
+ * @param {Array.<Array.<Schedule>>} pendingSchedules 
  */
-async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers) {
+async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules) {
    console.log("got callback_query");
    const data = ctx.callbackQuery.data;
    let chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
@@ -590,8 +588,9 @@ async function HandleCommandMessage(bot, ctx, db, chatID, msgText) {
  * @param {String} msgText 
  * @param {Languages} language 
  * @param {Boolean} mentioned 
+ * @param {Array.<Array.<Schedule>>} pendingSchedules 
  */
-async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned) {
+async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules) {
    let reply = '';
    let file_id = GetAttachmentId(ctx.message);
    await db.SetUserLanguage(ctx.from.id, language);
@@ -737,8 +736,9 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
  * @param {dbManagement} db 
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
+ * @param {Array.<Array.<Schedule>>} pendingSchedules 
  */
-async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers) {
+async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules) {
    let chatID = FormatChatId(ctx.chat.id)
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
@@ -773,7 +773,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       HandleCommandMessage(bot, ctx, db, chatID, msgText);
       return;
    }
-   ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned);
+   ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules);
 }
 
 /**
