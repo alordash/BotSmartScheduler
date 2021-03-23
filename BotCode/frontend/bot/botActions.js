@@ -278,15 +278,15 @@ async function CheckExpiredSchedules(bot, db) {
                         expired = false;
                         db.SetScheduleTargetDate(schedule.chatid, schedule.id, dueTime);
                      }
-                  } else if(typeof(card) == 'undefined') {
+                  } else if (typeof (card) == 'undefined') {
                      let board = await trelloManager.GetBoard(chat.trello_board_id);
-                     if(typeof(board) == 'undefined') {
+                     if (typeof (board) == 'undefined') {
                         db.ClearChatFromTrello(chat.id);
                      }
                   }
                }
-               
-               if(expired) {
+
+               if (expired) {
                   expired = now >= schedule.target_date;
                }
             } catch (e) {
@@ -682,7 +682,8 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
          } else if (!inGroup) {
             reply += replies.errorScheduling + '\r\n';
          }
-         if (!inGroup && !(await db.HasUserID(ctx.from.id))) {
+         if (ctx.message.id >= global.MessagesUntilTzWarning
+            && !inGroup && !(await db.HasUserID(ctx.from.id))) {
             shouldWarn = true;
          }
          parsedDateIndex++;
