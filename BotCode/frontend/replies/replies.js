@@ -17,7 +17,7 @@ function ListKeyboard(language) {
     const replies = LoadReplies(language);
     return Markup.keyboard([
         [{ text: replies.showListAction }]
-    ]).oneTime().removeKeyboard().resize().extra();
+    ]).removeKeyboard().resize().extra();
 }
 
 /**@param {Languages} language */
