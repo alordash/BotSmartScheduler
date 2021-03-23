@@ -12,8 +12,15 @@ const Markup = require('telegraf/markup');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 const cms = require('./botCommands');
 
+/**@type {Array.<String>} */
 let tzPendingConfirmationUsers = [];
+/**@type {Array.<String>} */
 let trelloPendingConfirmationUsers = [];
+
+/**@type {Array.<Array.<Schedule>>} */
+let pendingSchedules = [];
+/**@type {Array.<Schedule>} */
+let invalidSchedules = [];
 
 /**
  * @param {Composer} bot 
@@ -207,7 +214,7 @@ function InitActions(bot, db) {
    bot.on('callback_query', async (ctx) => {
       let language = await db.GetUserLanguage(ctx.from.id);
       ctx.from.language_code = language;
-      await botActions.HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers)
+      botActions.HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules);
    });
 
    if (!!process.env.YC_FOLDER_ID && !!process.env.YC_API_KEY) {
@@ -228,7 +235,7 @@ function InitActions(bot, db) {
                ctx.message.text = text;
                let language = await db.GetUserLanguage(ctx.from.id);
                ctx.from.language_code = language;
-               botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);
+               botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
             }
          } else {
             try {
@@ -243,7 +250,7 @@ function InitActions(bot, db) {
    bot.on('message', async ctx => {
       console.log(`Received msg, text: ${ctx.message.text}`);
       try {
-         await botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);
+         botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
       } catch (e) {
          console.log(e)
       }
