@@ -656,7 +656,9 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
 
                         let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(newSchedule.target_date), ids);
 
-                        newSchedule.trello_card_id = card.id;
+                        if (typeof (card) != 'undefined') {
+                           newSchedule.trello_card_id = card.id;
+                        }
                         newSchedule.max_date = 0;
                         newSchedule.period_time = 0;
                      }
@@ -798,7 +800,7 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
       ctx.reply(replies.trelloRemovedToken);
    } else if (user.trello_token == null && ctx.chat.id >= 0) {
       trelloPendingConfirmationUsers.push(ctx.from.id);
-      ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, "Smart Scheduler", user.lang),
+      ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, process.env.SMART_SCHEDULER_BOT_NAME, user.lang),
          rp.CancelKeyboard(user.lang));
    } else {
       let reply = '';
@@ -816,12 +818,16 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
             && chat.trello_token != null) {
             let boardTrelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
             let board = await boardTrelloManager.GetBoard(chat.trello_board_id);
-            let list = board.lists.find(x => x.id == chat.trello_list_id);
-
-            if (board != null && list != null) {
-               reply = `${Format.FormAlreadyBoardBinded(board, list, user.lang)}\r\n`;
-            } else {
+            if (typeof (board) == 'undefined') {
                noBoardBinded = true;
+            } else {
+               let list = board.lists.find(x => x.id == chat.trello_list_id);
+
+               if (list != null) {
+                  reply = `${Format.FormAlreadyBoardBinded(board, list, user.lang)}\r\n`;
+               } else {
+                  noBoardBinded = true;
+               }
             }
          } else {
             noBoardBinded = true;
@@ -865,10 +871,10 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
          chatID = `_${chatID.substring(1)}`;
       }
       const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
-      let replies = Format.SplitBigMessage(reply);
+      let answers = Format.SplitBigMessage(reply);
       let options = [];
-      options[replies.length - 1] = schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard();
-      ReplyMultipleMessages(ctx, replies, options);
+      options[answers.length - 1] = schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard();
+      ReplyMultipleMessages(ctx, answers, options);
    } else {
       ctx.replyWithHTML(replies.trelloWrongToken, rp.CancelButton(ctx.from.language_code));
    }
