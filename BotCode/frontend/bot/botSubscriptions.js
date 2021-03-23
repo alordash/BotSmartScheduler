@@ -19,7 +19,8 @@ let trelloPendingConfirmationUsers = [];
 
 /**@type {Array.<Array.<Schedule>>} */
 let pendingSchedules = [];
-
+/**@type {Array.<Schedule>} */
+let invalidSchedules = [];
 
 /**
  * @param {Composer} bot 
@@ -234,7 +235,7 @@ function InitActions(bot, db) {
                ctx.message.text = text;
                let language = await db.GetUserLanguage(ctx.from.id);
                ctx.from.language_code = language;
-               botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules);
+               botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
             }
          } else {
             try {
@@ -249,7 +250,7 @@ function InitActions(bot, db) {
    bot.on('message', async ctx => {
       console.log(`Received msg, text: ${ctx.message.text}`);
       try {
-         botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules);
+         botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
       } catch (e) {
          console.log(e)
       }

@@ -125,9 +125,17 @@ function UpdateTime(timeList, timeListDate) {
  * @returns {{target_date: Number, period_time: Number, max_date: Number}}
  */
 function ProcessParsedDate(parsedDate, tz, requireHours) {
-   if (requireHours
-      && TimeListIsEmpty(parsedDate.max_date)
-      && TimeListIsEmpty(parsedDate.period_time)) {
+   const max_date_empty = TimeListIsEmpty(parsedDate.max_date);
+   const period_time_empty = TimeListIsEmpty(parsedDate.period_time);
+   if (max_date_empty && period_time_empty
+      && TimeListIsEmpty(parsedDate.target_date)) {
+      return {
+         target_date: 0,
+         period_time: 0,
+         max_date: 0
+      };
+   }
+   if (requireHours && max_date_empty && period_time_empty) {
       if (typeof (parsedDate.target_date.hours) == 'undefined'
          && typeof (parsedDate.target_date.minutes) == 'undefined') {
          return undefined;
