@@ -1,6 +1,6 @@
 const Extra = require('telegraf/extra');
 const botSubscriptions = require('./botSubscriptions');
-const { dbManagement, User } = require('../../backend/dataBase/db');
+const { dbManagement, User } = require('../../storage/dataBase/db');
 const { LoadReplies } = require('../replies/replies');
 
 var i = 0;

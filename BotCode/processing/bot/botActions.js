@@ -3,16 +3,16 @@ const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('../replies/replies');
 const rp = require('../replies/replies');
-const { dbManagement, Schedule, User, Chat } = require('../../backend/dataBase/db');
+const { dbManagement, Schedule, User, Chat } = require('../../storage/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList, ParsedDate } = require('@alordash/date-parser');
 const Format = require('../formatting');
 const path = require('path');
-const { Decrypt } = require('../../backend/encryption/encrypt');
-const { ProcessParsedDate } = require('../../backend/timeProcessing');
+const { Decrypt } = require('../../storage/encryption/encrypt');
+const { ProcessParsedDate } = require('../../storage/timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { help, trelloAddListCommand, trelloClear, trelloHelp } = require('./botCommands');
-const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../backend/nicknamesExtraction');
+const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../storage/nicknamesExtraction');
 
 /**
  * @param {Number} x 

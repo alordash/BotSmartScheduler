@@ -6,8 +6,8 @@ const rp = require('../replies/replies');
 const botActions = require('./botActions');
 const { FormatChatId } = require('./botActions');
 const { Composer } = require('telegraf');
-const { dbManagement, User } = require('../../backend/dataBase/db');
-const { speechToText } = require('../../backend/stt/stt');
+const { dbManagement, User } = require('../../storage/dataBase/db');
+const { speechToText } = require('../../storage/stt/stt');
 const Markup = require('telegraf/markup');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 const cms = require('./botCommands');
@@ -97,8 +97,8 @@ function InitActions(bot, db) {
       }
    });
    console.log('__dirname :>> ', __dirname);
-   //let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
-   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
+   let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
+   //let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
    console.log('repliesFiles :>> ', repliesFiles);
    for (filename of repliesFiles) {
       if (path.extname(filename) == '.json') {

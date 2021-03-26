@@ -1,7 +1,7 @@
 const telegraf = require('telegraf');
-const { dbManagement } = require('./backend/dataBase/db');
-const botConfig = require('./frontend/bot/bot');
-const botActions = require('./frontend/bot/botActions');
+const { dbManagement } = require('./storage/dataBase/db');
+const botConfig = require('./processing/bot/bot');
+const botActions = require('./processing/bot/botActions');
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
