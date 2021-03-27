@@ -1,6 +1,6 @@
 {
   "name": "botsmartscheduler",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "",
   "scripts": {
     "postinstall": "npm install --prefix BotCode"
