@@ -3,6 +3,8 @@ const path = require('path');
 const request = require('request-promise');
 const { Languages, LoadReplies } = require('../replies/replies');
 const rp = require('../replies/replies');
+const Format = require('../formatting');
+const kbs = require('../replies/keyboards');
 const botActions = require('./botActions');
 const { FormatChatId } = require('./botActions');
 const { Composer } = require('telegraf');
@@ -30,7 +32,7 @@ function InitActions(bot, db) {
    bot.start(async ctx => {
       const replies = LoadReplies(Languages.general);
       try {
-         let inlineKeyboard = rp.TzDeterminationOnStartInlineKeyboard(Languages.general);
+         let inlineKeyboard = kbs.TzDeterminationOnStartInlineKeyboard(Languages.general);
          inlineKeyboard['disable_web_page_preview'] = true;
          ctx.replyWithHTML(replies.start, inlineKeyboard);
       } catch (e) {
@@ -97,8 +99,8 @@ function InitActions(bot, db) {
       }
    });
    console.log('__dirname :>> ', __dirname);
-   let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
-   //let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
+   //let repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'replies'));
+   let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
    console.log('repliesFiles :>> ', repliesFiles);
    for (filename of repliesFiles) {
       if (path.extname(filename) != '.json') {
@@ -138,7 +140,7 @@ function InitActions(bot, db) {
             try {
                const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
                ctx.replyWithHTML(reply,
-                  schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
+                  schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
             } catch (e) {
                console.error(e);
             }
@@ -178,7 +180,7 @@ function InitActions(bot, db) {
          const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
          await ctx.answerCbQuery();
          await ctx.replyWithHTML(text,
-            schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
+            schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
          await ctx.deleteMessage();
       } catch (e) {
          console.error(e);
@@ -203,8 +205,8 @@ function InitActions(bot, db) {
          try {
             const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
             botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
-            ctx.replyWithHTML(replies.tzDefined + '<b>' + rp.TzLocation(rawOffset) + '</b>',
-               schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
+            ctx.replyWithHTML(replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>',
+               schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
          } catch (e) {
             console.error(e);
          }

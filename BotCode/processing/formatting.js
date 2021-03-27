@@ -182,6 +182,100 @@ function SplitBigMessage(text) {
    return answers;
 }
 
+/**
+ * @param {String} str 
+ * @param {Boolean} newline 
+ * @param {Languages} language 
+ * @returns {String} 
+ */
+function Deleted(str, newline, language) {
+    const replies = LoadReplies(language);
+    return `${replies.deleted} ${str}. ${newline === false ? replies.showList : ``}`;
+}
+
+/**
+ * @param {Number} hours 
+ * @param {Number} minutes 
+ * @param {Boolean} isNegative 
+ * @returns {String} 
+ */
+function TzDetermined(hours, minutes, isNegative) {
+    let s = '+'
+    let t = '';
+    if (isNegative) {
+        s = '-';
+        hours *= -1;
+    }
+    if (hours < 10) {
+        t = '0';
+    }
+    s += t + hours + ':';
+    t = '0';
+    if (minutes >= 10) {
+        t = '';
+    }
+    s += t + minutes;
+    return s;
+}
+
+/**
+ * @param {Number} tz 
+ * @returns {String} 
+ */
+function TzLocation(tz) {
+    let t = '';
+    if (Math.abs(tz) < 10) t = '0';
+    if (tz < 0) {
+        t = '-' + t;
+        tz *= -1;
+    }
+    else t = '+' + t;
+    return t + tz;
+}
+
+/**
+ * @param {Number} tz 
+ * @returns {String} 
+ */
+function TzCurrent(tz) {
+    let negative = tz < 0;
+    let hour = tz / 3600 | 0;
+    let minutes = Math.abs(tz % 3600 / 60);
+    return TzDetermined(hour, minutes, negative);
+}
+
+/**
+ * @param {String} text 
+ * @param {String} myFormattedDate 
+ * @param {Languages} language 
+ * @returns {String} 
+ */
+function Scheduled(text, myFormattedDate, language) {
+    const replies = LoadReplies(language);
+    return `"${text}" ${replies.alreadyScheduled} <b>${myFormattedDate}</b>\r\n`;
+}
+
+/**
+ * @param {String} trello_key 
+ * @param {String} app_name 
+ * @param {Languages} language 
+ */
+function TrelloAuthorizationMessage(trello_key, app_name, language) {
+    const replies = LoadReplies(language);
+    let link = `https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=${app_name}&key=${trello_key}`;
+    return `${replies.trelloAuthenticate0}${link}${replies.trelloAuthenticate1}`;
+}
+
+/**
+ * @param {String} language 
+ * @param {String} link 
+ * @returns {String} 
+ */
+function TrelloInfoLink(language, link) {
+    const replies = LoadReplies(language);
+    return `${replies.trelloInfoLink} ${link}`;
+}
+
 module.exports = {
    TimeListIsEmpty,
    FormDateStringFormat,
@@ -192,5 +286,11 @@ module.exports = {
    FormListBinded,
    FormBoardUnbinded,
    FormAlreadyBoardBinded,
-   SplitBigMessage
+   SplitBigMessage,
+   Deleted,
+   TzLocation,
+   TzCurrent,
+   Scheduled,
+   TrelloAuthorizationMessage,
+   TrelloInfoLink
 }

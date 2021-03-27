@@ -42,11 +42,7 @@
     "trelloSavedToken": "🔒 Токен сохранён.",
     "trelloRemovedToken": "🗑 Токен удалён.",
     "trelloShowBoards": "🗄 Ваши доски:",
-    "trelloShowBoardsEnd": "Список досок: /trello",
     "trelloWrongToken": "🚫 Пожалуйста введите верный токен.",
-    "trelloPinnedBoard": "🔖 Закреплена",
-    "trelloUnpinnedBoard": "📌 Откреплена",
-    "trelloBoard": "доска",
     "trelloTooManyBoardsWarning": "⚠️ Слишком много закрепленных досок.\r\nМаксимальное количество:",
     "trelloBoardDoesNotExist": "⚠️ Доска не найдена.",
     "trelloBoardListsList0": "🗃 В доске",

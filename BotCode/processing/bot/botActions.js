@@ -3,10 +3,11 @@ const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('../replies/replies');
 const rp = require('../replies/replies');
+const Format = require('../formatting');
+const kbs = require('../replies/keyboards');
 const { dbManagement, Schedule, User, Chat } = require('../../storage/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList, ParsedDate } = require('@alordash/date-parser');
-const Format = require('../formatting');
 const path = require('path');
 const { Decrypt } = require('../../storage/encryption/encrypt');
 const { ProcessParsedDate } = require('../../storage/timeProcessing');
@@ -198,7 +199,7 @@ async function DeleteSchedules(ctx, db) {
             end = 's';
          }
          try {
-            ctx.replyWithHTML(rp.Deleted(nums.join(', '), false, ctx.message.from.language_code));
+            ctx.replyWithHTML(Format.Deleted(nums.join(', '), false, ctx.message.from.language_code));
          } catch (e) {
             console.error(e);
          }
@@ -223,13 +224,13 @@ async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
    const language = await db.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
    if (curTZ !== 0) {
-      reply = replies.tzDefined + '<b>' + rp.TzCurrent(curTZ) + '</b>\r\n';
+      reply = replies.tzDefined + '<b>' + Format.TzCurrent(curTZ) + '</b>\r\n';
    }
    let isPrivateChat = ctx.chat.id >= 0;
    if (isPrivateChat) {
       reply += replies.tzConfiguration + '\r\n' + replies.tzViaLoc + '\r\n' + replies.tzManually;
       try {
-         return await ctx.replyWithHTML(reply, rp.TzDeterminationKeyboard(language));
+         return await ctx.replyWithHTML(reply, kbs.TzDeterminationKeyboard(language));
       } catch (e) {
          console.error(e);
       }
@@ -424,15 +425,15 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
       tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
       try {
          const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
-         ctx.replyWithHTML(replies.tzDefined + '<b>' + rp.TzCurrent(ts) + '</b>\r\n',
-            schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
+         ctx.replyWithHTML(replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>\r\n',
+            schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
       } catch (e) {
          console.error(e);
       }
    } else {
       console.log(`Can't determine tz in "${ctx.message.text}"`);
       try {
-         ctx.replyWithHTML(replies.tzInvalidInput, rp.CancelButton(ctx.from.language_code));
+         ctx.replyWithHTML(replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
       } catch (e) {
          console.error(e);
       }
@@ -564,7 +565,7 @@ async function HandleCommandMessage(bot, ctx, db, chatID, msgText) {
    }
    let schedule = await db.GetScheduleById(chatID, scheduleId);
    try {
-      const text = rp.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
+      const text = Format.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
       if (typeof (schedule) != 'undefined') {
          await db.RemoveScheduleById(chatID, scheduleId);
          await db.ReorderSchedules(chatID);
@@ -632,7 +633,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
       if (found) {
          let schedule = schedules[i - 1];
          if (!inGroup) {
-            reply += rp.Scheduled(schedule.text, Format.FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language, true), language);
+            reply += Format.Scheduled(schedule.text, Format.FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language, true), language);
          }
       } else {
          if (count + schedulesCount < global.MaximumCountOfSchedules) {
@@ -747,7 +748,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
             }
          }, repeatScheduleTime, ctx, msg);
       } else {
-         options[answers.length - 1] = schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard();
+         options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard();
          ReplyMultipleMessages(ctx, answers, options);
       }
    } catch (e) {
@@ -813,11 +814,11 @@ async function HelpCommand(ctx, db) {
    let language = await db.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
    const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
-   let keyboard = schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard();
+   let keyboard = schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard();
    keyboard['disable_web_page_preview'] = true;
    let reply;
    if (ctx.message.text.indexOf(trelloHelp) >= 0) {
-      reply = `${replies.trelloHelp}\r\n${rp.TrelloInfoLink(language, process.env.SMART_SCHEDULER_INVITE)}`;
+      reply = `${replies.trelloHelp}\r\n${Format.TrelloInfoLink(language, process.env.SMART_SCHEDULER_INVITE)}`;
    } else {
       reply = replies.commands;
    }
@@ -837,8 +838,8 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
       ctx.reply(replies.trelloRemovedToken);
    } else if (user.trello_token == null && ctx.chat.id >= 0) {
       trelloPendingConfirmationUsers.push(ctx.from.id);
-      ctx.replyWithHTML(rp.TrelloAuthorizationMessage(process.env.TRELLO_KEY, process.env.SMART_SCHEDULER_BOT_NAME, user.lang),
-         rp.CancelKeyboard(user.lang));
+      ctx.replyWithHTML(Format.TrelloAuthorizationMessage(process.env.TRELLO_KEY, process.env.SMART_SCHEDULER_BOT_NAME, user.lang),
+         kbs.CancelKeyboard(user.lang));
    } else {
       let reply = '';
 
@@ -910,10 +911,10 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
       let answers = Format.SplitBigMessage(reply);
       let options = [];
-      options[answers.length - 1] = schedulesCount > 0 ? rp.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard();
+      options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard();
       ReplyMultipleMessages(ctx, answers, options);
    } else {
-      ctx.replyWithHTML(replies.trelloWrongToken, rp.CancelButton(ctx.from.language_code));
+      ctx.replyWithHTML(replies.trelloWrongToken, kbs.CancelButton(ctx.from.language_code));
    }
 }
 
