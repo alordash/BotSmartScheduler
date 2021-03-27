@@ -101,66 +101,67 @@ function InitActions(bot, db) {
    //let repliesFiles = fs.readdirSync(__dirname.substring(0, __dirname.lastIndexOf('/')) + '/replies');
    console.log('repliesFiles :>> ', repliesFiles);
    for (filename of repliesFiles) {
-      if (path.extname(filename) == '.json') {
-         const language = path.basename(filename, '.json');
-         const replies = LoadReplies(language);
-         if (typeof (replies.tzUseLocation) != 'undefined') {
-            bot.hears(replies.tzUseLocation, ctx => {
+      if (path.extname(filename) != '.json') {
+         continue;
+      }
+      const language = path.basename(filename, '.json');
+      const replies = LoadReplies(language);
+      if (typeof (replies.tzUseLocation) != 'undefined') {
+         bot.hears(replies.tzUseLocation, ctx => {
+            try {
+               ctx.replyWithHTML(replies.tzUseLocationResponse);
+            } catch (e) {
+               console.error(e);
+            }
+         });
+      }
+      if (typeof (replies.tzTypeManually) != 'undefined') {
+         bot.hears(replies.tzTypeManually, ctx => {
+            if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
+               tzPendingConfirmationUsers.push(ctx.from.id);
+            }
+            try {
+               ctx.replyWithHTML(replies.tzTypeManuallyReponse);
+            } catch (e) {
+               console.error(e);
+            }
+         });
+      }
+      if (typeof (replies.cancel) != 'undefined') {
+         bot.hears(replies.cancel, async ctx => {
+            botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
+            let reply = replies.cancelReponse;
+            let user = await db.GetUserById(ctx.from.id);
+            if (typeof (user) == 'undefined' || user.tz == null) {
+               reply += '\r\n' + replies.tzCancelWarning;
+            }
+            try {
+               const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+               ctx.replyWithHTML(reply,
+                  schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
+            } catch (e) {
+               console.error(e);
+            }
+         });
+      }
+      if (typeof (replies.showListAction) != 'undefined') {
+         bot.hears(replies.showListAction, async ctx => {
+            let chatID = FormatChatId(ctx.chat.id);
+            let tz = await db.GetUserTZ(ctx.from.id);
+            let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
+            for (const answer of answers) {
                try {
-                  ctx.replyWithHTML(replies.tzUseLocationResponse);
+                  ctx.replyWithHTML(answer, { disable_web_page_preview: true });
                } catch (e) {
                   console.error(e);
                }
-            });
-         }
-         if (typeof (replies.tzTypeManually) != 'undefined') {
-            bot.hears(replies.tzTypeManually, ctx => {
-               if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
-                  tzPendingConfirmationUsers.push(ctx.from.id);
-               }
-               try {
-                  ctx.replyWithHTML(replies.tzTypeManuallyReponse);
-               } catch (e) {
-                  console.error(e);
-               }
-            });
-         }
-         if (typeof (replies.cancel) != 'undefined') {
-            bot.hears(replies.cancel, async ctx => {
-               botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
-               let reply = replies.cancelReponse;
-               let user = await db.GetUserById(ctx.from.id);
-               if (typeof (user) == 'undefined' || user.tz == null) {
-                  reply += '\r\n' + replies.tzCancelWarning;
-               }
-               try {
-                  const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
-                  ctx.replyWithHTML(reply,
-                     schedulesCount > 0 ? rp.ListKeyboard(language) : Markup.removeKeyboard());
-               } catch (e) {
-                  console.error(e);
-               }
-            });
-         }
-         if (typeof (replies.showListAction) != 'undefined') {
-            bot.hears(replies.showListAction, async ctx => {
-               let chatID = FormatChatId(ctx.chat.id);
-               let tz = await db.GetUserTZ(ctx.from.id);
-               let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
-               for (const answer of answers) {
-                  try {
-                     ctx.replyWithHTML(answer, { disable_web_page_preview: true });
-                  } catch (e) {
-                     console.error(e);
-                  }
-               }
-            });
-         }
-         if (typeof (replies.changeTimeZoneAction) != 'undefined') {
-            bot.hears(replies.changeTimeZoneAction, async ctx => {
-               botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
-            });
-         }
+            }
+         });
+      }
+      if (typeof (replies.changeTimeZoneAction) != 'undefined') {
+         bot.hears(replies.changeTimeZoneAction, async ctx => {
+            botActions.StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers);
+         });
       }
    }
 
@@ -220,23 +221,23 @@ function InitActions(bot, db) {
    if (!!process.env.YC_FOLDER_ID && !!process.env.YC_API_KEY) {
       bot.on('voice', async ctx => {
          let fileInfo = await ctx.telegram.getFile(ctx.message.voice.file_id);
-         let voiceMessage
-         let text
          console.log(`Received Voice msg`);
          if (ctx.message.voice.duration < global.MaximumVoiceMessageDuration) {
+            let text;
             try {
                let uri = `https://api.telegram.org/file/bot${process.env.SMART_SCHEDULER_TLGRM_API_TOKEN}/${fileInfo.file_path}`;
-               voiceMessage = await request.get({ uri, encoding: null });
+               let voiceMessage = await request.get({ uri, encoding: null });
                text = await stt.recognize(voiceMessage);
             } catch (e) {
                console.error(e);
             }
-            if (!!text) {
-               ctx.message.text = text;
-               let language = await db.GetUserLanguage(ctx.from.id);
-               ctx.from.language_code = language;
-               botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
+            if (text == '') {
+               return;
             }
+            ctx.message.text = text;
+            let language = await db.GetUserLanguage(ctx.from.id);
+            ctx.from.language_code = language;
+            botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
          } else {
             try {
                ctx.replyWithHTML(rp.voiceMessageTooBig);
@@ -248,7 +249,6 @@ function InitActions(bot, db) {
    }
 
    bot.on('message', async ctx => {
-      console.log(`Received msg, text: ${ctx.message.text}`);
       try {
          botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
       } catch (e) {
