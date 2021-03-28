@@ -226,7 +226,12 @@ function InitActions(bot, db) {
 
    if (!!process.env.YC_FOLDER_ID && !!process.env.YC_API_KEY) {
       bot.on('voice', async ctx => {
-         let fileInfo = await ctx.telegram.getFile(ctx.message.voice.file_id);
+         let fileInfo;
+         try {
+            fileInfo = await ctx.telegram.getFile(ctx.message.voice.file_id);
+         } catch (e) {
+            console.log(e);
+         }
          console.log(`Received Voice msg`);
          if (ctx.message.voice.duration < global.MaximumVoiceMessageDuration) {
             let text;
