@@ -112,6 +112,23 @@ class dbManagement {
       }
    }
 
+   async paramQuery(query, values) {
+      const client = await this.pool.connect();
+      let res;
+      try {
+         res = await client.query({
+            rowMode: 'array',
+            text: query,
+            values
+         });
+      } catch (err) {
+         console.error(err.stack);
+      } finally {
+         client.release();
+         return res;
+      }
+   }
+
    /**@param {Array.<Schedule>} newSchedules
     * @param {String} chatID
     */
@@ -119,16 +136,19 @@ class dbManagement {
       let queryString = `INSERT INTO schedules VALUES `;
       let schedules = await this.GetSchedules(chatID);
       let id = schedules.length + 1;
+      let values = [];
+      let i = 0;
       for (let schedule of newSchedules) {
          if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') {
             schedule.username = 'none';
          }
          const text = Encrypt(schedule.text, schedule.chatid);
-         queryString += `('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, '${schedule.file_id}', '${schedule.trello_card_id}'), `;
+         queryString = `${queryString}($${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}), `;
+         values.push(`${schedule.chatid}`, id, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`);
          id++;
       }
       queryString = queryString.substring(0, queryString.length - 2);
-      await this.Query(queryString);
+      await this.paramQuery(queryString, values);
       console.log(`Added multiple schedules = ${JSON.stringify(newSchedules)}`);
    }
 
@@ -139,7 +159,8 @@ class dbManagement {
       let id = schedules.length + 1;
       console.log(`Target_date = ${schedule.target_date}`);
       const text = Encrypt(schedule.text, schedule.chatid);
-      await this.Query(`INSERT INTO schedules VALUES ('${schedule.chatid}', ${id}, '${text}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, '${schedule.file_id}')`);
+      await this.paramQuery('INSERT INTO schedules VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+         [`${schedule.chatid}`, id, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`]);
       console.log(`Added "${schedule.text}" (encrypted: "${text}") to ${schedule.target_date} from chat "${schedule.chatid}"`);
    }
 
@@ -160,7 +181,7 @@ class dbManagement {
     * @param {Number} id
     */
    async RemoveScheduleById(chatID, id) {
-      console.log(`Removing schedule s = ${"s"}\r\ChatID = "${chatID}" typeof(ChatID) = ${typeof (chatID)}`);
+      console.log(`Removing schedule \r\ChatID = "${chatID}"`);
       let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND id = ${id}`;
       console.log(`QUERY = "${query}"`);
       let res = await this.Query(query);
@@ -186,27 +207,23 @@ class dbManagement {
    }
 
    /**@param {String} chatID
-    * @returns {Boolean}
     */
    async ReorderSchedules(chatID) {
-      let schedules = await this.GetSchedules(chatID);
-      if (schedules.length > 0) {
-         schedules.sort((a, b) => a.id - b.id);
-      }
-      if (schedules.length > 0) {
-         await this.Query(`DELETE FROM schedules WHERE ChatID = '${chatID}'`);
-         let queryString = `INSERT INTO schedules VALUES `;
-         for (let i = 0; i < schedules.length; i++) {
-            let schedule = schedules[i];
-            queryString += `('${chatID}', ${i + 1}, '${Encrypt(schedule.text, schedule.chatid)}', '${schedule.username}', ${schedule.target_date}, ${schedule.period_time}, ${schedule.max_date}, '${schedule.file_id}'), `;
-            console.log(`Reordering schedule with new id = ${i + 1}`);
-         }
-         queryString = queryString.substring(0, queryString.length - 2);
-         console.log(`queryString = "${queryString}"`);
-         await this.Query(queryString);
-         return true;
-      }
-      return false;
+      console.log(`Reordering schedules in chat: ${chatID}`);
+      let res = await this.Query(`DO
+      $do$
+      DECLARE
+         s int;
+      BEGIN
+         SELECT Max(id) FROM schedules WHERE chatid = '${chatID}' INTO s;
+         FOR i IN REVERSE s..1 LOOP
+            IF NOT EXISTS (SELECT FROM schedules WHERE chatid = '${chatID}' AND id = i) THEN
+               UPDATE schedules SET id = id - 1 WHERE chatid = '${chatID}' AND id > i;
+            END IF;
+         END LOOP;
+      END
+      $do$;`);
+      return res;
    }
 
    /**@param {String} chatID
@@ -404,10 +421,11 @@ class dbManagement {
     * @param {String} trello_token 
     */
    async SetUserTrelloToken(id, trello_token) {
-      return await this.Query(
-         `UPDATE userids 
-         SET trello_token = '${trello_token}'
-         WHERE id = ${id};`
+      return await this.paramQuery(
+         `UPDATE userids
+         SET trello_token = $1
+         WHERE id = ${id}`,
+         [trello_token]
       );
    }
 
@@ -428,7 +446,7 @@ class dbManagement {
     */
    async AddChat(id, trello_board_id) {
       let query = `INSERT INTO chats VALUES ('${id}')`;
-      if(typeof(trello_board_id) != 'undefined') {
+      if (typeof (trello_board_id) != 'undefined') {
          query = `INSERT INTO chats VALUES ('${id}', '${trello_board_id}')`;
       }
       return await this.Query(query);
@@ -450,10 +468,11 @@ class dbManagement {
     * @param {String} trello_board_id 
     */
    async SetChatTrelloBoard(id, trello_board_id) {
-      return await this.Query(
+      return await this.paramQuery(
          `UPDATE chats
-         SET trello_board_id = '${trello_board_id}'
-         WHERE id = '${id}'`
+         SET trello_board_id = $1
+         WHERE id = '${id}'`,
+         [trello_board_id]
       );
    }
 
@@ -533,10 +552,6 @@ class dbManagement {
       await this.Query(`ALTER TABLE userids ADD COLUMN IF NOT EXISTS trello_token TEXT`);
       for (let user of users) {
          console.log(`User "${user.id}" doesn't have '${column_name}' field`);
-         /*         this.Query(
-                     `UPDATE userids 
-                     SET lang = '${this.defaultUserLanguage}'
-                     WHERE id = ${user.id};`);*/
       }
    }
 

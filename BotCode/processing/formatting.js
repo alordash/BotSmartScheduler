@@ -80,7 +80,7 @@ async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, d
       period = `\r\n      ${replies.everyTime} <b>${FormPeriodStringFormat(period_time, language)}</b>`;
    }
    let username = '';
-   if (schedule.username != 'none') {
+   if (schedule.username != 'none' && schedule.username != null) {
       username = ` (<b>${schedule.username}</b>)`;
    }
    let file = (schedule.file_id != '~' && schedule.file_id != null) ? ' 💾' : '';
