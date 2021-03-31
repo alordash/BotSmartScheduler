@@ -215,6 +215,7 @@ class dbManagement {
       DECLARE
          s int;
       BEGIN
+         s := 1;
          SELECT Max(id) FROM schedules WHERE chatid = '${chatID}' INTO s;
          FOR i IN REVERSE s..1 LOOP
             IF NOT EXISTS (SELECT FROM schedules WHERE chatid = '${chatID}' AND id = i) THEN
