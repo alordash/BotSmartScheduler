@@ -1,5 +1,5 @@
 const { ParsedDate, TimeList } = require('@alordash/date-parser');
-const { isTimeType } = require('@alordash/date-parser/lib/date-cases');
+const { isTimeType } = require('@alordash/date-parser/lib/date-cases/date-cases');
 
 /**@param {TimeList} tl 
  * @returns {TimeList} 
