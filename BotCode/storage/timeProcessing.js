@@ -119,6 +119,21 @@ function UpdateTime(timeList, timeListDate) {
 }
 
 /**
+ * @param {TimeList} target_date 
+ * @returns {Boolean} 
+ */
+function TodayCheck(target_date, tz) {
+   const date = new Date();
+   const checkDate = new Date(date.getTime() + tz * 1000);
+   return target_date.dates == checkDate.getDate()
+      && target_date.months == checkDate.getMonth()
+      && typeof (target_date.hours) == 'undefined'
+      && typeof (target_date.minutes) == 'undefined'
+      && typeof (target_date.years) == 'undefined';
+
+}
+
+/**
  * @param {ParsedDate} parsedDate 
  * @param {Number} tz 
  * @param {Boolean} requireHours 
@@ -140,6 +155,9 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
          && typeof (parsedDate.target_date.minutes) == 'undefined') {
          return undefined;
       }
+   }
+   if(TodayCheck(parsedDate.target_date, tz)) {
+      parsedDate.target_date = new TimeList();
    }
    let dateValues = parsedDate.valueOf();
    let target_date = dateValues.target_date.getTime().div(1000);
