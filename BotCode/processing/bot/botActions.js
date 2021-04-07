@@ -775,7 +775,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       invalidSchedules[chatID] = undefined;
       return;
    }
-   const language = DetermineLanguage(msgText);
+   let language = await db.GetUserLanguage(ctx.from.id);
    ctx.from.language_code = language;
 
    const mentionText = `@${ctx.me}`;
@@ -803,6 +803,9 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       HandleCommandMessage(bot, ctx, db, chatID, msgText);
       return;
    }
+   
+   language = DetermineLanguage(msgText);
+   ctx.from.language_code = language;
    ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules);
 }
 
