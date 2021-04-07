@@ -69,7 +69,7 @@ Smart Scheduler может быть интегрирован в Вашу [Trello
   
 Для интеграции с [Trello](https://trello.com/) (опционально):  
 
-10. **TRELLO_KEY**: Trello api token.  
+10. **TRELLO_TOKEN**: Trello api token.  
 
 ### На локальном сервере
 

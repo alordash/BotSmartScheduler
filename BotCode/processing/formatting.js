@@ -93,7 +93,7 @@ async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, d
       }
       let chat = await db.GetChatById(chatID);
       if (typeof (chat) != 'undefined' && chat.trello_token != null) {
-         let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+         let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
          let card = await trelloManager.GetCard(schedule.trello_card_id);
          if (typeof (card) != 'undefined') {
             text = `<a href="${card.shortUrl}">${text}</a>`;

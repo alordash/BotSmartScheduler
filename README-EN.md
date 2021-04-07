@@ -71,7 +71,7 @@ For voice messages (optional):
 
 For integration with [Trello](https://trello.com/) (optional):  
 
-10. **TRELLO_KEY**: Trello api token.  
+10. **TRELLO_TOKEN**: Trello api token.  
 
 ### On local server
 

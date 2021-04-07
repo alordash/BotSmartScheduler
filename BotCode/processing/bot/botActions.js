@@ -268,7 +268,7 @@ async function CheckExpiredSchedules(bot, db) {
             try {
                let chat = await db.GetChatById(chatID);
                if (typeof (chat) != 'undefined' && chat.trello_token != null) {
-                  let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+                  let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
                   let card = await trelloManager.GetCard(schedule.trello_card_id);
                   if (typeof (card) != 'undefined' && typeof (card.due) != 'undefined') {
                      let dueTime = new Date(card.due).getTime();
@@ -502,7 +502,7 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
          try {
             let chat = await db.GetChatById(`${ctx.chat.id}`);
             if (typeof (chat) != 'undefined' && chat.trello_list_id != null) {
-               let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+               let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
                for (const schedule of pendingSchedules[chatID]) {
                   trelloManager.DeleteCard(schedule.trello_card_id);
                }
@@ -675,7 +675,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
             }
             if (proceed) {
                if (trelloIsOk) {
-                  let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+                  let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
 
                   let nickExtractionResult = ExtractNicknames(newSchedule.text);
                   let ids = await GetUsersIDsFromNicknames(nickExtractionResult.nicks, trelloManager);
@@ -841,12 +841,12 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
       ctx.reply(replies.trelloRemovedToken);
    } else if (user.trello_token == null && ctx.chat.id >= 0) {
       trelloPendingConfirmationUsers.push(ctx.from.id);
-      ctx.replyWithHTML(Format.TrelloAuthorizationMessage(process.env.TRELLO_KEY, process.env.SMART_SCHEDULER_BOT_NAME, user.lang),
+      ctx.replyWithHTML(Format.TrelloAuthorizationMessage(process.env.TRELLO_TOKEN, process.env.SMART_SCHEDULER_BOT_NAME, user.lang),
          kbs.CancelKeyboard(user.lang));
    } else {
       let reply = '';
 
-      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+      let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, user.trello_token);
       let owner = await trelloManager.GetTokenOwner(user.trello_token);
       let noBoardBinded = false;
       let boardsList = [];
@@ -857,7 +857,7 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
             && chat.trello_board_id != null
             && chat.trello_list_id != null
             && chat.trello_token != null) {
-            let boardTrelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+            let boardTrelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
             let board = await boardTrelloManager.GetBoard(chat.trello_board_id);
             if (typeof (board) == 'undefined') {
                noBoardBinded = true;
@@ -901,7 +901,7 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       db.SetUserTrelloToken(ctx.from.id, token);
       trelloPendingConfirmationUsers.splice(trelloPendingConfirmationUsers.indexOf(ctx.from.id), 1);
 
-      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, token);
+      let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, token);
       let owner = await trelloManager.GetTokenOwner(token);
       let boardsList = await trelloManager.GetUserBoards(owner.id);
 
@@ -932,7 +932,7 @@ async function TrelloPinCommand(ctx, db, user) {
    let id = text.match(/[a-zA-Z0-9]{24}/)[0];
 
    let chat = await db.GetChatById(`${ctx.chat.id}`);
-   let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+   let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, user.trello_token);
    let board = await trelloManager.GetBoard(id);
 
    if (typeof (board) != 'undefined') {
@@ -965,7 +965,7 @@ async function TrelloAddList(ctx, db) {
       ctx.reply(replies.trelloNoBoardBinded);
       return;
    }
-   let trelloManager = new TrelloManager(process.env.TRELLO_KEY, user.trello_token);
+   let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, user.trello_token);
    let board = await trelloManager.GetBoard(chat.trello_board_id);
    let target_list = board.lists[i];
    await db.SetChatTrelloList(chatId, target_list.id, user.trello_token);
@@ -981,7 +981,7 @@ async function TrelloUnpinCommand(ctx, db, user) {
    let chat = await db.GetChatById(ctx.chat.id);
    db.ClearChatFromTrello(ctx.chat.id);
    if (chat.trello_token != null) {
-      let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+      let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
       let board = await trelloManager.GetBoard(chat.trello_board_id);
       ctx.replyWithHTML(Format.FormBoardUnbinded(board, user.lang));
    }
