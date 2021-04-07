@@ -650,27 +650,6 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
                dateParams.period_time,
                dateParams.max_date,
                file_id);
-            if (trelloIsOk) {
-               let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
-
-               let nickExtractionResult = ExtractNicknames(newSchedule.text);
-               let ids = await GetUsersIDsFromNicknames(nickExtractionResult.nicks, trelloManager);
-               newSchedule.text = nickExtractionResult.string;
-
-               let text = newSchedule.text;
-               let i = text.indexOf(' ');
-               if (i < 0) {
-                  i = undefined;
-               }
-
-               let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(newSchedule.target_date), ids);
-
-               if (typeof (card) != 'undefined') {
-                  newSchedule.trello_card_id = card.id;
-               }
-               newSchedule.max_date = 0;
-               newSchedule.period_time = 0;
-            }
             let proceed = dateExists && textIsValid;
             if (!proceed && !inGroup) {
                let invalidSchedule = invalidSchedules[chatID];
@@ -695,6 +674,27 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
                }
             }
             if (proceed) {
+               if (trelloIsOk) {
+                  let trelloManager = new TrelloManager(process.env.TRELLO_KEY, chat.trello_token);
+
+                  let nickExtractionResult = ExtractNicknames(newSchedule.text);
+                  let ids = await GetUsersIDsFromNicknames(nickExtractionResult.nicks, trelloManager);
+                  newSchedule.text = nickExtractionResult.string;
+
+                  let text = newSchedule.text;
+                  let i = text.indexOf(' ');
+                  if (i < 0) {
+                     i = undefined;
+                  }
+
+                  let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(newSchedule.target_date), ids);
+
+                  if (typeof (card) != 'undefined') {
+                     newSchedule.trello_card_id = card.id;
+                  }
+                  newSchedule.max_date = 0;
+                  newSchedule.period_time = 0;
+               }
                invalidSchedules[chatID] = undefined;
                pendingSchedules[chatID].push(newSchedule);
                count++;
