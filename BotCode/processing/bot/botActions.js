@@ -682,12 +682,12 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
                   newSchedule.text = nickExtractionResult.string;
 
                   let text = newSchedule.text;
-                  let i = text.indexOf(' ');
-                  if (i < 0) {
-                     i = undefined;
+                  if (text.length > global.MaxTrelloCardTextLength) {
+                     text = text.substring(0, global.MaxTrelloCardTextLength)
+                     text = `${text.substring(0, text.lastIndexOf(' '))}...`;
                   }
 
-                  let card = await trelloManager.AddCard(chat.trello_list_id, text.substring(0, i), text, 0, new Date(newSchedule.target_date), ids);
+                  let card = await trelloManager.AddCard(chat.trello_list_id, text, newSchedule.text, 0, new Date(newSchedule.target_date), ids);
 
                   if (typeof (card) != 'undefined') {
                      newSchedule.trello_card_id = card.id;
