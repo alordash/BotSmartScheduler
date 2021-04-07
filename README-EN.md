@@ -69,7 +69,9 @@ For voice messages (optional):
 8. **YC_API_KEY**: Yandex api key.  
 9. **YC_FOLDER_ID**: Yandex catalog id.  
 
-Without these variables the bot will not respond to voice messages.  
+For integration with [Trello](https://trello.com/) (optional):  
+
+10. **TRELLO_KEY**: Trello api token.  
 
 ### On local server
 

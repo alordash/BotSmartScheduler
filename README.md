@@ -66,8 +66,10 @@ Smart Scheduler может быть интегрирован в Вашу [Trello
 
 8. **YC_API_KEY**: Yandex api key.  
 9. **YC_FOLDER_ID**: Yandex catalog id.  
+  
+Для интеграции с [Trello](https://trello.com/) (опционально):  
 
-Если не укзаать эти переменные, то бот не будет отвечать на голосовые сообщения.  
+10. **TRELLO_KEY**: Trello api token.  
 
 ### На локальном сервере
 
