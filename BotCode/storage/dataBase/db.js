@@ -192,7 +192,7 @@ class dbManagement {
     * @param {String} s
     */
    async RemoveSchedules(chatID, s) {
-      console.log(`Removing schedule s = "${s}"\r\ChatID = "${chatID}" typeof(ChatID) = ${typeof (chatID)}`);
+      console.log(`Removing schedule s = "${s}"\r\nChatID = "${chatID}" typeof(ChatID) = ${typeof (chatID)}`);
       let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND (${s})`;
       console.log(`QUERY = "${query}"`);
       let res = await this.Query(query);
