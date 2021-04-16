@@ -3,8 +3,10 @@ const path = require('path');
 /**@param {*} ctx 
  * @param {Text} text 
  * @param {Object} option 
+ * @param {Boolean} notify 
  */
-function BotReply(ctx, text, option = {}) {
+function BotReply(ctx, text, option = {}, notify = false) {
+    option.disable_notification = !notify;
     return ctx.replyWithHTML(text, option);
 }
 
@@ -12,8 +14,10 @@ function BotReply(ctx, text, option = {}) {
  * @param {Number} chatID 
  * @param {String} text 
  * @param {Object} option 
+ * @param {Boolean} notify 
  */
-function BotSendMessage(bot, chatID, text, option = {}) {
+function BotSendMessage(bot, chatID, text, option = {}, notify = false) {
+    option.disable_notification = !notify;
     return bot.telegram.sendMessage(chatID, text, option);
 }
 
@@ -24,9 +28,10 @@ function BotSendMessage(bot, chatID, text, option = {}) {
  * @param {String} caption 
  * @param {Number} file_id 
  * @param {Object} option 
- * @returns 
+ * @param {Boolean} notify 
  */
-async function BotSendAttachment(bot, chatID, caption, file_id, option = {}) {
+async function BotSendAttachment(bot, chatID, caption, file_id, option = {}, notify = false) {
+    option.disable_notification = !notify;
    let file_info = await bot.telegram.getFile(file_id);
    let file_path = path.parse(file_info.file_path);
    if (file_path.dir == 'photos') {

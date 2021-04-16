@@ -234,7 +234,6 @@ async function CheckExpiredSchedules(bot, db) {
    let now = Date.now();
    let expiredSchedules = await db.CheckActiveSchedules(now);
    if (expiredSchedules.length > 0) {
-      console.log(`expiredSchedules = ${JSON.stringify(expiredSchedules)}`);
       let ChatIDs = [];
       let deletingIDs = [];
       for (let schedule of expiredSchedules) {
@@ -301,11 +300,11 @@ async function CheckExpiredSchedules(bot, db) {
             const remindText = `${remindIcon}${scheduleId}${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`;
             try {
                if (schedule.file_id != '~' && schedule.file_id != null) {
-                  msg = await BotSendAttachment(bot, +chatID, remindText, schedule.file_id, keyboard);
+                  msg = await BotSendAttachment(bot, +chatID, remindText, schedule.file_id, keyboard, true);
                } else {
                   msg = await BotSendMessage(bot, +chatID, remindText, {
                      ...keyboard
-                  });
+                  }, true);
                }
                setTimeout(function (msg) {
                   bot.telegram.editMessageReplyMarkup(msg.chat.id, msg.message_id, Extra.markup((m) =>
