@@ -13,6 +13,7 @@ const { speechToText } = require('../../storage/stt/stt');
 const Markup = require('telegraf/markup');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 const cms = require('./botCommands');
+const { BotReply } = require('./botReplying');
 
 /**@type {Array.<String>} */
 let tzPendingConfirmationUsers = [];
@@ -34,7 +35,7 @@ function InitActions(bot, db) {
       try {
          let inlineKeyboard = kbs.TzDeterminationOnStartInlineKeyboard(Languages.general);
          inlineKeyboard['disable_web_page_preview'] = true;
-         ctx.replyWithHTML(replies.start, inlineKeyboard);
+         BotReply(ctx, replies.start, inlineKeyboard);
       } catch (e) {
          console.error(e);
       }
@@ -54,7 +55,7 @@ function InitActions(bot, db) {
       let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
       for (const answer of answers) {
          try {
-            ctx.replyWithHTML(answer, { disable_web_page_preview: true });
+            BotReply(ctx, answer, { disable_web_page_preview: true });
          } catch (e) {
             console.error(e);
          }
@@ -115,7 +116,7 @@ function InitActions(bot, db) {
       if (typeof (replies.tzUseLocation) != 'undefined') {
          bot.hears(replies.tzUseLocation, ctx => {
             try {
-               ctx.replyWithHTML(replies.tzUseLocationResponse);
+               BotReply(ctx, replies.tzUseLocationResponse);
             } catch (e) {
                console.error(e);
             }
@@ -127,7 +128,7 @@ function InitActions(bot, db) {
                tzPendingConfirmationUsers.push(ctx.from.id);
             }
             try {
-               ctx.replyWithHTML(replies.tzTypeManuallyReponse);
+               BotReply(ctx, replies.tzTypeManuallyReponse);
             } catch (e) {
                console.error(e);
             }
@@ -143,7 +144,7 @@ function InitActions(bot, db) {
             }
             try {
                const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
-               ctx.replyWithHTML(reply,
+               BotReply(ctx, reply,
                   schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
             } catch (e) {
                console.error(e);
@@ -157,7 +158,7 @@ function InitActions(bot, db) {
             let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
             for (const answer of answers) {
                try {
-                  ctx.replyWithHTML(answer, { disable_web_page_preview: true });
+                  BotReply(ctx, answer, { disable_web_page_preview: true });
                } catch (e) {
                   console.error(e);
                }
@@ -183,7 +184,7 @@ function InitActions(bot, db) {
       try {
          const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
          await ctx.answerCbQuery();
-         await ctx.replyWithHTML(text,
+         await BotReply(ctx, text,
             schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
          await ctx.deleteMessage();
       } catch (e) {
@@ -209,7 +210,7 @@ function InitActions(bot, db) {
          try {
             const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
             botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
-            ctx.replyWithHTML(replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>',
+            BotReply(ctx, replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>',
                schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
          } catch (e) {
             console.error(e);
@@ -251,7 +252,7 @@ function InitActions(bot, db) {
             botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
          } else {
             try {
-               ctx.replyWithHTML(rp.voiceMessageTooBig);
+               BotReply(ctx, rp.voiceMessageTooBig);
             } catch (e) {
                console.error(e);
             }

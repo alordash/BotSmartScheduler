@@ -8,12 +8,12 @@ const kbs = require('../replies/keyboards');
 const { dbManagement, Schedule, User, Chat } = require('../../storage/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList, ParsedDate } = require('@alordash/date-parser');
-const path = require('path');
 const { Decrypt } = require('../../storage/encryption/encrypt');
 const { ProcessParsedDate } = require('../../storage/timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { help, trelloAddListCommand, trelloClear, trelloHelp } = require('./botCommands');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../storage/nicknamesExtraction');
+const { BotReply, BotSendMessage, BotSendAttachment } = require('./botReplying');
 
 /**
  * @param {Number} x 
@@ -92,27 +92,6 @@ function GetAttachmentId(message) {
    return '~';
 }
 
-async function SendAttachment(bot, schedule, chatID, caption, keyboard) {
-   let file_info = await bot.telegram.getFile(schedule.file_id);
-   let file_path = path.parse(file_info.file_path);
-   if (file_path.dir == 'photos') {
-      return await bot.telegram.sendPhoto(chatID, schedule.file_id, {
-         caption,
-         ...keyboard
-      });
-   } else if (file_path.dir == 'videos') {
-      return await bot.telegram.sendVideo(chatID, schedule.file_id, {
-         caption,
-         ...keyboard
-      });
-   } else {
-      return await bot.telegram.sendDocument(chatID, schedule.file_id, {
-         caption,
-         ...keyboard
-      });
-   }
-}
-
 /**
  * @param {String} chatID 
  * @param {Number} tsOffset 
@@ -159,7 +138,7 @@ async function DeleteSchedules(ctx, db) {
    const replies = LoadReplies(ctx.from.language_code);
    if (msgText.indexOf('all') == "/del ".length) {
       await db.ClearAllSchedules(chatID);
-      ctx.replyWithHTML(replies.cleared);
+      BotReply(ctx, replies.cleared);
    } else {
       let nums = msgText.match(/[0-9]+/g);
       let ranges = msgText.match(/[0-9]+-[0-9]+/g);
@@ -199,13 +178,13 @@ async function DeleteSchedules(ctx, db) {
             end = 's';
          }
          try {
-            ctx.replyWithHTML(Format.Deleted(nums.join(', '), false, ctx.message.from.language_code));
+            BotReply(ctx, Format.Deleted(nums.join(', '), false, ctx.message.from.language_code));
          } catch (e) {
             console.error(e);
          }
       } else {
          try {
-            ctx.replyWithHTML(replies.invalidDelete);
+            BotReply(ctx, replies.invalidDelete);
          } catch (e) {
             console.error(e);
          }
@@ -230,7 +209,7 @@ async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
    if (isPrivateChat) {
       reply += replies.tzConfiguration + '\r\n' + replies.tzViaLoc + '\r\n' + replies.tzManually;
       try {
-         return await ctx.replyWithHTML(reply, kbs.TzDeterminationKeyboard(language));
+         return await BotReply(ctx, reply, kbs.TzDeterminationKeyboard(language));
       } catch (e) {
          console.error(e);
       }
@@ -239,7 +218,7 @@ async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
       tzPendingConfirmationUsers.push(ctx.from.id);
    }
    try {
-      return await ctx.replyWithHTML(replies.tzGroupChatConfiguration);
+      return await BotReply(ctx, replies.tzGroupChatConfiguration);
    } catch (e) {
       console.error(e);
    }
@@ -322,9 +301,9 @@ async function CheckExpiredSchedules(bot, db) {
             const remindText = `${remindIcon}${scheduleId}${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`;
             try {
                if (schedule.file_id != '~' && schedule.file_id != null) {
-                  msg = await SendAttachment(bot, schedule, +chatID, remindText, keyboard);
+                  msg = await BotSendAttachment(bot, +chatID, remindText, schedule.file_id, keyboard);
                } else {
-                  msg = await bot.telegram.sendMessage(+chatID, remindText, {
+                  msg = await BotSendMessage(bot, +chatID, remindText, {
                      ...keyboard
                   });
                }
@@ -425,7 +404,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
       tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
       try {
          const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
-         ctx.replyWithHTML(replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>\r\n',
+         BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>\r\n',
             schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
       } catch (e) {
          console.error(e);
@@ -433,7 +412,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
    } else {
       console.log(`Can't determine tz in "${ctx.message.text}"`);
       try {
-         ctx.replyWithHTML(replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
+         BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
       } catch (e) {
          console.error(e);
       }
@@ -570,11 +549,11 @@ async function HandleCommandMessage(bot, ctx, db, chatID, msgText) {
          await db.RemoveScheduleById(chatID, scheduleId);
          await db.ReorderSchedules(chatID);
          if (schedule.file_id != '~' && schedule.file_id != null) {
-            SendAttachment(bot, schedule, chatID, text, {});
+            BotSendAttachment(bot, +chatID, text, schedule.file_id);
             return;
          }
       }
-      ctx.replyWithHTML(text);
+      BotReply(ctx, text);
    } catch (e) {
       console.error(e);
    }
@@ -803,7 +782,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       HandleCommandMessage(bot, ctx, db, chatID, msgText);
       return;
    }
-   
+
    language = DetermineLanguage(msgText);
    ctx.from.language_code = language;
    ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules);
@@ -825,7 +804,7 @@ async function HelpCommand(ctx, db) {
    } else {
       reply = replies.commands;
    }
-   ctx.replyWithHTML(reply, keyboard);
+   BotReply(ctx, reply, keyboard);
 }
 
 /**
@@ -838,10 +817,10 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
    const replies = LoadReplies(user.lang);
    if (ctx.message.text.indexOf(trelloClear) >= 0 && ctx.chat.id >= 0) {
       db.ClearUserTrelloToken(ctx.from.id);
-      ctx.reply(replies.trelloRemovedToken);
+      BotReply(ctx, replies.trelloRemovedToken);
    } else if (user.trello_token == null && ctx.chat.id >= 0) {
       trelloPendingConfirmationUsers.push(ctx.from.id);
-      ctx.replyWithHTML(Format.TrelloAuthorizationMessage(process.env.TRELLO_TOKEN, process.env.SMART_SCHEDULER_BOT_NAME, user.lang),
+      BotReply(ctx, Format.TrelloAuthorizationMessage(process.env.TRELLO_TOKEN, process.env.SMART_SCHEDULER_BOT_NAME, user.lang),
          kbs.CancelKeyboard(user.lang));
    } else {
       let reply = '';
@@ -917,7 +896,7 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard();
       ReplyMultipleMessages(ctx, answers, options);
    } else {
-      ctx.replyWithHTML(replies.trelloWrongToken, kbs.CancelButton(ctx.from.language_code));
+      BotReply(ctx, replies.trelloWrongToken, kbs.CancelButton(ctx.from.language_code));
    }
 }
 
@@ -945,7 +924,7 @@ async function TrelloPinCommand(ctx, db, user) {
       let replies = Format.SplitBigMessage(Format.FormBoardListsList(board, user.lang));
       await ReplyMultipleMessages(ctx, replies);
    } else {
-      ctx.reply(replies.trelloBoardDoesNotExist);
+      BotReply(ctx, replies.trelloBoardDoesNotExist);
    }
 }
 
@@ -962,14 +941,14 @@ async function TrelloAddList(ctx, db) {
    const replies = rp.LoadReplies(user.lang);
    let chat = await db.GetChatById(chatId);
    if (chat.trello_board_id == null) {
-      ctx.reply(replies.trelloNoBoardBinded);
+      BotReply(ctx, replies.trelloNoBoardBinded);
       return;
    }
    let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, user.trello_token);
    let board = await trelloManager.GetBoard(chat.trello_board_id);
    let target_list = board.lists[i];
    await db.SetChatTrelloList(chatId, target_list.id, user.trello_token);
-   ctx.replyWithHTML(Format.FormListBinded(board, target_list, user.lang));
+   BotReply(ctx, Format.FormListBinded(board, target_list, user.lang));
 }
 
 /**
@@ -983,7 +962,7 @@ async function TrelloUnpinCommand(ctx, db, user) {
    if (chat.trello_token != null) {
       let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
       let board = await trelloManager.GetBoard(chat.trello_board_id);
-      ctx.replyWithHTML(Format.FormBoardUnbinded(board, user.lang));
+      BotReply(ctx, Format.FormBoardUnbinded(board, user.lang));
    }
 }
 
@@ -998,11 +977,12 @@ async function ReplyMultipleMessages(ctx, replies, options) {
    if (typeof (options) == 'undefined') {
       options = [];
    }
+   //   options[0].disable_notification = true;
    try {
       for (const i in replies) {
          let reply = replies[i];
          let option = options[i] || {};
-         results.push(await ctx.replyWithHTML(reply, option));
+         results.push(await BotReply(ctx, reply, option));
       }
    } catch (e) {
       console.log(e);
