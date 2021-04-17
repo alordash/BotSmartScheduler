@@ -29,7 +29,13 @@ Number.prototype.div = function (x) {
 function DetermineLanguage(string) {
    let ruCount = [...string.matchAll(/[А-Яа-я]/g)].length;
    let enCount = [...string.matchAll(/[A-Za-z]/g)].length;
-   return ruCount > enCount ? Languages.RU : Languages.EN;
+   let result = null;
+   if(ruCount > enCount) {
+      result = Languages.RU;
+   } else if(enCount > ruCount) {
+      result = Languages.EN;
+   }
+   return result;
 }
 
 /**
@@ -782,7 +788,10 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       return;
    }
 
-   language = DetermineLanguage(msgText);
+   let determinedLanguage = DetermineLanguage(msgText);
+   if(determinedLanguage != null) {
+      language = determinedLanguage;
+   }
    ctx.from.language_code = language;
    ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules);
 }
