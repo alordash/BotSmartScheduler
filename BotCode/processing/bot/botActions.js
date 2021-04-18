@@ -602,6 +602,9 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
    for (let parsedDate of parsedDates) {
       let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned && !trelloIsOk);
       const dateIsValid = typeof (dateParams) != 'undefined';
+      if(inGroup && !dateIsValid) {
+         continue;
+      }
       const dateExists = dateIsValid &&
          (dateParams.target_date != 0 ||
             dateParams.period_time != 0 ||
