@@ -15,7 +15,7 @@
     "errorScheduling": "Can not schedule for this date.",
     "showKeyboard": "Opened menu.",
     "repeatSchedule": "🔔 Remind in 5 minutes",
-    "remindSchedule": "🔔 Remind set to",
+    "remindSchedule": "🔔 Repeat:",
     "confirmSchedule": "Confirm ✅",
     "declineSchedule": "Decline ⛔️",
     "until": "until",
