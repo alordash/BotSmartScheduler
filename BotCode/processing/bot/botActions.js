@@ -600,7 +600,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
    let chat = await db.GetChatById(`${ctx.chat.id}`);
    let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
    for (let parsedDate of parsedDates) {
-      let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned && !trelloIsOk);
+      let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
       const dateIsValid = typeof (dateParams) != 'undefined';
       if(inGroup && !dateIsValid) {
          continue;
