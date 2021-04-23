@@ -734,12 +734,7 @@ async function HelpCommand(ctx, db) {
 }
 */
 
-/**
- * @param {*} ctx 
- * @param {User} user 
- * @param {dbManagement} db 
- * @param {Array.<Number>} trelloPendingConfirmationUsers 
- */
+/*
 async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
    const replies = LoadReplies(user.lang);
    if (ctx.message.text.indexOf(trelloClear) >= 0 && ctx.chat.id >= 0) {
@@ -794,11 +789,6 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
    }
 }
 
-/**
- * @param {*} ctx 
- * @param {dbManagement} db 
- * @param {Array.<Number>} trelloPendingConfirmationUsers 
- */
 async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
    let token = ctx.message.text;
    const replies = rp.LoadReplies(ctx.from.language_code);
@@ -827,11 +817,6 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
    }
 }
 
-/**
- * @param {*} ctx 
- * @param {dbManagement} db 
- * @param {User} user
- */
 async function TrelloPinCommand(ctx, db, user) {
    const replies = rp.LoadReplies(user.lang);
    let text = ctx.message.text;
@@ -855,10 +840,6 @@ async function TrelloPinCommand(ctx, db, user) {
    }
 }
 
-/**
- * @param {*} ctx 
- * @param {dbManagement} db 
- */
 async function TrelloAddList(ctx, db) {
    let text = ctx.message.text;
    let i = parseInt(text.substring(trelloAddListCommand.length)) - 1;
@@ -878,11 +859,6 @@ async function TrelloAddList(ctx, db) {
    BotReply(ctx, Format.FormListBinded(board, target_list, user.lang));
 }
 
-/**
- * @param {*} ctx 
- * @param {dbManagement} db 
- * @param {User} user 
- */
 async function TrelloUnpinCommand(ctx, db, user) {
    let chat = await db.GetChatById(ctx.chat.id);
    db.ClearChatFromTrello(ctx.chat.id);
@@ -892,6 +868,7 @@ async function TrelloUnpinCommand(ctx, db, user) {
       BotReply(ctx, Format.FormBoardUnbinded(board, user.lang));
    }
 }
+*/
 
 module.exports = {
    LoadSchedulesList,
