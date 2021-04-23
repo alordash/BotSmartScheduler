@@ -19,7 +19,7 @@ function TzDeterminationKeyboard(language) {
             [{ text: replies.cancel }]
         ]).oneTime()
         .resize()
-        .extra()
+        .extra();
 }
 
 /**@param {Languages} language */
@@ -40,7 +40,7 @@ function CancelKeyboard(language) {
             [{ text: replies.cancel }]
         ]).oneTime()
         .resize()
-        .extra()
+        .extra();
 }
 
 /**@param {Languages} language */
@@ -49,8 +49,19 @@ function CancelButton(language) {
     return Extra.markup((m) =>
         m.inlineKeyboard([
             m.callbackButton(replies.cancel, 'cancel')
+        ])
+    );
+}
+
+/**@param {Languages} language */
+function ConfirmScheduleKeyboard(language) {
+    const replies = LoadReplies(language);
+    return Extra.markup((m) =>
+        m.inlineKeyboard([
+            m.callbackButton(replies.confirmSchedule, `confirm`),
+            m.callbackButton(replies.declineSchedule, `delete`)
         ]).oneTime()
-    )
+    );
 }
 
 module.exports = {
@@ -58,5 +69,6 @@ module.exports = {
     TzDeterminationKeyboard,
     TzDeterminationOnStartInlineKeyboard,
     CancelKeyboard,
-    CancelButton
+    CancelButton,
+    ConfirmScheduleKeyboard
 }

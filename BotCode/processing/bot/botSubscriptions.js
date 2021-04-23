@@ -186,11 +186,12 @@ function InitActions(bot, db) {
          await ctx.answerCbQuery();
          await BotReply(ctx, text,
             schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
-         await ctx.deleteMessage();
+         ctx.deleteMessage();
       } catch (e) {
          console.error(e);
       }
    });
+
    bot.on('location', async ctx => {
       let language = await db.GetUserLanguage(ctx.from.id);
       const replies = LoadReplies(language);
@@ -222,7 +223,7 @@ function InitActions(bot, db) {
    bot.on('callback_query', async (ctx) => {
       let language = await db.GetUserLanguage(ctx.from.id);
       ctx.from.language_code = language;
-      botActions.HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules);
+      botActions.HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules);
    });
 
    if (!!process.env.YC_FOLDER_ID && !!process.env.YC_API_KEY) {

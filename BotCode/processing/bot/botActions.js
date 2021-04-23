@@ -30,9 +30,9 @@ function DetermineLanguage(string) {
    let ruCount = [...string.matchAll(/[А-Яа-я]/g)].length;
    let enCount = [...string.matchAll(/[A-Za-z]/g)].length;
    let result = null;
-   if(ruCount > enCount) {
+   if (ruCount > enCount) {
       result = Languages.RU;
-   } else if(enCount > ruCount) {
+   } else if (enCount > ruCount) {
       result = Languages.EN;
    }
    return result;
@@ -429,10 +429,11 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
  * @param {dbManagement} db 
  * @param {Array.<Number>} tzPendingConfirmationUsers
  * @param {Array.<Array.<Schedule>>} pendingSchedules 
+ * @param {Array.<Schedule>} invalidSchedules 
  */
-async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules) {
-   console.log("got callback_query");
+async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules) {
    const data = ctx.callbackQuery.data;
+   console.log(`got callback_query, data: "${data}"`);
    let chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
    const language = await db.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
@@ -468,6 +469,13 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
             console.error(e);
          }
          break;
+      case 'cancel_rm':
+         invalidSchedules[chatID] = undefined;
+         try {
+            ctx.deleteMessage();
+         } catch (e) {
+            console.error(e);
+         }
       case 'confirm':
          try {
             if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
@@ -598,10 +606,11 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
    let parsedDateIndex = 0;
    let chat = await db.GetChatById(`${ctx.chat.id}`);
    let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
+   let keyboard;
    for (let parsedDate of parsedDates) {
       let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
       const dateIsValid = typeof (dateParams) != 'undefined';
-      if(inGroup && !dateIsValid) {
+      if (inGroup && !dateIsValid) {
          continue;
       }
       const dateExists = dateIsValid &&
@@ -654,8 +663,10 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
                   invalidSchedules[chatID] = newSchedule;
                   if (!dateExists) {
                      reply = `${reply}${replies.scheduleDateInvalid}\r\n`;
+                     keyboard = kbs.CancelButton(language);
                   } else if (!textIsValid) {
                      reply = `${reply}${replies.scheduleTextInvalid}\r\n`;
+                     keyboard = kbs.CancelButton(language);
                   }
                }
             }
@@ -714,14 +725,8 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
    let options = [];
    try {
       if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
-         let keyboard;
          if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-            keyboard = Extra.markup((m) =>
-               m.inlineKeyboard([
-                  m.callbackButton(replies.confirmSchedule, `confirm`),
-                  m.callbackButton(replies.declineSchedule, `delete`)
-               ]).oneTime()
-            )
+            keyboard = kbs.ConfirmScheduleKeyboard(language);
          }
          options[answers.length - 1] = keyboard;
          let results = await ReplyMultipleMessages(ctx, answers, options);
@@ -734,7 +739,12 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
             }
          }, repeatScheduleTime, ctx, msg);
       } else {
+
          options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard();
+         if (typeof (keyboard) != 'undefined') {
+            keyboard.reply_markup.inline_keyboard[0][0].callback_data = 'cancel_rm';
+            options[answers.length - 1] = keyboard;
+         }
          ReplyMultipleMessages(ctx, answers, options);
       }
    } catch (e) {
@@ -752,7 +762,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
  * @param {Number} prevalenceForParsing 
  */
 async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules, prevalenceForParsing = 50) {
-   let chatID = FormatChatId(ctx.chat.id)
+   let chatID = FormatChatId(ctx.chat.id);
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
    if (typeof (msgText) == 'undefined') {
@@ -792,7 +802,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
    }
 
    let determinedLanguage = DetermineLanguage(msgText);
-   if(determinedLanguage != null) {
+   if (determinedLanguage != null) {
       language = determinedLanguage;
    }
    ctx.from.language_code = language;
