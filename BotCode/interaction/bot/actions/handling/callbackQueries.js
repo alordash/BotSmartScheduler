@@ -1,9 +1,9 @@
 const Extra = require('telegraf/extra');
-const { Languages, LoadReplies } = require('../static/replies/repliesLoader');
-const Format = require('../../processing/formatting');
-const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
+const { Languages, LoadReplies } = require('../../static/replies/repliesLoader');
+const Format = require('../../../processing/formatting');
+const { dbManagement, Schedule, User, Chat } = require('../../../../storage/dataBase/db');
 const { TrelloManager } = require('@alordash/node-js-trello');
-const utils = require('./utilities');
+const utils = require('../utilities');
 const { StartTimeZoneDetermination } = require('../technical');
 
 /**

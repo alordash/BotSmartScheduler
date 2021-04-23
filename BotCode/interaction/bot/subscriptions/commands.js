@@ -4,7 +4,7 @@ const { Composer } = require('telegraf');
 const { dbManagement } = require('../../../storage/dataBase/db');
 const cms = require('../static/commandsList');
 const { BotReply } = require('../actions/replying');
-const { TrelloCommand } = require('../actions/handling/trelloCommands');
+const { TrelloCommand, TrelloPinCommand, TrelloUnpinCommand } = require('../actions/handling/trelloCommands');
 
 /**
  * @param {Composer} bot 
@@ -51,7 +51,7 @@ function InitCommandsSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
    bot.command(cms.trelloPinBoardCommand, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
-         botActions.TrelloPinCommand(ctx, db, user);
+         TrelloPinCommand(ctx, db, user);
       } catch (e) {
          console.error(e);
       }
@@ -59,7 +59,7 @@ function InitCommandsSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
    bot.command(cms.trelloUnpinBoardCommand, async ctx => {
       try {
          let user = await db.GetUserById(ctx.from.id);
-         botActions.TrelloUnpinCommand(ctx, db, user);
+         TrelloUnpinCommand(ctx, db, user);
       } catch (e) {
          console.log(e);
       }

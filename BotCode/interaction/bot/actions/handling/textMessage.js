@@ -1,13 +1,14 @@
 const Markup = require('telegraf/markup');
-const { Languages, LoadReplies } = require('../static/replies/repliesLoader');
-const Format = require('../../formatting');
-const kbs = require('../static/replies/keyboards');
-const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
-const { help, trelloAddListCommand, trelloHelp } = require('../static/commandsList');
-const { BotReply, BotSendAttachment } = require('./replying');
-const utils = require('./utilities');
+const { Languages, LoadReplies } = require('../../static/replies/repliesLoader');
+const Format = require('../../../processing/formatting');
+const kbs = require('../../static/replies/keyboards');
+const { dbManagement, Schedule, User, Chat } = require('../../../../storage/dataBase/db');
+const { help, trelloAddListCommand, trelloHelp } = require('../../static/commandsList');
+const { BotReply, BotSendAttachment } = require('../replying');
+const utils = require('../utilities');
 const ParseScheduleMessage = require('../remindersParsing');
 const { ConfrimTimeZone } = require('../technical');
+const { TrelloAuthenticate, TrelloAddList } = require('./trelloCommands');
 
 /**
  * @param {*} ctx 
