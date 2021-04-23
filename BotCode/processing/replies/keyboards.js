@@ -1,6 +1,7 @@
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
 const { LoadReplies } = require('./replies');
+const { Schedule } = require('../../storage/dataBase/db');
 
 /**@param {Languages} language */
 function ListKeyboard(language) {
@@ -52,8 +53,10 @@ function CancelButton(language) {
     );
 }
 
-/**@param {Languages} language */
-function ConfirmScheduleKeyboard(language) {
+/**
+ * @param {Languages} language
+ */
+function ConfirmSchedulesKeyboard(language) {
     const replies = LoadReplies(language);
     return Extra.markup((m) =>
         m.inlineKeyboard([
@@ -69,5 +72,5 @@ module.exports = {
     TzDeterminationOnStartInlineKeyboard,
     CancelKeyboard,
     CancelButton,
-    ConfirmScheduleKeyboard
+    ConfirmSchedulesKeyboard
 }

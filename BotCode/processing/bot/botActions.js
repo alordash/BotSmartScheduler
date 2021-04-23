@@ -115,7 +115,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
          schedule.target_date = +schedule.target_date;
          schedule.period_time = +schedule.period_time;
          schedule.max_date = +schedule.max_date;
-         let newAnswer = `${await Format.FormStringFormatSchedule(schedule, tsOffset, language, false, db)}\r\n`;
+         let newAnswer = `${await Format.FormStringFormatSchedule(schedule, tsOffset, language, false, true, db)}\r\n`;
          if (answer.length + newAnswer.length > global.MaxMessageLength) {
             answers.push(answer);
             answer = newAnswer;
@@ -432,10 +432,11 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
  * @param {Array.<Schedule>} invalidSchedules 
  */
 async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules) {
-   const data = ctx.callbackQuery.data;
+   let data = ctx.callbackQuery.data;
    console.log(`got callback_query, data: "${data}"`);
    let chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
-   const language = await db.GetUserLanguage(ctx.from.id);
+   const user = await db.GetUserById(ctx.from.id);
+   const language = user.lang;
    const replies = LoadReplies(language);
    switch (data) {
       case 'repeat':
@@ -455,7 +456,7 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
          let schedulesCount = await db.GetSchedules(chatID).length;
          let target_date = Date.now() + global.repeatScheduleTime;
          let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0, file_id);
-         let tz = await db.GetUserTZ(ctx.from.id);
+         let tz = user.tz;
 
          try {
             await db.AddSchedule(schedule);
@@ -477,22 +478,31 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
             console.error(e);
          }
       case 'confirm':
+         /**@type {Array.<Schedule>} */
+         let schedules = pendingSchedules[chatID];
          try {
+            let schedulesCount = (await db.GetSchedules(chatID)).length;
             if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
                await db.AddSchedules(chatID, pendingSchedules[chatID]);
             }
-         } catch (e) {
-            console.error(e);
-         } finally {
+            let text = '';
+            let tz = user.tz;
+            for(let schedule of schedules) {
+               schedule.id = ++schedulesCount;
+               text += `${await Format.FormStringFormatSchedule(schedule, tz, language, true, true, db)}\r\n`;
+            }
+            ctx.editMessageText(text, { parse_mode: 'HTML' });
             pendingSchedules[chatID] = [];
             ctx.editMessageReplyMarkup(Extra.markup((m) =>
                m.inlineKeyboard([]).removeKeyboard()
             ));
+         } catch (e) {
+            console.error(e);
          }
          break;
       case 'delete':
          try {
-            let chat = await db.GetChatById(`${ctx.chat.id}`);
+            let chat = await db.GetChatById(chatID);
             if (typeof (chat) != 'undefined' && chat.trello_list_id != null) {
                let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
                for (const schedule of pendingSchedules[chatID]) {
@@ -510,7 +520,6 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
          break;
       case 'startTZ':
          try {
-            let language = await db.GetUserLanguage(ctx.from.id);
             ctx.from.language_code = language;
             ctx.editMessageReplyMarkup(Extra.markup((m) =>
                m.inlineKeyboard([]).removeKeyboard()
@@ -695,7 +704,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
                invalidSchedules[chatID] = undefined;
                pendingSchedules[chatID].push(newSchedule);
                count++;
-               reply += await Format.FormStringFormatSchedule(newSchedule, tz, language, true, db) + `\r\n`;
+               reply += await Format.FormStringFormatSchedule(newSchedule, tz, language, true, !inGroup, db) + `\r\n`;
             }
          } else {
             reply += replies.shouldRemove + '\r\n' + replies.maximumSchedulesCount + ` <b>${global.MaximumCountOfSchedules}</b>.`;
@@ -726,7 +735,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
    try {
       if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
          if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-            keyboard = kbs.ConfirmScheduleKeyboard(language);
+            keyboard = kbs.ConfirmSchedulesKeyboard(language);
          }
          options[answers.length - 1] = keyboard;
          let results = await ReplyMultipleMessages(ctx, answers, options);

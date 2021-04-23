@@ -61,10 +61,11 @@ function FormPeriodStringFormat(period_time, language) {
  * @param {Number} tz 
  * @param {Language} language 
  * @param {Boolean} showDayOfWeek 
+ * @param {Boolean} showId 
  * @param {dbManagement} db
  * @returns {String}
  */
-async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, db) {
+async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, showId, db) {
    let period_time = schedule.period_time.div(1000);
    let target_date = new Date(schedule.target_date + tz * 1000);
    console.log(`FORMATTING target_date: ${schedule.target_date}, tz: ${tz}, will be: ${schedule.target_date + tz * 1000}`);
@@ -100,7 +101,8 @@ async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, d
          }
       }
    }
-   return `/${schedule.id}. <b>${FormDateStringFormat(target_date, language, showDayOfWeek)}</b> "${text}"${file}${username}${until}${period}`;
+   let idText = showId ? `/${schedule.id}. ` : '';
+   return `${idText}<b>${FormDateStringFormat(target_date, language, showDayOfWeek)}</b> "${text}"${file}${username}${until}${period}`;
 }
 
 /**
