@@ -1,7 +1,17 @@
 const Extra = require('telegraf/extra');
-const botSubscriptions = require('./botSubscriptions');
 const { dbManagement, User } = require('../../storage/dataBase/db');
-const { LoadReplies } = require('../replies/replies');
+const { LoadReplies } = require('./static/replies/repliesLoader');
+const Subscriptions = require('./subscriptions/all');
+
+/**@type {Array.<String>} */
+let tzPendingConfirmationUsers = [];
+/**@type {Array.<String>} */
+let trelloPendingConfirmationUsers = [];
+
+/**@type {Array.<Array.<Schedule>>} */
+let pendingSchedules = [];0
+/**@type {Array.<Schedule>} */
+let invalidSchedules = [];
 
 var i = 0;
 var errorsCount = 0;
@@ -55,7 +65,10 @@ function sendNotification(bot, inviteLink, users) {
  * @param {dbManagement} db 
  */
 exports.InitBot = async function (bot, db) {
-   await botSubscriptions.InitActions(bot, db);
+   const subscriptionsArgs = [bot, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules];
+   await Subscriptions.initCommands(...subscriptionsArgs);
+   await Subscriptions.initAdvanced(...subscriptionsArgs);
+   await Subscriptions.initBasic(...subscriptionsArgs);
    await bot.launch();
 
    if (process.env.SMART_SCHEDULER_SEND_INVITE === 'true'

@@ -1,19 +1,19 @@
 const { Composer } = require('telegraf');
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
-const { Languages, LoadReplies } = require('../replies/replies');
-const rp = require('../replies/replies');
-const Format = require('../formatting');
-const kbs = require('../replies/keyboards');
-const { dbManagement, Schedule, User, Chat } = require('../../storage/dataBase/db');
+const { Languages, LoadReplies } = require('../static/replies/repliesLoader');
+const rp = require('../static/replies/repliesLoader');
+const Format = require('../../formatting');
+const kbs = require('../static/replies/keyboards');
+const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList, ParsedDate } = require('@alordash/date-parser');
-const { Decrypt } = require('../../storage/encryption/encrypt');
-const { ProcessParsedDate } = require('../../storage/timeProcessing');
+const { Decrypt } = require('../../../storage/encryption/encrypt');
+const { ProcessParsedDate } = require('../../../storage/timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
-const { help, trelloAddListCommand, trelloClear, trelloHelp } = require('./botCommands');
-const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../storage/nicknamesExtraction');
-const { BotReply, BotSendMessage, BotSendAttachment } = require('./botReplying');
+const { help, trelloAddListCommand, trelloClear, trelloHelp } = require('../static/commandsList');
+const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../../storage/nicknamesExtraction');
+const { BotReply, BotSendMessage, BotSendAttachment } = require('./replying');
 
 /**
  * @param {Number} x 
