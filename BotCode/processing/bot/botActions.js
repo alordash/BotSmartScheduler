@@ -575,21 +575,20 @@ async function HandleCommandMessage(bot, ctx, db, chatID, msgText) {
  * @param {Boolean} mentioned 
  * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
+ * @param {Number} prevalenceForParsing 
  */
-async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules) {
+async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules, prevalenceForParsing) {
    let reply = '';
    let file_id = GetAttachmentId(ctx.message);
    await db.SetUserLanguage(ctx.from.id, language);
    const replies = LoadReplies(language);
    let tz = await db.GetUserTZ(ctx.from.id);
    //#region PARSE SCHEDULE
-   let prevalence = 50;
    let username = 'none';
    if (inGroup) {
       username = ctx.from.username;
-      //prevalence = 60;
    }
-   let parsedDates = wordsParseDate(arrayParseString(msgText, 1), 1, prevalence, msgText);
+   let parsedDates = wordsParseDate(arrayParseString(msgText, 1), 1, prevalenceForParsing, msgText);
    let count = 1;
    let shouldWarn = false;
    let schedulesCount = (await db.GetSchedules(chatID)).length;
@@ -750,8 +749,9 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
  * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
+ * @param {Number} prevalenceForParsing 
  */
-async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules) {
+async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules, prevalenceForParsing = 50) {
    let chatID = FormatChatId(ctx.chat.id)
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
@@ -796,7 +796,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       language = determinedLanguage;
    }
    ctx.from.language_code = language;
-   ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules);
+   ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules, prevalenceForParsing);
 }
 
 /**

@@ -249,7 +249,7 @@ function InitActions(bot, db) {
             ctx.message.text = text;
             let language = await db.GetUserLanguage(ctx.from.id);
             ctx.from.language_code = language;
-            botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
+            botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules, 20);
          } else {
             try {
                BotReply(ctx, rp.voiceMessageTooBig);
