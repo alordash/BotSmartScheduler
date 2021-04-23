@@ -487,12 +487,14 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
             }
             let text = '';
             let tz = user.tz;
-            for(let schedule of schedules) {
+            for (let schedule of schedules) {
                schedule.id = ++schedulesCount;
                text += `${await Format.FormStringFormatSchedule(schedule, tz, language, true, true, db)}\r\n`;
             }
-            ctx.editMessageText(text, { parse_mode: 'HTML' });
             pendingSchedules[chatID] = [];
+            if (text.length > 0) {
+               ctx.editMessageText(text, { parse_mode: 'HTML' });
+            }
             ctx.editMessageReplyMarkup(Extra.markup((m) =>
                m.inlineKeyboard([]).removeKeyboard()
             ));
