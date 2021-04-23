@@ -4,8 +4,9 @@ const request = require('request-promise');
 const { LoadReplies } = require('../static/replies/repliesLoader');
 const Format = require('../../formatting');
 const kbs = require('../static/replies/keyboards');
+const utils = require('../actions/utilities');
 const botActions = require('../actions/botActions');
-const { FormatChatId } = require('../actions/botActions');
+const { FormatChatId } = require('../actions/utilities');
 const { Composer } = require('telegraf');
 const { dbManagement, User } = require('../../../storage/dataBase/db');
 const Markup = require('telegraf/markup');
@@ -57,7 +58,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
       }
       if (typeof (replies.cancel) != 'undefined') {
          bot.hears(replies.cancel, async ctx => {
-            botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
+            utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
             let reply = replies.cancelReponse;
             let user = await db.GetUserById(ctx.from.id);
             if (typeof (user) == 'undefined' || user.tz == null) {
@@ -91,7 +92,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
    bot.action('cancel', async ctx => {
       let language = await db.GetUserLanguage(ctx.from.id);
       const replies = LoadReplies(language);
-      botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
+      utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
       let text = replies.cancelReponse;
       let user = await db.GetUserById(ctx.from.id);
       if (typeof (user) == 'undefined' || user.tz == null) {
@@ -125,7 +126,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
          }
          try {
             const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
-            botActions.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
+            utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
             BotReply(ctx, replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>',
                schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
          } catch (e) {

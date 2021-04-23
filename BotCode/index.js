@@ -5,6 +5,10 @@ const botActions = require('./processing/bot/actions/botActions');
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
+Number.prototype.div = function (x) {
+   return Math.floor(this / x);
+}
+
 var SmartSchedulerBot = new telegraf(process.env.SMART_SCHEDULER_TLGRM_API_TOKEN);
 
 let dbUrl;

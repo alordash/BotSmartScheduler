@@ -14,89 +14,7 @@ const { TrelloManager } = require('@alordash/node-js-trello');
 const { help, trelloAddListCommand, trelloClear, trelloHelp } = require('../static/commandsList');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../../storage/nicknamesExtraction');
 const { BotReply, BotSendMessage, BotSendAttachment } = require('./replying');
-
-/**
- * @param {Number} x 
- * @returns {Number} 
- */
-Number.prototype.div = function (x) {
-   return Math.floor(this / x);
-}
-
-/**@param {String} string
- * @returns {Languages}
- */
-function DetermineLanguage(string) {
-   let ruCount = [...string.matchAll(/[А-Яа-я]/g)].length;
-   let enCount = [...string.matchAll(/[A-Za-z]/g)].length;
-   let result = null;
-   if (ruCount > enCount) {
-      result = Languages.RU;
-   } else if (enCount > ruCount) {
-      result = Languages.EN;
-   }
-   return result;
-}
-
-/**
- * @param {Array.<Number>} tz 
- * @param {Array.<Number>} trello 
- * @param {Number} id 
- */
-function ClearPendingConfirmation(tzs, trellos, id) {
-   let index = tzs.indexOf(id)
-   if (index >= 0) {
-      tzs.splice(index, 1);
-   }
-   index = trellos.indexOf(id);
-   if (index >= 0) {
-      trellos.splice(index, 1);
-   }
-}
-
-function GetDeletingIDsIndex(chatID, deletingIDs) {
-   if (deletingIDs.length) {
-      for (let i in deletingIDs) {
-         if (deletingIDs[i].chatID == chatID) {
-            return i;
-         }
-      }
-   }
-   return false;
-}
-/**
- * @param {Number} id 
- * @returns {String} 
- */
-function FormatChatId(id) {
-   id = id.toString(10);
-   if (id[0] == '-') {
-      id = '_' + id.substring(1);
-   }
-   return id;
-}
-
-/**@returns {String} */
-function GetAttachmentId(message) {
-   if (typeof (message.document) != 'undefined') {
-      return message.document.file_id;
-   } else if (typeof (message.video) != 'undefined') {
-      return message.video.file_id;
-   } else if (typeof (message.photo) != 'undefined' && message.photo.length > 0) {
-      let photoes = message.photo;
-      let file_id = photoes[0].file_id;
-      let file_size = photoes[0].file_size;
-      for (let i = 1; i < photoes.length; i++) {
-         const photo = photoes[i];
-         if (photo.file_size > file_size) {
-            file_size = photo.file_size;
-            file_id = photo.file_id;
-         }
-      }
-      return file_id;
-   }
-   return '~';
-}
+const utils = require('./utilities');
 
 /**
  * @param {String} chatID 
@@ -139,7 +57,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
  * @param {Languages} 
  */
 async function DeleteSchedules(ctx, db) {
-   let chatID = FormatChatId(ctx.chat.id)
+   let chatID = utils.FormatChatId(ctx.chat.id)
    let msgText = ctx.message.text;
    const replies = LoadReplies(ctx.from.language_code);
    if (msgText.indexOf('all') == "/del ".length) {
@@ -346,7 +264,7 @@ async function CheckExpiredSchedules(bot, db) {
             }
          }
          if (shouldDelete) {
-            let index = GetDeletingIDsIndex(schedule.chatid, deletingIDs);
+            let index = utils.GetDeletingIDsIndex(schedule.chatid, deletingIDs);
             if (index === false) {
                deletingIDs.push({ s: `id = ${schedule.id} OR `, chatID: schedule.chatid });
             } else {
@@ -356,7 +274,7 @@ async function CheckExpiredSchedules(bot, db) {
       }
       console.log('CHECKED, removing and reordering');
       for (let chatID of ChatIDs) {
-         let index = GetDeletingIDsIndex(chatID, deletingIDs);
+         let index = utils.GetDeletingIDsIndex(chatID, deletingIDs);
          if (index !== false) {
             let s = deletingIDs[index].s;
             s = s.substring(0, s.length - 4);
@@ -408,7 +326,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
       }
       tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
       try {
-         const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+         const schedulesCount = (await db.GetSchedules(utils.FormatChatId(ctx.chat.id))).length;
          BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>\r\n',
             schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
       } catch (e) {
@@ -434,7 +352,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
 async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules) {
    let data = ctx.callbackQuery.data;
    console.log(`got callback_query, data: "${data}"`);
-   let chatID = FormatChatId(ctx.callbackQuery.message.chat.id);
+   let chatID = utils.FormatChatId(ctx.callbackQuery.message.chat.id);
    const user = await db.GetUserById(ctx.from.id);
    const language = user.lang;
    const replies = LoadReplies(language);
@@ -452,7 +370,7 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
          if (chatID[0] === '_') {
             username = ctx.from.username;
          }
-         let file_id = GetAttachmentId(ctx.callbackQuery.message);
+         let file_id = utils.GetAttachmentId(ctx.callbackQuery.message);
          let schedulesCount = await db.GetSchedules(chatID).length;
          let target_date = Date.now() + global.repeatScheduleTime;
          let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0, file_id);
@@ -598,7 +516,7 @@ async function HandleCommandMessage(bot, ctx, db, chatID, msgText) {
  */
 async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules, prevalenceForParsing) {
    let reply = '';
-   let file_id = GetAttachmentId(ctx.message);
+   let file_id = utils.GetAttachmentId(ctx.message);
    await db.SetUserLanguage(ctx.from.id, language);
    const replies = LoadReplies(language);
    let tz = await db.GetUserTZ(ctx.from.id);
@@ -744,7 +662,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
          let msg = results[results.length - 1];
          setTimeout(function (ctx, msg) {
             if (typeof (msg) != 'undefined') {
-               let chatID = FormatChatId(msg.chat.id);
+               let chatID = utils.FormatChatId(msg.chat.id);
                ctx.telegram.deleteMessage(msg.chat.id, msg.message_id);
                pendingSchedules[chatID] = [];
             }
@@ -773,7 +691,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
  * @param {Number} prevalenceForParsing 
  */
 async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules, prevalenceForParsing = 50) {
-   let chatID = FormatChatId(ctx.chat.id);
+   let chatID = utils.FormatChatId(ctx.chat.id);
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
    if (typeof (msgText) == 'undefined') {
@@ -812,7 +730,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
       return;
    }
 
-   let determinedLanguage = DetermineLanguage(msgText);
+   let determinedLanguage = utils.DetermineLanguage(msgText);
    if (determinedLanguage != null) {
       language = determinedLanguage;
    }
@@ -827,7 +745,7 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
 async function HelpCommand(ctx, db) {
    let language = await db.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
-   const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+   const schedulesCount = (await db.GetSchedules(utils.FormatChatId(ctx.chat.id))).length;
    let keyboard = schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard();
    keyboard['disable_web_page_preview'] = true;
    let reply;
@@ -922,7 +840,7 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       if (chatID[0] == '-') {
          chatID = `_${chatID.substring(1)}`;
       }
-      const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+      const schedulesCount = (await db.GetSchedules(utils.FormatChatId(ctx.chat.id))).length;
       let answers = Format.SplitBigMessage(reply);
       let options = [];
       options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard();
@@ -998,12 +916,7 @@ async function TrelloUnpinCommand(ctx, db, user) {
    }
 }
 
-/**
- * @param {*} ctx 
- * @param {Array.<String>} replies 
- * @param {Array.<Object>} options 
- * @returns {Array.<Object>}
- */
+/*
 async function ReplyMultipleMessages(ctx, replies, options) {
    let results = [];
    if (typeof (options) == 'undefined') {
@@ -1021,11 +934,8 @@ async function ReplyMultipleMessages(ctx, replies, options) {
    }
    return results;
 }
-
+*/
 module.exports = {
-   ClearPendingConfirmation,
-   GetDeletingIDsIndex,
-   FormatChatId,
    LoadSchedulesList,
    DeleteSchedules,
    StartTimeZoneDetermination,

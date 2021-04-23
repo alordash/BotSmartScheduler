@@ -1,5 +1,5 @@
 const botActions = require('../actions/botActions');
-const { FormatChatId } = require('../actions/botActions');
+const { FormatChatId } = require('../actions/utilities');
 const { Composer } = require('telegraf');
 const { dbManagement } = require('../../../storage/dataBase/db');
 const cms = require('../static/commandsList');
