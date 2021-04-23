@@ -63,56 +63,56 @@ async function DeleteSchedules(ctx, db) {
    if (msgText.indexOf('all') == "/del ".length) {
       await db.ClearAllSchedules(chatID);
       BotReply(ctx, replies.cleared);
-   } else {
-      let nums = msgText.match(/[0-9]+/g);
-      let ranges = msgText.match(/[0-9]+-[0-9]+/g);
-      for (let i in nums) {
-         nums[i] = parseInt(nums[i], 10);
+      return;
+   }
+   let nums = msgText.match(/[0-9]+/g);
+   let ranges = msgText.match(/[0-9]+-[0-9]+/g);
+   for (let i in nums) {
+      nums[i] = parseInt(nums[i], 10);
+   }
+   for (let i in ranges) {
+      let range = ranges[i];
+      let index = range.indexOf('-');
+      let leftNum = +range.substring(0, index);
+      let rightNum = +range.substring(index + 1);
+      if (leftNum > rightNum) {
+         let t = leftNum;
+         leftNum = rightNum;
+         rightNum = t;
       }
-      for (let i in ranges) {
-         let range = ranges[i];
-         let index = range.indexOf('-');
-         let leftNum = +range.substring(0, index);
-         let rightNum = +range.substring(index + 1);
-         if (leftNum > rightNum) {
-            let t = leftNum;
-            leftNum = rightNum;
-            rightNum = t;
-         }
-         for (let j = leftNum; j <= rightNum && j - leftNum <= 10; j++) {
-            nums.push(j);
-         }
+      for (let j = leftNum; j <= rightNum && j - leftNum <= 10; j++) {
+         nums.push(j);
       }
-      if (nums != null) {
-         nums = nums.filter((item, pos) => {
-            return nums.indexOf(item) == pos;
-         });
-         nums.sort((a, b) => a - b);
+   }
+   if (nums != null) {
+      nums = nums.filter((item, pos) => {
+         return nums.indexOf(item) == pos;
+      });
+      nums.sort((a, b) => a - b);
 
-         let query = '';
-         for (let i in nums) {
-            let schedule = nums[i];
-            query += `id = ${schedule} OR `;
-         }
-         query = query.substring(0, query.length - 4);
-         await db.RemoveSchedules(chatID, query);
-         await db.ReorderSchedules(chatID);
-         let end = '';
-         if (nums.length > 1) {
-            end = 's';
-         }
-         try {
-            BotReply(ctx, Format.Deleted(nums.join(', '), false, ctx.message.from.language_code));
-         } catch (e) {
-            console.error(e);
-         }
-      } else {
-         try {
-            BotReply(ctx, replies.invalidDelete);
-         } catch (e) {
-            console.error(e);
-         }
+      let query = '';
+      for (let i in nums) {
+         let schedule = nums[i];
+         query += `id = ${schedule} OR `;
       }
+      query = query.substring(0, query.length - 4);
+      await db.RemoveSchedules(chatID, query);
+      await db.ReorderSchedules(chatID);
+      let end = '';
+      if (nums.length > 1) {
+         end = 's';
+      }
+      try {
+         BotReply(ctx, Format.Deleted(nums.join(', '), false, ctx.message.from.language_code));
+      } catch (e) {
+         console.error(e);
+      }
+      return;
+   }
+   try {
+      BotReply(ctx, replies.invalidDelete);
+   } catch (e) {
+      console.error(e);
    }
 }
 
