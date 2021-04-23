@@ -116,42 +116,7 @@ async function DeleteSchedules(ctx, db) {
    }
 }
 
-/**
- * @param {*} ctx 
- * @param {dbManagement} db 
- * @param {Array.<Number>} tzPendingConfirmationUsers 
- */
-async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
-   let curTZ = await db.GetUserTZ(ctx.from.id);
-   let reply = '';
-   const language = await db.GetUserLanguage(ctx.from.id);
-   const replies = LoadReplies(language);
-   if (curTZ !== 0) {
-      reply = replies.tzDefined + '<b>' + Format.TzCurrent(curTZ) + '</b>\r\n';
-   }
-   let isPrivateChat = ctx.chat.id >= 0;
-   if (isPrivateChat) {
-      reply += replies.tzConfiguration + '\r\n' + replies.tzViaLoc + '\r\n' + replies.tzManually;
-      try {
-         return await BotReply(ctx, reply, kbs.TzDeterminationKeyboard(language));
-      } catch (e) {
-         console.error(e);
-      }
-   }
-   if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
-      tzPendingConfirmationUsers.push(ctx.from.id);
-   }
-   try {
-      return await BotReply(ctx, replies.tzGroupChatConfiguration);
-   } catch (e) {
-      console.error(e);
-   }
-}
-
-/**
- * @param {Composer} bot 
- * @param {dbManagement} db 
- */
+/*
 async function CheckExpiredSchedules(bot, db) {
    console.log('Checking expired schedules ' + new Date());
    db.sending = true;
@@ -286,6 +251,39 @@ async function CheckExpiredSchedules(bot, db) {
    }
    db.sending = false;
    console.log(`Done checking expired schedules`);
+}
+*/
+
+/**
+ * @param {*} ctx 
+ * @param {dbManagement} db 
+ * @param {Array.<Number>} tzPendingConfirmationUsers 
+ */
+async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
+   let curTZ = await db.GetUserTZ(ctx.from.id);
+   let reply = '';
+   const language = await db.GetUserLanguage(ctx.from.id);
+   const replies = LoadReplies(language);
+   if (curTZ !== 0) {
+      reply = replies.tzDefined + '<b>' + Format.TzCurrent(curTZ) + '</b>\r\n';
+   }
+   let isPrivateChat = ctx.chat.id >= 0;
+   if (isPrivateChat) {
+      reply += replies.tzConfiguration + '\r\n' + replies.tzViaLoc + '\r\n' + replies.tzManually;
+      try {
+         return await BotReply(ctx, reply, kbs.TzDeterminationKeyboard(language));
+      } catch (e) {
+         console.error(e);
+      }
+   }
+   if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
+      tzPendingConfirmationUsers.push(ctx.from.id);
+   }
+   try {
+      return await BotReply(ctx, replies.tzGroupChatConfiguration);
+   } catch (e) {
+      console.error(e);
+   }
 }
 
 /**
