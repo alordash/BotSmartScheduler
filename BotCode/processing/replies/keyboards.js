@@ -17,8 +17,7 @@ function TzDeterminationKeyboard(language) {
         .keyboard([
             [{ text: replies.tzUseLocation, request_location: true }, { text: replies.tzTypeManually }],
             [{ text: replies.cancel }]
-        ]).oneTime()
-        .resize()
+        ]).resize()
         .extra();
 }
 
@@ -28,7 +27,7 @@ function TzDeterminationOnStartInlineKeyboard(language) {
     return Extra.markup((m) =>
         m.inlineKeyboard([
             m.callbackButton(replies.startTZ, `startTZ`)
-        ]).oneTime()
+        ])
     );
 }
 
@@ -60,7 +59,7 @@ function ConfirmScheduleKeyboard(language) {
         m.inlineKeyboard([
             m.callbackButton(replies.confirmSchedule, `confirm`),
             m.callbackButton(replies.declineSchedule, `delete`)
-        ]).oneTime()
+        ])
     );
 }
 
