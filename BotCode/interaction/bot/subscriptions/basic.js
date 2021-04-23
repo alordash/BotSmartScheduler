@@ -8,6 +8,7 @@ const { dbManagement } = require('../../../storage/dataBase/db');
 const { speechToText } = require('../actions/stt/stt');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 const { BotReply } = require('../actions/replying');
+const { HelpCommand, HandleTextMessage } = require('../actions/handling/textMessage');
 
 /**
  * @param {Composer} bot 
@@ -30,7 +31,7 @@ function InitBasicSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPendi
    });
    bot.help(async ctx => {
       try {
-         botActions.HelpCommand(ctx, db);
+         HelpCommand(ctx, db);
       } catch (e) {
          console.error(e);
       }
@@ -60,7 +61,7 @@ function InitBasicSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPendi
             ctx.message.text = text;
             let language = await db.GetUserLanguage(ctx.from.id);
             ctx.from.language_code = language;
-            botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules, 20);
+            HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules, 20);
          } else {
             try {
                BotReply(ctx, rp.voiceMessageTooBig);
@@ -73,7 +74,7 @@ function InitBasicSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPendi
 
    bot.on('message', async ctx => {
       try {
-         botActions.HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
+         HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules);
       } catch (e) {
          console.log(e)
       }

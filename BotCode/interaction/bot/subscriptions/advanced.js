@@ -11,6 +11,7 @@ const { Composer } = require('telegraf');
 const { dbManagement, User } = require('../../../storage/dataBase/db');
 const Markup = require('telegraf/markup');
 const { BotReply } = require('../actions/replying');
+const HandleCallbackQuery = require('../actions/handling/callbackQueries');
 
 /**
  * @param {Composer} bot 
@@ -140,7 +141,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
    bot.on('callback_query', async (ctx) => {
       let language = await db.GetUserLanguage(ctx.from.id);
       ctx.from.language_code = language;
-      botActions.HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules);
+      HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules);
    });
 }
 

@@ -1,7 +1,7 @@
 const telegraf = require('telegraf');
 const { dbManagement } = require('./storage/dataBase/db');
 const botConfig = require('./interaction/bot/main');
-const botActions = require('./interaction/bot/actions/botActions');
+const CheckExpiredSchedules = require('./interaction/bot/actions/remindersChecking');
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
@@ -44,8 +44,8 @@ let db = new dbManagement(dbOptions);
    if (process.env.ENABLE_SCHEDULES_CHEKING == 'true') {
       setTimeout(async function () {
          console.log(`Timeout expired`);
-         setInterval(function () { botActions.CheckExpiredSchedules(SmartSchedulerBot, db) }, 60000);
-         await botActions.CheckExpiredSchedules(SmartSchedulerBot, db);
+         setInterval(function () { CheckExpiredSchedules(SmartSchedulerBot, db) }, 60000);
+         await CheckExpiredSchedules(SmartSchedulerBot, db);
       }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
    }
 

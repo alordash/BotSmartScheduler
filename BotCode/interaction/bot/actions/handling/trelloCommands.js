@@ -167,3 +167,11 @@ async function TrelloUnpinCommand(ctx, db, user) {
       BotReply(ctx, Format.FormBoardUnbinded(board, user.lang));
    }
 }
+
+module.exports = {
+   TrelloCommand,
+   TrelloAuthenticate,
+   TrelloPinCommand,
+   TrelloAddList,
+   TrelloUnpinCommand
+}

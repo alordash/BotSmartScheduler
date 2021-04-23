@@ -1,19 +1,10 @@
-const { Composer } = require('telegraf');
 const Markup = require('telegraf/markup');
-const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('../static/replies/repliesLoader');
-const rp = require('../static/replies/repliesLoader');
 const Format = require('../../formatting');
 const kbs = require('../static/replies/keyboards');
 const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
-const { arrayParseString } = require('@alordash/parse-word-to-number');
-const { wordsParseDate, TimeList, ParsedDate } = require('@alordash/date-parser');
-const { Decrypt } = require('../../../storage/encryption/encrypt');
-const { ProcessParsedDate } = require('../../timeProcessing');
-const { TrelloManager } = require('@alordash/node-js-trello');
-const { help, trelloAddListCommand, trelloClear, trelloHelp } = require('../static/commandsList');
-const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../nicknamesExtraction');
-const { BotReply, BotSendMessage, BotSendAttachment, BotReplyMultipleMessages } = require('./replying');
+const { help, trelloAddListCommand, trelloHelp } = require('../static/commandsList');
+const { BotReply, BotSendAttachment } = require('./replying');
 const utils = require('./utilities');
 
 /**
@@ -133,4 +124,9 @@ async function HandleTextMessage(bot, ctx, db, tzPendingConfirmationUsers, trell
    }
    ctx.from.language_code = language;
    ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules, prevalenceForParsing);
+}
+
+module.exports = {
+   HelpCommand,
+   HandleTextMessage
 }
