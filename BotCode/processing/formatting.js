@@ -1,7 +1,7 @@
 const { ParsedDate } = require('@alordash/date-parser');
 const { Schedule, User } = require('../storage/dataBase/db');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases/date-cases');
-const { TimeListIsEmpty } = require('../storage/timeProcessing');
+const { TimeListIsEmpty } = require('./timeProcessing');
 const { Language, LoadReplies } = require('./bot/static/replies/repliesLoader');
 const { trelloAddListCommand } = require('./bot/static/commandsList');
 const { TrelloManager } = require('@alordash/node-js-trello');

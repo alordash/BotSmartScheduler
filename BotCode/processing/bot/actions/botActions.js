@@ -9,10 +9,10 @@ const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBas
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList, ParsedDate } = require('@alordash/date-parser');
 const { Decrypt } = require('../../../storage/encryption/encrypt');
-const { ProcessParsedDate } = require('../../../storage/timeProcessing');
+const { ProcessParsedDate } = require('../../timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { help, trelloAddListCommand, trelloClear, trelloHelp } = require('../static/commandsList');
-const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../../storage/nicknamesExtraction');
+const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../nicknamesExtraction');
 const { BotReply, BotSendMessage, BotSendAttachment } = require('./replying');
 const utils = require('./utilities');
 
