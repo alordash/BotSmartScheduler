@@ -149,7 +149,6 @@ class dbManagement {
       }
       queryString = queryString.substring(0, queryString.length - 2);
       await this.paramQuery(queryString, values);
-      console.log(`Added multiple schedules = ${JSON.stringify(newSchedules)}`);
    }
 
    /**@param {Schedule} schedule */

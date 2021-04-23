@@ -58,7 +58,6 @@ exports.InitBot = async function (bot, db) {
    await botSubscriptions.InitActions(bot, db);
    await bot.launch();
 
-   const users = await db.GetAllUsers();
    if (process.env.SMART_SCHEDULER_SEND_INVITE === 'true'
       && process.env.SMART_SCHEDULER_INVITE.length > 0) {
       sendNotification(bot, process.env.SMART_SCHEDULER_INVITE, users);
