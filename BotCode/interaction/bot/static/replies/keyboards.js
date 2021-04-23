@@ -1,7 +1,7 @@
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
-const { LoadReplies } = require('./replies');
-const { Schedule } = require('../../storage/dataBase/db');
+const { LoadReplies } = require('./repliesLoader');
+const { Schedule } = require('../../../../storage/dataBase/db');
 
 /**@param {Languages} language */
 function ListKeyboard(language) {

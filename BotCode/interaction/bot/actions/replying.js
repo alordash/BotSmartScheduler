@@ -6,8 +6,8 @@ const path = require('path');
  * @param {Boolean} notify 
  */
 function BotReply(ctx, text, option = {}, notify = false) {
-    option.disable_notification = !notify;
-    return ctx.replyWithHTML(text, option);
+   option.disable_notification = !notify;
+   return ctx.replyWithHTML(text, option);
 }
 
 /**@param {*} bot 
@@ -17,8 +17,8 @@ function BotReply(ctx, text, option = {}, notify = false) {
  * @param {Boolean} notify 
  */
 function BotSendMessage(bot, chatID, text, option = {}, notify = false) {
-    option.disable_notification = !notify;
-    return bot.telegram.sendMessage(chatID, text, option);
+   option.disable_notification = !notify;
+   return bot.telegram.sendMessage(chatID, text, option);
 }
 
 /**
@@ -31,7 +31,7 @@ function BotSendMessage(bot, chatID, text, option = {}, notify = false) {
  * @param {Boolean} notify 
  */
 async function BotSendAttachment(bot, chatID, caption, file_id, option = {}, notify = false) {
-    option.disable_notification = !notify;
+   option.disable_notification = !notify;
    let file_info = await bot.telegram.getFile(file_id);
    let file_path = path.parse(file_info.file_path);
    if (file_path.dir == 'photos') {
@@ -52,8 +52,33 @@ async function BotSendAttachment(bot, chatID, caption, file_id, option = {}, not
    }
 }
 
+/**
+ * @param {*} ctx 
+ * @param {Array.<String>} replies 
+ * @param {Array.<Object>} options 
+ * @returns {Array.<Object>}
+ */
+ async function BotReplyMultipleMessages(ctx, replies, options) {
+   let results = [];
+   if (typeof (options) == 'undefined') {
+      options = [];
+   }
+   
+   try {
+      for (const i in replies) {
+         let reply = replies[i];
+         let option = options[i] || {};
+         results.push(await BotReply(ctx, reply, option));
+      }
+   } catch (e) {
+      console.log(e);
+   }
+   return results;
+}
+
 module.exports = {
-    BotReply,
-    BotSendMessage,
-    BotSendAttachment
+   BotReply,
+   BotSendMessage,
+   BotSendAttachment,
+   BotReplyMultipleMessages
 };
