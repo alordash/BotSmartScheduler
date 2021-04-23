@@ -6,6 +6,7 @@ const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBas
 const { help, trelloAddListCommand, trelloHelp } = require('../static/commandsList');
 const { BotReply, BotSendAttachment } = require('./replying');
 const utils = require('./utilities');
+const ParseScheduleMessage = require('../remindersParsing');
 
 /**
  * @param {*} ctx 
