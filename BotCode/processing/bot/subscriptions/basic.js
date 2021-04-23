@@ -5,7 +5,7 @@ const kbs = require('../static/replies/keyboards');
 const botActions = require('../actions/botActions');
 const { Composer } = require('telegraf');
 const { dbManagement } = require('../../../storage/dataBase/db');
-const { speechToText } = require('../../../storage/stt/stt');
+const { speechToText } = require('../actions/stt/stt');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 const { BotReply } = require('../actions/replying');
 

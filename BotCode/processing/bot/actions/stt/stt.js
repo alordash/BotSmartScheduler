@@ -10,9 +10,9 @@ exports.speechToText = class {
    async recognize(body) {
       try {
          const response = await request.post({
-            url: this.url + this.FOLDER_ID,
+            url: `${this.url}${this.FOLDER_ID}`,
             headers: {
-               'Authorization': `Api-Key ` + this.API_KEY,
+               'Authorization': `Api-Key ${this.API_KEY}`,
             },
             body
          });
