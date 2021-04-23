@@ -340,13 +340,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
    }
 }
 
-/**
- * @param {*} ctx 
- * @param {dbManagement} db 
- * @param {Array.<Number>} tzPendingConfirmationUsers
- * @param {Array.<Array.<Schedule>>} pendingSchedules 
- * @param {Array.<Schedule>} invalidSchedules 
- */
+/*
 async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules) {
    let data = ctx.callbackQuery.data;
    console.log(`got callback_query, data: "${data}"`);
@@ -394,7 +388,6 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
             console.error(e);
          }
       case 'confirm':
-         /**@type {Array.<Schedule>} */
          let schedules = pendingSchedules[chatID];
          try {
             let schedulesCount = (await db.GetSchedules(chatID)).length;
@@ -456,6 +449,7 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
       console.error(e);
    }
 }
+*/
 
 /*
 async function HandleCommandMessage(bot, ctx, db, chatID, msgText) {
