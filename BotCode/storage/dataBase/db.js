@@ -217,6 +217,9 @@ class dbManagement {
       BEGIN
          s := 1;
          SELECT Max(id) FROM schedules WHERE chatid = '${chatID}' INTO s;
+         IF s IS NULL THEN
+            s:= 1;
+         END IF;
          FOR i IN REVERSE s..1 LOOP
             IF NOT EXISTS (SELECT FROM schedules WHERE chatid = '${chatID}' AND id = i) THEN
                UPDATE schedules SET id = id - 1 WHERE chatid = '${chatID}' AND id > i;
