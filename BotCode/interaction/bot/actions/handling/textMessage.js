@@ -7,6 +7,7 @@ const { help, trelloAddListCommand, trelloHelp } = require('../static/commandsLi
 const { BotReply, BotSendAttachment } = require('./replying');
 const utils = require('./utilities');
 const ParseScheduleMessage = require('../remindersParsing');
+const { ConfrimTimeZone } = require('../technical');
 
 /**
  * @param {*} ctx 

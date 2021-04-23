@@ -4,6 +4,7 @@ const Format = require('../../processing/formatting');
 const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const utils = require('./utilities');
+const { StartTimeZoneDetermination } = require('../technical');
 
 /**
  * @param {*} ctx 

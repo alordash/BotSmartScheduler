@@ -5,7 +5,7 @@ const { LoadReplies } = require('../static/replies/repliesLoader');
 const Format = require('../../formatting');
 const kbs = require('../static/replies/keyboards');
 const utils = require('../actions/utilities');
-const botActions = require('../actions/botActions');
+const technicalActions = require('../actions/technical');
 const { FormatChatId } = require('../actions/utilities');
 const { Composer } = require('telegraf');
 const { dbManagement, User } = require('../../../storage/dataBase/db');
@@ -78,7 +78,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
          bot.hears(replies.showListAction, async ctx => {
             let chatID = FormatChatId(ctx.chat.id);
             let tz = await db.GetUserTZ(ctx.from.id);
-            let answers = await botActions.LoadSchedulesList(chatID, tz, db, language);
+            let answers = await technicalActions.LoadSchedulesList(chatID, tz, db, language);
             for (const answer of answers) {
                try {
                   BotReply(ctx, answer, { disable_web_page_preview: true });
