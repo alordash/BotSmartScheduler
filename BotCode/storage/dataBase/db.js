@@ -313,6 +313,14 @@ class dbManagement {
       }
    }
 
+   /**@param {String} chatID
+    * @returns {Number}
+    */
+   async GetSchedulesCount(chatID) {
+      let res = await this.Query(`SELECT Count(*) FROM schedules WHERE ChatID = '${chatID}'`);
+      return +res.rows[0].count;
+   }
+
    /**@param {User} user */
    async AddUser(user) {
       return await this.Query(`INSERT INTO userids VALUES (${user.id}, ${user.tz}, '${user.lang}', true)`);
