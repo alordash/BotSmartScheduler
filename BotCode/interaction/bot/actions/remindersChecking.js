@@ -6,6 +6,7 @@ const { Decrypt } = require('../../../storage/encryption/encrypt');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { BotSendMessage, BotSendAttachment } = require('./replying');
 const utils = require('./utilities');
+const { Encrypt } = require('../../../storage/encryption/encrypt');
 
 /**
  * @param {Composer} bot 
@@ -35,7 +36,15 @@ async function CheckExpiredSchedules(bot, db) {
                      let dueTime = new Date(card.due).getTime();
                      if (now < dueTime) {
                         expired = false;
-                        db.SetScheduleTargetDate(schedule.chatid, schedule.id, dueTime);
+
+                        if (dueTime != schedule.target_date) {
+                           db.SetScheduleTargetDate(schedule.chatid, schedule.id, dueTime);
+                        }
+
+                        const cardText = Encrypt(card.desc, schedule.chatid);
+                        if (cardText != schedule.text) {
+                           db.SetScheduleText(schedule.chatid, schedule.id, cardText);
+                        }
                      }
                   } else if (typeof (card) == 'undefined') {
                      let board = await trelloManager.GetBoard(chat.trello_board_id);

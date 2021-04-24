@@ -174,6 +174,19 @@ class dbManagement {
       );
    }
 
+   /**@param {Number} chatID 
+    * @param {Number} id 
+    * @param {String} text 
+    */
+   async SetScheduleText(chatID, id, text) {
+      await this.paramQuery(
+         `UPDATE schedules 
+      SET text = $1
+      WHERE ChatID = $2
+      AND id = $3;`,
+         [text, chatID, id]);
+   }
+
    /**@param {String} chatID
     * @param {Number} id
     */
