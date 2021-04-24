@@ -134,8 +134,7 @@ class dbManagement {
     */
    async AddSchedules(chatID, newSchedules) {
       let queryString = `INSERT INTO schedules VALUES `;
-      let schedules = await this.GetSchedules(chatID);
-      let id = schedules.length + 1;
+      let id = await this.GetSchedulesCount(chatID) + 1;
       let values = [];
       let i = 0;
       for (let schedule of newSchedules) {
@@ -154,8 +153,7 @@ class dbManagement {
    /**@param {Schedule} schedule */
    async AddSchedule(schedule) {
       if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') schedule.username = 'none';
-      let schedules = await this.GetSchedules(schedule.chatid);
-      let id = schedules.length + 1;
+      let id = await this.GetSchedulesCount(schedule.chatid) + 1;
       console.log(`Target_date = ${schedule.target_date}`);
       const text = Encrypt(schedule.text, schedule.chatid);
       await this.paramQuery('INSERT INTO schedules VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
@@ -311,6 +309,14 @@ class dbManagement {
       } else {
          return [];
       }
+   }
+
+   /**@param {String} chatID
+    * @returns {Number}
+    */
+   async GetSchedulesCount(chatID) {
+      let res = await this.Query(`SELECT Count(*) FROM schedules WHERE ChatID = '${chatID}'`);
+      return +res.rows[0].count;
    }
 
    /**@param {User} user */

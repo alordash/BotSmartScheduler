@@ -176,7 +176,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
       }
       tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
       try {
-         const schedulesCount = (await db.GetSchedules(utils.FormatChatId(ctx.chat.id))).length;
+         const schedulesCount = await db.GetSchedulesCount(utils.FormatChatId(ctx.chat.id));
          BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>\r\n',
             schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
       } catch (e) {

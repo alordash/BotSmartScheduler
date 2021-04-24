@@ -37,7 +37,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
    let parsedDates = wordsParseDate(arrayParseString(msgText, 1), 1, prevalenceForParsing, msgText);
    let count = 1;
    let shouldWarn = false;
-   let schedulesCount = (await db.GetSchedules(chatID)).length;
+   let schedulesCount = await db.GetSchedulesCount(chatID);
    if (parsedDates.length == 0) {
       parsedDates[0] = new ParsedDate(new TimeList(), new TimeList(), new TimeList(), msgText, 50, []);
    }

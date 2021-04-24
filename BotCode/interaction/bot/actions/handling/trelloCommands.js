@@ -92,7 +92,7 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       if (chatID[0] == '-') {
          chatID = `_${chatID.substring(1)}`;
       }
-      const schedulesCount = (await db.GetSchedules(utils.FormatChatId(ctx.chat.id))).length;
+      const schedulesCount = await db.GetSchedulesCount(utils.FormatChatId(ctx.chat.id));
       let answers = Format.SplitBigMessage(reply);
       let options = [];
       options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard();

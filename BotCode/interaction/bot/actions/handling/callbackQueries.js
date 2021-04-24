@@ -35,7 +35,7 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
             username = ctx.from.username;
          }
          let file_id = utils.GetAttachmentId(ctx.callbackQuery.message);
-         let schedulesCount = await db.GetSchedules(chatID).length;
+         let schedulesCount = await db.GetSchedulesCount(chatID);
          let target_date = Date.now() + global.repeatScheduleTime;
          let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0, file_id);
          let tz = user.tz;
@@ -62,7 +62,7 @@ async function HandleCallbackQuery(ctx, db, tzPendingConfirmationUsers, pendingS
       case 'confirm':
          let schedules = pendingSchedules[chatID];
          try {
-            let schedulesCount = (await db.GetSchedules(chatID)).length;
+            let schedulesCount = await db.GetSchedulesCount(chatID);
             if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
                await db.AddSchedules(chatID, pendingSchedules[chatID]);
             }

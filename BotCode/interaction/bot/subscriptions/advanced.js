@@ -66,7 +66,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
                reply += '\r\n' + replies.tzCancelWarning;
             }
             try {
-               const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+               const schedulesCount = await db.GetSchedulesCount(FormatChatId(ctx.chat.id));
                BotReply(ctx, reply,
                   schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
             } catch (e) {
@@ -100,7 +100,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
          text += '\r\n' + replies.tzCancelWarning;
       }
       try {
-         const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+         const schedulesCount = await db.GetSchedulesCount(FormatChatId(ctx.chat.id));
          ctx.answerCbQuery();
          ctx.editMessageText(text, { parse_mode: 'HTML' });
          ctx.editMessageReplyMarkup(schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
@@ -126,7 +126,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
             await db.SetUserTz(userId, ts);
          }
          try {
-            const schedulesCount = (await db.GetSchedules(FormatChatId(ctx.chat.id))).length;
+            const schedulesCount = await db.GetSchedulesCount(FormatChatId(ctx.chat.id));
             utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
             BotReply(ctx, replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>',
                schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
