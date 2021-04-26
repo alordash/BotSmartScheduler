@@ -11,7 +11,7 @@ const { Composer } = require('telegraf');
 const { dbManagement, User } = require('../../../storage/dataBase/db');
 const Markup = require('telegraf/markup');
 const { BotReply } = require('../actions/replying');
-const HandleCallbackQuery = require('../actions/handling/callbackQueries');
+const HandleCallbackQuery = require('../actions/handling/callbackQueries/callbackQueries');
 
 /**
  * @param {Composer} bot 
@@ -30,7 +30,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
       repliesFiles = fs.readdirSync(path.join(__dirname, '..', 'static', 'replies'));
    }
    console.log('repliesFiles :>> ', repliesFiles);
-   for (filename of repliesFiles) {
+   for (const filename of repliesFiles) {
       if (path.extname(filename) != '.json') {
          continue;
       }
