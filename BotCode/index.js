@@ -1,7 +1,7 @@
 const telegraf = require('telegraf');
 const { dbManagement } = require('./storage/dataBase/db');
-const botConfig = require('./interaction/bot/main');
-const CheckExpiredSchedules = require('./interaction/bot/actions/remindersChecking');
+const botConfig = require('./interactions/bot/main');
+const CheckExpiredSchedules = require('./interactions/bot/actions/remindersChecking');
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
