@@ -324,12 +324,14 @@ class dbManagement {
    /**@param {Number} id 
     * @returns {User}
     */
-   async GetUserById(id) {
+   async GetUserById(id, real = false) {
       let res = await this.Query(`SELECT * FROM userids WHERE id = ${id}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return new User(res.rows[0]);
-      } else {
+      } else if (!real) {
          return new User();
+      } else {
+         return new User(null, null, null, null, null);
       }
    }
 
