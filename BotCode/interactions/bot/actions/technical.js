@@ -170,7 +170,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
       let ts = hours * 3600;
       ts += minutes * 60 * (negative ? -1 : 1);
       if (!await db.HasUserID(userId)) {
-         await db.AddUser(new User(userId, ts, db.defaultUserLanguage));
+         await db.AddUser(new User(userId, ts, global.defaultUserLanguage));
       } else {
          await db.SetUserTz(userId, ts);
       }

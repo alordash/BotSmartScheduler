@@ -121,7 +121,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
          let userId = ctx.from.id;
          let ts = rawOffset * 3600;
          if (!await db.HasUserID(userId)) {
-            await db.AddUser(new User(userId, ts, db.defaultUserLanguage));
+            await db.AddUser(new User(userId, ts, global.defaultUserLanguage));
          } else {
             await db.SetUserTz(userId, ts);
          }
