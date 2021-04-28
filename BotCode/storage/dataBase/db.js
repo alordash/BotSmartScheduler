@@ -329,7 +329,7 @@ class dbManagement {
    }
 
    /**@param {Number} id */
-   async RemoveUserTZ(id) {
+   async RemoveUser(id) {
       return await this.Query(`DELETE FROM userids WHERE id = ${id}`);
    }
 
@@ -501,7 +501,6 @@ class dbManagement {
    }
 
    async InitDB() {
-      await this.RemoveUserTZ(455780449);
       await this.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT, trello_card_id TEXT)');
       await this.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN, trello_token TEXT)');
       await this.Query('CREATE TABLE IF NOT EXISTS chats (id TEXT, trello_board_id TEXT, trello_list_id TEXT, trello_token TEXT)');
