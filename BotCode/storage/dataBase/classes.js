@@ -58,7 +58,7 @@ module.exports.User = class {
     * @param {String} trello_token 
     */
    constructor(id, tz = global.defaultUserTimezone, lang = global.defaultUserLanguage, subscribed = true, trello_token = null) {
-      if(typeof(id) == 'object') {
+      if(typeof(id) == 'object' && id != null) {
          tz = +id.tz;
          lang = id.lang;
          subscribed = id.subscribed;
