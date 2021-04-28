@@ -179,7 +179,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
          }, repeatScheduleTime, ctx, msg);
       } else {
 
-         options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard();
+         options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(language) : kbs.RemoveKeyboard();
          if (typeof (keyboard) != 'undefined') {
             keyboard.reply_markup.inline_keyboard[0][0].callback_data = 'cancel_rm';
             options[answers.length - 1] = keyboard;

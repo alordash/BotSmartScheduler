@@ -179,7 +179,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
       try {
          const schedulesCount = await db.GetSchedulesCount(utils.FormatChatId(ctx.chat.id));
          BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>\r\n',
-            schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
+            schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : kbs.RemoveKeyboard());
       } catch (e) {
          console.error(e);
       }

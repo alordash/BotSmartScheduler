@@ -95,7 +95,7 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       const schedulesCount = await db.GetSchedulesCount(utils.FormatChatId(ctx.chat.id));
       let answers = Format.SplitBigMessage(reply);
       let options = [];
-      options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard();
+      options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : kbs.RemoveKeyboard();
       BotReplyMultipleMessages(ctx, answers, options);
    } else {
       BotReply(ctx, replies.trelloWrongToken, kbs.CancelButton(ctx.from.language_code));
