@@ -55,7 +55,7 @@ module.exports.User = class {
     * @param {Number} tz 
     * @param {String} lang 
     */
-   constructor(id, tz, lang) {
+   constructor(id, tz = global.defaultUserTimezone, lang = global.defaultUserLanguage) {
       this.id = id;
       this.tz = tz;
       this.lang = lang;
