@@ -5,6 +5,7 @@ const kbs = require('../static/replies/keyboards');
 const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
 const { BotReply } = require('./replying');
 const utils = require('./utilities');
+const fixTimezone = require('../../processing/timeZone');
 
 /**
  * @param {String} chatID 
@@ -112,7 +113,7 @@ async function DeleteSchedules(ctx, db) {
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  */
 async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
-   let curTZ = await db.GetUserTZ(ctx.from.id);
+   let curTZ = fixTimezone(await db.GetUserTZ(ctx.from.id));
    let reply = '';
    const language = await db.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);

@@ -10,6 +10,7 @@ const { TrelloManager } = require('@alordash/node-js-trello');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../processing/nicknamesExtraction');
 const { BotReplyMultipleMessages } = require('./replying');
 const utils = require('./utilities');
+const fixTimezone = require('../../processing/timeZone');
 
 /**
  * @param {*} ctx 
@@ -28,7 +29,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
    let file_id = utils.GetAttachmentId(ctx.message);
    await db.SetUserLanguage(ctx.from.id, language);
    const replies = LoadReplies(language);
-   let tz = await db.GetUserTZ(ctx.from.id);
+   let tz = fixTimezone(await db.GetUserTZ(ctx.from.id));
    //#region PARSE SCHEDULE
    let username = 'none';
    if (inGroup) {
