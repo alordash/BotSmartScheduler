@@ -269,18 +269,6 @@ class dbManagement {
       );
    }
 
-   /**@param {Number} id
-    * @returns {Number}
-    */
-   async GetUserTZ(id) {
-      let res = await this.Query(`SELECT * FROM userids where id = ${id}`);
-      if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return parseInt(res.rows[0].tz);
-      } else {
-         return undefined;
-      }
-   }
-
    /**@param {Number} id 
     * @returns {String} 
     */
@@ -336,12 +324,14 @@ class dbManagement {
    /**@param {Number} id 
     * @returns {User}
     */
-   async GetUserById(id) {
+   async GetUserById(id, real = false) {
       let res = await this.Query(`SELECT * FROM userids WHERE id = ${id}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return res.rows[0];
-      } else {
+         return new User(res.rows[0]);
+      } else if (!real) {
          return new User();
+      } else {
+         return new User(null, null, null, null, null);
       }
    }
 

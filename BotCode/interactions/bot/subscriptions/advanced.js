@@ -12,7 +12,6 @@ const { dbManagement, User } = require('../../../storage/dataBase/db');
 const Markup = require('telegraf/markup');
 const { BotReply } = require('../actions/replying');
 const HandleCallbackQuery = require('../actions/handling/callbackQueries/callbackQueries');
-const fixTimezone = require('../../../storage/dataBase/dataProcessing');
 
 /**
  * @param {Composer} bot 
@@ -62,7 +61,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
          bot.hears(replies.cancel, async ctx => {
             utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
             let reply = replies.cancelReponse;
-            let user = await db.GetUserById(ctx.from.id);
+            let user = await db.GetUserById(ctx.from.id, true);
             if (typeof (user) == 'undefined' || user.tz == null) {
                reply += '\r\n' + replies.tzCancelWarning;
             }
@@ -78,7 +77,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
       if (typeof (replies.showListAction) != 'undefined') {
          bot.hears(replies.showListAction, async ctx => {
             let chatID = FormatChatId(ctx.chat.id);
-            let tz = fixTimezone(await db.GetUserTZ(ctx.from.id));
+            let tz = (await db.GetUserById(ctx.from.id)).tz;
             let answers = await technicalActions.LoadSchedulesList(chatID, tz, db, language);
             for (const answer of answers) {
                try {
@@ -96,7 +95,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
       const replies = LoadReplies(language);
       utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
       let text = replies.cancelReponse;
-      let user = await db.GetUserById(ctx.from.id);
+      let user = await db.GetUserById(ctx.from.id, true);
       if (typeof (user) == 'undefined' || user.tz == null) {
          text += '\r\n' + replies.tzCancelWarning;
       }
