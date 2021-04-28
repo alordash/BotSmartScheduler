@@ -5,6 +5,7 @@ const kbs = require('../static/replies/keyboards');
 const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
 const { BotReply } = require('./replying');
 const utils = require('./utilities');
+const fixTimezone = require('../../../storage/dataBase/dataProcessing');
 
 /**
  * @param {String} chatID 
@@ -112,7 +113,7 @@ async function DeleteSchedules(ctx, db) {
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  */
 async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
-   let curTZ = await db.GetUserTZ(ctx.from.id);
+   let curTZ = fixTimezone(await db.GetUserTZ(ctx.from.id));
    let reply = '';
    const language = await db.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
@@ -170,7 +171,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
       let ts = hours * 3600;
       ts += minutes * 60 * (negative ? -1 : 1);
       if (!await db.HasUserID(userId)) {
-         await db.AddUser(new User(userId, ts, db.defaultUserLanguage));
+         await db.AddUser(new User(userId, ts, global.defaultUserLanguage));
       } else {
          await db.SetUserTz(userId, ts);
       }
@@ -178,7 +179,7 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
       try {
          const schedulesCount = await db.GetSchedulesCount(utils.FormatChatId(ctx.chat.id));
          BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>\r\n',
-            schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : Markup.removeKeyboard());
+            schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : kbs.RemoveKeyboard());
       } catch (e) {
          console.error(e);
       }

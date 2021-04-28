@@ -12,6 +12,7 @@ const { dbManagement, User } = require('../../../storage/dataBase/db');
 const Markup = require('telegraf/markup');
 const { BotReply } = require('../actions/replying');
 const HandleCallbackQuery = require('../actions/handling/callbackQueries/callbackQueries');
+const fixTimezone = require('../../../storage/dataBase/dataProcessing');
 
 /**
  * @param {Composer} bot 
@@ -68,7 +69,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
             try {
                const schedulesCount = await db.GetSchedulesCount(FormatChatId(ctx.chat.id));
                BotReply(ctx, reply,
-                  schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
+                  schedulesCount > 0 ? kbs.ListKeyboard(language) : kbs.RemoveKeyboard());
             } catch (e) {
                console.error(e);
             }
@@ -77,7 +78,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
       if (typeof (replies.showListAction) != 'undefined') {
          bot.hears(replies.showListAction, async ctx => {
             let chatID = FormatChatId(ctx.chat.id);
-            let tz = await db.GetUserTZ(ctx.from.id);
+            let tz = fixTimezone(await db.GetUserTZ(ctx.from.id));
             let answers = await technicalActions.LoadSchedulesList(chatID, tz, db, language);
             for (const answer of answers) {
                try {
@@ -103,7 +104,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
          const schedulesCount = await db.GetSchedulesCount(FormatChatId(ctx.chat.id));
          ctx.answerCbQuery();
          ctx.editMessageText(text, { parse_mode: 'HTML' });
-         ctx.editMessageReplyMarkup(schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
+         ctx.editMessageReplyMarkup(schedulesCount > 0 ? kbs.ListKeyboard(language) : kbs.RemoveKeyboard());
       } catch (e) {
          console.error(e);
       }
@@ -121,7 +122,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
          let userId = ctx.from.id;
          let ts = rawOffset * 3600;
          if (!await db.HasUserID(userId)) {
-            await db.AddUser(new User(userId, ts, db.defaultUserLanguage));
+            await db.AddUser(new User(userId, ts, global.defaultUserLanguage));
          } else {
             await db.SetUserTz(userId, ts);
          }
@@ -129,7 +130,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
             const schedulesCount = await db.GetSchedulesCount(FormatChatId(ctx.chat.id));
             utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
             BotReply(ctx, replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>',
-               schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard());
+               schedulesCount > 0 ? kbs.ListKeyboard(language) : kbs.RemoveKeyboard());
          } catch (e) {
             console.error(e);
          }

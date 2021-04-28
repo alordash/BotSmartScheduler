@@ -5,7 +5,7 @@ const Languages = Object.freeze({
 });
 
 /**@param {Languages} language */
-function LoadReplies(language) {
+function LoadReplies(language = global.defaultUserLanguage) {
     return require(`${__dirname}/${language}.json`);
 }
 

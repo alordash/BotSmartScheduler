@@ -53,9 +53,7 @@ function CancelButton(language) {
     );
 }
 
-/**
- * @param {Languages} language
- */
+/**@param {Languages} language */
 function ConfirmSchedulesKeyboard(language) {
     const replies = LoadReplies(language);
     return Extra.markup((m) =>
@@ -66,11 +64,16 @@ function ConfirmSchedulesKeyboard(language) {
     );
 }
 
+function RemoveKeyboard() {
+    return { reply_markup: { remove_keyboard: true } };
+}
+
 module.exports = {
     ListKeyboard,
     TzDeterminationKeyboard,
     TzDeterminationOnStartInlineKeyboard,
     CancelKeyboard,
     CancelButton,
-    ConfirmSchedulesKeyboard
+    ConfirmSchedulesKeyboard,
+    RemoveKeyboard
 }

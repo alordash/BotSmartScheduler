@@ -10,6 +10,7 @@ const { TrelloManager } = require('@alordash/node-js-trello');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../processing/nicknamesExtraction');
 const { BotReplyMultipleMessages } = require('./replying');
 const utils = require('./utilities');
+const fixTimezone = require('../../../storage/dataBase/dataProcessing');
 
 /**
  * @param {*} ctx 
@@ -28,7 +29,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
    let file_id = utils.GetAttachmentId(ctx.message);
    await db.SetUserLanguage(ctx.from.id, language);
    const replies = LoadReplies(language);
-   let tz = await db.GetUserTZ(ctx.from.id);
+   let tz = fixTimezone(await db.GetUserTZ(ctx.from.id));
    //#region PARSE SCHEDULE
    let username = 'none';
    if (inGroup) {
@@ -178,7 +179,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
          }, repeatScheduleTime, ctx, msg);
       } else {
 
-         options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(language) : Markup.removeKeyboard();
+         options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(language) : kbs.RemoveKeyboard();
          if (typeof (keyboard) != 'undefined') {
             keyboard.reply_markup.inline_keyboard[0][0].callback_data = 'cancel_rm';
             options[answers.length - 1] = keyboard;

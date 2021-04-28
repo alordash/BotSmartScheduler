@@ -3,13 +3,6 @@ const { Encrypt, Decrypt } = require('../encryption/encrypt');
 const { Schedule, User, Chat } = require('./classes');
 
 class dbManagement {
-   /**@type {String} */
-   defaultUserLanguage = 'ru';
-   /**@type {Number} */
-   defaultUserTimezone = 3 * 3600;
-   /**@type {Number} */
-   maximumAddedTrelloBoards = 10;
-
    constructor(options) {
       this.pool = new Pool(options);
       this.sending = false;
@@ -284,7 +277,7 @@ class dbManagement {
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return parseInt(res.rows[0].tz);
       } else {
-         return this.defaultUserTimezone;
+         return undefined;
       }
    }
 
@@ -296,7 +289,7 @@ class dbManagement {
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows[0].lang;
       } else {
-         return this.defaultUserLanguage;
+         return undefined;
       }
    }
 
@@ -336,7 +329,7 @@ class dbManagement {
    }
 
    /**@param {Number} id */
-   async RemoveUserTZ(id) {
+   async RemoveUser(id) {
       return await this.Query(`DELETE FROM userids WHERE id = ${id}`);
    }
 
@@ -344,7 +337,12 @@ class dbManagement {
     * @returns {User}
     */
    async GetUserById(id) {
-      return (await this.Query(`SELECT * FROM userids WHERE id = ${id}`)).rows[0];
+      let res = await this.Query(`SELECT * FROM userids WHERE id = ${id}`);
+      if (typeof (res) != 'undefined' && res.rows.length > 0) {
+         return res.rows[0];
+      } else {
+         return new User();
+      }
    }
 
    /**@param {Number} id
