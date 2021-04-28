@@ -289,7 +289,7 @@ class dbManagement {
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows[0].lang;
       } else {
-         return global.defaultUserLanguage;
+         return undefined;
       }
    }
 
