@@ -269,18 +269,6 @@ class dbManagement {
       );
    }
 
-   /**@param {Number} id
-    * @returns {Number}
-    */
-   async GetUserTZ(id) {
-      let res = await this.Query(`SELECT * FROM userids where id = ${id}`);
-      if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return parseInt(res.rows[0].tz);
-      } else {
-         return undefined;
-      }
-   }
-
    /**@param {Number} id 
     * @returns {String} 
     */

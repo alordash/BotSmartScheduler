@@ -12,7 +12,6 @@ const { dbManagement, User } = require('../../../storage/dataBase/db');
 const Markup = require('telegraf/markup');
 const { BotReply } = require('../actions/replying');
 const HandleCallbackQuery = require('../actions/handling/callbackQueries/callbackQueries');
-const fixTimezone = require('../../../storage/dataBase/dataProcessing');
 
 /**
  * @param {Composer} bot 
@@ -78,7 +77,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
       if (typeof (replies.showListAction) != 'undefined') {
          bot.hears(replies.showListAction, async ctx => {
             let chatID = FormatChatId(ctx.chat.id);
-            let tz = fixTimezone(await db.GetUserTZ(ctx.from.id));
+            let tz = (await db.GetUserById(ctx.from.id)).tz;
             let answers = await technicalActions.LoadSchedulesList(chatID, tz, db, language);
             for (const answer of answers) {
                try {

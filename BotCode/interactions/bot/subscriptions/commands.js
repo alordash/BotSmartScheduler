@@ -5,7 +5,6 @@ const { dbManagement } = require('../../../storage/dataBase/db');
 const cms = require('../static/commandsList');
 const { BotReply } = require('../actions/replying');
 const { TrelloCommand, TrelloPinCommand, TrelloUnpinCommand } = require('../actions/handling/trelloCommands');
-const fixTimezone = require('../../../storage/dataBase/dataProcessing');
 
 /**
  * @param {Composer} bot 
@@ -15,7 +14,7 @@ const fixTimezone = require('../../../storage/dataBase/dataProcessing');
  */
 function InitCommandsSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers) {
    bot.command(cms.listSchedules, async ctx => {
-      let tz = fixTimezone(await db.GetUserTZ(ctx.from.id));
+      let tz = (await db.GetUserById(ctx.from.id)).tz;
       let language = await db.GetUserLanguage(ctx.from.id);
       let chatID = FormatChatId(ctx.chat.id);
       let answers = await technicalActions.LoadSchedulesList(chatID, tz, db, language);
