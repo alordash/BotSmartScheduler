@@ -1,6 +1,8 @@
 const { Pool } = require('pg');
 const { Encrypt, Decrypt } = require('../encryption/encrypt');
-const { Schedule, User, Chat } = require('./classes');
+const { Schedule } = require('./Schedules/ScheduleClass');
+const { User } = require('./Users/UserClass');
+const { Chat } = require('./Chats/ChatClass');
 
 class dbManagement {
    constructor(options) {
