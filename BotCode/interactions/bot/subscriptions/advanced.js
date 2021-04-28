@@ -61,7 +61,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
          bot.hears(replies.cancel, async ctx => {
             utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
             let reply = replies.cancelReponse;
-            let user = await db.GetUserById(ctx.from.id);
+            let user = await db.GetUserById(ctx.from.id, true);
             if (typeof (user) == 'undefined' || user.tz == null) {
                reply += '\r\n' + replies.tzCancelWarning;
             }
@@ -95,7 +95,7 @@ function InitAdvancedSubscriptions(bot, db, tzPendingConfirmationUsers, trelloPe
       const replies = LoadReplies(language);
       utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
       let text = replies.cancelReponse;
-      let user = await db.GetUserById(ctx.from.id);
+      let user = await db.GetUserById(ctx.from.id, true);
       if (typeof (user) == 'undefined' || user.tz == null) {
          text += '\r\n' + replies.tzCancelWarning;
       }

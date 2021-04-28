@@ -112,11 +112,11 @@ async function DeleteSchedules(ctx, db) {
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  */
 async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
-   let curTZ = (await db.GetUserById(ctx.from.id)).tz;
+   let curTZ = (await db.GetUserById(ctx.from.id, true)).tz;
    let reply = '';
    const language = await db.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
-   if (curTZ !== 0) {
+   if (curTZ != null) {
       reply = replies.tzDefined + '<b>' + Format.TzCurrent(curTZ) + '</b>\r\n';
    }
    let isPrivateChat = ctx.chat.id >= 0;
