@@ -5,7 +5,7 @@ const { dbManagement } = require('../../../storage/dataBase/db');
 const cms = require('../static/commandsList');
 const { BotReply } = require('../actions/replying');
 const { TrelloCommand, TrelloPinCommand, TrelloUnpinCommand } = require('../actions/handling/trelloCommands');
-const fixTimezone = require('../../processing/timeZone');
+const fixTimezone = require('../../../storage/dataBase/dataProcessing');
 
 /**
  * @param {Composer} bot 

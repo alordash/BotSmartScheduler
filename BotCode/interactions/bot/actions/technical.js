@@ -5,7 +5,7 @@ const kbs = require('../static/replies/keyboards');
 const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
 const { BotReply } = require('./replying');
 const utils = require('./utilities');
-const fixTimezone = require('../../processing/timeZone');
+const fixTimezone = require('../../../storage/dataBase/dataProcessing');
 
 /**
  * @param {String} chatID 

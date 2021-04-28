@@ -12,7 +12,7 @@ const { dbManagement, User } = require('../../../storage/dataBase/db');
 const Markup = require('telegraf/markup');
 const { BotReply } = require('../actions/replying');
 const HandleCallbackQuery = require('../actions/handling/callbackQueries/callbackQueries');
-const fixTimezone = require('../../processing/timeZone');
+const fixTimezone = require('../../../storage/dataBase/dataProcessing');
 
 /**
  * @param {Composer} bot 

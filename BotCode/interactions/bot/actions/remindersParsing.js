@@ -10,7 +10,7 @@ const { TrelloManager } = require('@alordash/node-js-trello');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../processing/nicknamesExtraction');
 const { BotReplyMultipleMessages } = require('./replying');
 const utils = require('./utilities');
-const fixTimezone = require('../../processing/timeZone');
+const fixTimezone = require('../../../storage/dataBase/dataProcessing');
 
 /**
  * @param {*} ctx 
