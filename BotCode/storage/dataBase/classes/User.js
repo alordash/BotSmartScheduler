@@ -1,4 +1,4 @@
-const { DataBaseConnection } = require('../Connection');
+const { DataBase } = require('../Connection');
 
 class User {
    /**@type {Number} */
@@ -36,14 +36,14 @@ class User {
 
    /**@param {User} user */
    static async AddUser(user) {
-      return await DataBaseConnection.instance.Query(`INSERT INTO userids VALUES (${user.id}, ${user.tz}, '${user.lang}', true)`);
+      return await DataBase.instance.Query(`INSERT INTO userids VALUES (${user.id}, ${user.tz}, '${user.lang}', true)`);
    }
 
    /**@param {Number} id
     * @param {Number} tz
     */
    static async SetUserTz(id, tz) {
-      return await DataBaseConnection.instance.Query(
+      return await DataBase.instance.Query(
          `UPDATE userids 
          SET tz = ${tz}
          WHERE id = ${id};`
@@ -54,7 +54,7 @@ class User {
     * @param {String} language 
     */
    static async SetUserLanguage(id, language) {
-      return await DataBaseConnection.instance.Query(
+      return await DataBase.instance.Query(
          `UPDATE userids
          SET lang = '${language}'
          WHERE id = ${id};`
@@ -65,7 +65,7 @@ class User {
     * @returns {String} 
     */
    static async GetUserLanguage(id) {
-      let res = await DataBaseConnection.instance.Query(`SELECT * FROM userids where id = ${id}`);
+      let res = await DataBase.instance.Query(`SELECT * FROM userids where id = ${id}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows[0].lang;
       } else {
@@ -77,7 +77,7 @@ class User {
     * @param {Boolean} subscribed 
     */
    static async SetUserSubscription(id, subscribed) {
-      return await DataBaseConnection.instance.Query(
+      return await DataBase.instance.Query(
          `UPDATE userids
          SET subscribed = ${subscribed}
          WHERE id = ${id};`
@@ -88,7 +88,7 @@ class User {
     * @returns {Boolean} 
     */
    static async IsUserSubscribed(id) {
-      let res = await DataBaseConnection.instance.Query(`SELECT * FROM userids where id = ${id}`);
+      let res = await DataBase.instance.Query(`SELECT * FROM userids where id = ${id}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows[0].subscribed;
       } else {
@@ -98,7 +98,7 @@ class User {
 
    /**@returns {Array.<User>} */
    static async GetAllUsers() {
-      let users = await DataBaseConnection.instance.Query(`SELECT * FROM userids`);
+      let users = await DataBase.instance.Query(`SELECT * FROM userids`);
       if (typeof (users) != 'undefined' && users.rows.length > 0) {
          console.log(`Picked users count: ${users.rows.length}`);
          return users.rows;
@@ -110,14 +110,14 @@ class User {
 
    /**@param {Number} id */
    static async RemoveUser(id) {
-      return await DataBaseConnection.instance.Query(`DELETE FROM userids WHERE id = ${id}`);
+      return await DataBase.instance.Query(`DELETE FROM userids WHERE id = ${id}`);
    }
 
    /**@param {Number} id 
     * @returns {User}
     */
    static async GetUserById(id, real = false) {
-      let res = await DataBaseConnection.instance.Query(`SELECT * FROM userids WHERE id = ${id}`);
+      let res = await DataBase.instance.Query(`SELECT * FROM userids WHERE id = ${id}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return new User(res.rows[0]);
       } else if (!real) {
@@ -131,7 +131,7 @@ class User {
     * @returns {Boolean}
     */
    static async HasUserID(id) {
-      let res = await DataBaseConnection.instance.Query(`SELECT * FROM userids WHERE id = ${id}`);
+      let res = await DataBase.instance.Query(`SELECT * FROM userids WHERE id = ${id}`);
       return typeof (res) != 'undefined' && res.rows.length > 0
    }
 
@@ -140,7 +140,7 @@ class User {
     * @param {String} trello_token 
     */
    static async SetUserTrelloToken(id, trello_token) {
-      return await DataBaseConnection.instance.paramQuery(
+      return await DataBase.instance.paramQuery(
          `UPDATE userids
          SET trello_token = $1
          WHERE id = ${id}`,
@@ -152,7 +152,7 @@ class User {
     * @param {Number} id 
     */
    static async ClearUserTrelloToken(id) {
-      return await DataBaseConnection.instance.Query(
+      return await DataBase.instance.Query(
          `UPDATE userids 
          SET trello_token = NULL
          WHERE id = ${id};`

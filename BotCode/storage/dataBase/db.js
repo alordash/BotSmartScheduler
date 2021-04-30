@@ -1,4 +1,4 @@
-const { DataBaseConnectionOptions, DataBaseConnection } = require('./Connection');
+const { DataBaseOptions, DataBase } = require('./Connection');
 const Chat = require('./classes/Chat');
 const Schedule = require('./classes/Schedule');
 const User = require('./classes/User');
@@ -6,8 +6,8 @@ const Migrations = require('./Migrations');
 
 class dbManagement {
    constructor(options) {
-      DataBaseConnection.Instantiate(options);
-      DataBaseConnection.instance.sending = false;
+      DataBase.Instantiate(options);
+      DataBase.instance.sending = false;
    }
 
    chats = Chat;
