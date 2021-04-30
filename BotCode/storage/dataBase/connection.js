@@ -67,7 +67,7 @@ class DataBaseConnection {
    }
 
    /**
-    * @param {DataBaseOptions} options 
+    * @param {DataBaseConnectionOptions} options 
     */
    static Instantiate(options) {
       this.instance = new DataBaseConnection(options);
