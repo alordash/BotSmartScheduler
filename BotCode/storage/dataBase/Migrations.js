@@ -1,6 +1,6 @@
 const { Connector } = require('./Connector');
-const User = require('./TablesClasses2/User');
-const Schedule = require('./TablesClasses2/Schedule');
+const User = require('./TablesClasses/User');
+const Schedule = require('./TablesClasses/Schedule');
 const { Encrypt, Decrypt } = require('../encryption/encrypt');
 
 class Migrations {
