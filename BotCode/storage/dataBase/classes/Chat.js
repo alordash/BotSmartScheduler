@@ -1,4 +1,4 @@
-const { dbManagement } = require('../db');
+const { DataBaseConnection } = require('../Connection');
 
 class Chat {
    /**@type {String} */
@@ -18,7 +18,6 @@ class Chat {
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} id 
     * @param {String} trello_board_id 
     */
@@ -27,28 +26,26 @@ class Chat {
       if (typeof (trello_board_id) != 'undefined') {
          query = `INSERT INTO chats VALUES ('${id}', '${trello_board_id}')`;
       }
-      return await this.Query(query);
+      return await DataBaseConnection.instance.Query(query);
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} id 
     * @returns {Chat} 
     */
    static async GetChatById(id) {
-      return (await this.Query(
+      return (await DataBaseConnection.instance.Query(
          `SELECT * FROM chats
       WHERE id = '${id}'`
       )).rows[0];
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} id 
     * @param {String} trello_board_id 
     */
    static async SetChatTrelloBoard(id, trello_board_id) {
-      return await this.paramQuery(
+      return await DataBaseConnection.instance.paramQuery(
          `UPDATE chats
       SET trello_board_id = $1
       WHERE id = '${id}'`,
@@ -57,12 +54,11 @@ class Chat {
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} id 
     * @param {String} trello_list_id 
     */
    static async SetChatTrelloList(id, trello_list_id, trello_token) {
-      return await this.Query(
+      return await DataBaseConnection.instance.Query(
          `UPDATE chats
       SET trello_list_id = '${trello_list_id}',
       trello_token = '${trello_token}'
@@ -71,11 +67,10 @@ class Chat {
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} id
     */
    static async ClearChatFromTrello(id) {
-      return await this.Query(
+      return await DataBaseConnection.instance.Query(
          `UPDATE chats
       SET trello_board_id = NULL,
       trello_list_id = NULL,

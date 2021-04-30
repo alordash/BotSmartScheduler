@@ -1,4 +1,4 @@
-const { dbManagement } = require('../db');
+const { DataBaseConnection } = require('../Connection');
 
 class Schedule {
    /**@type {String} */
@@ -39,14 +39,14 @@ class Schedule {
       this.max_date = max_date;
       this.file_id = file_id;
    }
+
    /**
-    * @this {dbManagement} 
     * @param {Array.<Schedule>} newSchedules
     * @param {String} chatID
     */
    static async AddSchedules(chatID, newSchedules) {
       let queryString = `INSERT INTO schedules VALUES `;
-      let id = await this.schedules.GetSchedulesCount.call(this, chatID) + 1;
+      let id = await this.GetSchedulesCount(chatID) + 1;
       let values = [];
       let i = 0;
       for (let schedule of newSchedules) {
@@ -59,11 +59,10 @@ class Schedule {
          id++;
       }
       queryString = queryString.substring(0, queryString.length - 2);
-      await this.paramQuery(queryString, values);
+      await DataBaseConnection.instance.paramQuery(queryString, values);
    }
 
    /**
-    * @this {dbManagement} 
     * @param {Schedule} schedule
     */
    static async AddSchedule(schedule) {
@@ -71,19 +70,18 @@ class Schedule {
       let id = await this.GetSchedulesCount(schedule.chatid) + 1;
       console.log(`Target_date = ${schedule.target_date}`);
       const text = Encrypt(schedule.text, schedule.chatid);
-      await this.paramQuery('INSERT INTO schedules VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      await DataBaseConnection.instance.paramQuery('INSERT INTO schedules VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
          [`${schedule.chatid}`, id, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`]);
       console.log(`Added "${schedule.text}" (encrypted: "${text}") to ${schedule.target_date} from chat "${schedule.chatid}"`);
    }
 
    /**
-    * @this {dbManagement} 
     * @param {Number} chatID 
     * @param {Number} id 
     * @param {Number} target_date 
     */
    static async SetScheduleTargetDate(chatID, id, target_date) {
-      await this.Query(
+      await DataBaseConnection.instance.Query(
          `UPDATE schedules 
       SET target_date = ${target_date}
       WHERE ChatID = '${chatID}'
@@ -92,13 +90,12 @@ class Schedule {
    }
 
    /**
-    * @this {dbManagement} 
     * @param {Number} chatID 
     * @param {Number} id 
     * @param {String} text 
     */
    static async SetScheduleText(chatID, id, text) {
-      await this.paramQuery(
+      await DataBaseConnection.instance.paramQuery(
          `UPDATE schedules 
       SET text = $1
       WHERE ChatID = $2
@@ -107,7 +104,6 @@ class Schedule {
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} chatID
     * @param {Number} id
     */
@@ -115,12 +111,11 @@ class Schedule {
       console.log(`Removing schedule \r\ChatID = "${chatID}"`);
       let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND id = ${id}`;
       console.log(`QUERY = "${query}"`);
-      let res = await this.Query(query);
+      let res = await DataBaseConnection.instance.Query(query);
       console.log(`res = ${JSON.stringify(res.rows)}`);
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} chatID
     * @param {String} s
     */
@@ -128,27 +123,25 @@ class Schedule {
       console.log(`Removing schedule s = "${s}"\r\nChatID = "${chatID}" typeof(ChatID) = ${typeof (chatID)}`);
       let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND (${s})`;
       console.log(`QUERY = "${query}"`);
-      let res = await this.Query(query);
+      let res = await DataBaseConnection.instance.Query(query);
       console.log(`res = ${JSON.stringify(res.rows)}`);
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} chatID 
     */
    static async ClearAllSchedules(chatID) {
       console.log(`Clearing all schedules in chat ${chatID}`);
-      await this.Query(`DELETE FROM schedules WHERE ChatID = '${chatID}'`);
+      await DataBaseConnection.instance.Query(`DELETE FROM schedules WHERE ChatID = '${chatID}'`);
       console.log(`Cleared all schedules`);
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} chatID
     */
    static async ReorderSchedules(chatID) {
       console.log(`Reordering schedules in chat: ${chatID}`);
-      let res = await this.Query(`DO
+      let res = await DataBaseConnection.instance.Query(`DO
       $do$
       DECLARE
          s int;
@@ -169,19 +162,17 @@ class Schedule {
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} chatID
     * @returns {Array.<Schedule>}
     */
    static async ListSchedules(chatID) {
-      if (!this.sending) {
+      if (!DataBaseConnection.instance.sending) {
          return await this.GetSchedules(chatID);
       }
       return [];
    }
 
    /**
-    * @this {dbManagement} 
     * @param {Number} tsNow
     * @returns {Array.<Schedule>}
     */
@@ -198,14 +189,13 @@ class Schedule {
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} chatID
     * @param {String} text
     * @returns {Schedule}
     */
    static async GetScheduleByText(chatID, text) {
       const encryptedText = Encrypt(text, chatID);
-      let res = await this.Query(`SELECT * FROM schedules WHERE text = '${encryptedText}' AND ChatID = '${chatID}'`);
+      let res = await DataBaseConnection.instance.Query(`SELECT * FROM schedules WHERE text = '${encryptedText}' AND ChatID = '${chatID}'`);
       console.log(`Picked schedule by text ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows[0];
@@ -215,13 +205,12 @@ class Schedule {
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} chatID
     * @param {Number} id
     * @returns {Schedule}
     */
    static async GetScheduleById(chatID, id) {
-      let res = await this.Query(`SELECT * FROM schedules WHERE id = '${id}' AND ChatID = '${chatID}'`);
+      let res = await DataBaseConnection.instance.Query(`SELECT * FROM schedules WHERE id = '${id}' AND ChatID = '${chatID}'`);
       console.log(`Picked schedule by id ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          res.rows[0].text = Decrypt(res.rows[0].text, res.rows[0].chatid);
@@ -232,11 +221,10 @@ class Schedule {
    }
 
    /**
-    * @this {dbManagement} 
     * @returns {Array.<Schedule>}
     */
    static async GetAllSchedules() {
-      let res = await this.Query(`SELECT * FROM schedules`);
+      let res = await DataBaseConnection.instance.Query(`SELECT * FROM schedules`);
       console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows;
@@ -246,12 +234,11 @@ class Schedule {
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} chatID
     * @returns {Array.<Schedule>}
     */
    static async GetSchedules(chatID) {
-      let res = await this.Query(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`);
+      let res = await DataBaseConnection.instance.Query(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`);
       let i = res.rows.length;
       while (i--) {
          let schedule = res.rows[i];
@@ -266,12 +253,11 @@ class Schedule {
    }
 
    /**
-    * @this {dbManagement} 
     * @param {String} chatID
     * @returns {Number}
     */
    static async GetSchedulesCount(chatID) {
-      let res = await this.Query(`SELECT Count(*) FROM schedules WHERE ChatID = '${chatID}'`);
+      let res = await DataBaseConnection.instance.Query(`SELECT Count(*) FROM schedules WHERE ChatID = '${chatID}'`);
       return +res.rows[0].count;
    }
 }
