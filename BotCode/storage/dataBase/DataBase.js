@@ -1,7 +1,7 @@
 const { ConnectorOptions, Connector } = require('./Connector');
-const Chat = require('./classes/Chat');
-const Schedule = require('./classes/Schedule');
-const User = require('./classes/User');
+const Chat = require('./TablesClasses/Chat');
+const Schedule = require('./TablesClasses/Schedule');
+const User = require('./TablesClasses/User');
 const Migrations = require('./Migrations');
 
 class DataBase {
