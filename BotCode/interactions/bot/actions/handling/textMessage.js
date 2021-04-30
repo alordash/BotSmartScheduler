@@ -14,8 +14,7 @@ const { TrelloAuthenticate, TrelloAddList } = require('./trelloCommands');
 async function HelpCommand(ctx) {
    let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
-   const schedulesCount = await DataBase.Schedules.GetSchedulesCount(utils.FormatChatId(ctx.chat.id));
-   let keyboard = schedulesCount > 0 ? kbs.ListKeyboard(language) : kbs.RemoveKeyboard();
+   let keyboard = await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id));
    keyboard['disable_web_page_preview'] = true;
    let reply;
    if (ctx.message.text.indexOf(trelloHelp) >= 0) {

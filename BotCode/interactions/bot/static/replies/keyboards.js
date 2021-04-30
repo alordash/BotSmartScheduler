@@ -1,6 +1,6 @@
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
-const { LoadReplies } = require('./repliesLoader');
+const { Languages, LoadReplies } = require('./repliesLoader');
 const { DataBase, Schedule } = require('../../../../storage/dataBase/DataBase');
 
 /**@param {Languages} language */
@@ -71,9 +71,12 @@ function RemoveKeyboard() {
 /**
  * @param {Languages} language 
  * @param {String} chatID 
+ * @param {Number} schedulesCount 
  */
-async function LogicalListKeyboard(language, chatID) {
-    const schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID);
+async function LogicalListKeyboard(language, chatID, schedulesCount = -1) {
+    if (schedulesCount == -1) {
+        schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID);
+    }
     return schedulesCount > 0 ? ListKeyboard(language) : RemoveKeyboard();
 }
 

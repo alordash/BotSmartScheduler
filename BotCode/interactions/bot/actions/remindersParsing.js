@@ -176,8 +176,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             }
          }, repeatScheduleTime, ctx, msg);
       } else {
-
-         options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(language) : kbs.RemoveKeyboard();
+         options[answers.length - 1] = await kbs.LogicalListKeyboard(language, chatID, schedulesCount);
          if (typeof (keyboard) != 'undefined') {
             keyboard.reply_markup.inline_keyboard[0][0].callback_data = 'cancel_rm';
             options[answers.length - 1] = keyboard;

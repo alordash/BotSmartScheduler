@@ -65,9 +65,7 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
                reply += '\r\n' + replies.tzCancelWarning;
             }
             try {
-               const schedulesCount = await DataBase.Schedules.GetSchedulesCount(FormatChatId(ctx.chat.id));
-               BotReply(ctx, reply,
-                  schedulesCount > 0 ? kbs.ListKeyboard(language) : kbs.RemoveKeyboard());
+               BotReply(ctx, reply, await kbs.LogicalListKeyboard(language, FormatChatId(ctx.chat.id)));
             } catch (e) {
                console.error(e);
             }
@@ -99,10 +97,9 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
          text += '\r\n' + replies.tzCancelWarning;
       }
       try {
-         const schedulesCount = await DataBase.Schedules.GetSchedulesCount(FormatChatId(ctx.chat.id));
          ctx.answerCbQuery();
          ctx.editMessageText(text, { parse_mode: 'HTML' });
-         ctx.editMessageReplyMarkup(schedulesCount > 0 ? kbs.ListKeyboard(language) : kbs.RemoveKeyboard());
+         ctx.editMessageReplyMarkup(await kbs.LogicalListKeyboard(language, FormatChatId(ctx.chat.id)));
       } catch (e) {
          console.error(e);
       }
@@ -125,10 +122,8 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
             await DataBase.Users.SetUserTz(userId, ts);
          }
          try {
-            const schedulesCount = await DataBase.Schedules.GetSchedulesCount(FormatChatId(ctx.chat.id));
             utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
-            BotReply(ctx, replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>',
-               schedulesCount > 0 ? kbs.ListKeyboard(language) : kbs.RemoveKeyboard());
+            BotReply(ctx, replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>', await kbs.LogicalListKeyboard(language, FormatChatId(ctx.chat.id)));
          } catch (e) {
             console.error(e);
          }
