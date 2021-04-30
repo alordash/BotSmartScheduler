@@ -3,7 +3,7 @@ const User = require('./classes/User');
 const Schedule = require('./classes/Schedule');
 
 class Migrations {
-   static async Initialize() {
+   static async InitializeTables() {
       await DataBase.instance.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT, trello_card_id TEXT)');
       await DataBase.instance.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN, trello_token TEXT)');
       await DataBase.instance.Query('CREATE TABLE IF NOT EXISTS chats (id TEXT, trello_board_id TEXT, trello_list_id TEXT, trello_token TEXT)');
