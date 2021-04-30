@@ -1,11 +1,10 @@
 const { ParsedDate } = require('@alordash/date-parser');
-const { Schedule, User } = require('../../storage/dataBase/db');
+const { DataBase, Schedule, User } = require('../../storage/dataBase/DataBase');
 const { isTimeType } = require('@alordash/date-parser/lib/date-cases/date-cases');
 const { TimeListIsEmpty } = require('./timeProcessing');
 const { Language, LoadReplies } = require('../bot/static/replies/repliesLoader');
 const { trelloAddListCommand } = require('../bot/static/commandsList');
 const { TrelloManager } = require('@alordash/node-js-trello');
-const { dbManagement } = require('../../storage/dataBase/db');
 
 /**@param {Date} date 
  * @param {Language} language 
@@ -57,15 +56,15 @@ function FormPeriodStringFormat(period_time, language) {
    return result.trim();
 }
 
-/**@param {Schedule} schedule
+/**
+ * @param {Schedule} schedule
  * @param {Number} tz 
  * @param {Language} language 
  * @param {Boolean} showDayOfWeek 
  * @param {Boolean} showId 
- * @param {dbManagement} db
  * @returns {String}
  */
-async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, showId, db) {
+async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, showId) {
    let period_time = schedule.period_time.div(1000);
    let target_date = new Date(schedule.target_date + tz * 1000);
    console.log(`FORMATTING target_date: ${schedule.target_date}, tz: ${tz}, will be: ${schedule.target_date + tz * 1000}`);
@@ -92,7 +91,7 @@ async function FormStringFormatSchedule(schedule, tz, language, showDayOfWeek, s
       if (chatID[0] == '_') {
          chatID = '-' + chatID.substring(1);
       }
-      let chat = await db.GetChatById(chatID);
+      let chat = await DataBase.Chats.GetChatById(chatID);
       if (typeof (chat) != 'undefined' && chat.trello_token != null) {
          let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
          let card = await trelloManager.GetCard(schedule.trello_card_id);

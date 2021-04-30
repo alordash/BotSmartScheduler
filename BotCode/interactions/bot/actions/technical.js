@@ -2,19 +2,18 @@ const Markup = require('telegraf/markup');
 const { Languages, LoadReplies } = require('../static/replies/repliesLoader');
 const Format = require('../../processing/formatting');
 const kbs = require('../static/replies/keyboards');
-const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
+const { DataBase, Schedule, User, Chat } = require('../../../storage/dataBase/DataBase');
 const { BotReply } = require('./replying');
 const utils = require('./utilities');
 
 /**
  * @param {String} chatID 
  * @param {Number} tsOffset 
- * @param {dbManagement} db 
  * @param {Languages} language
  * @returns {Array.<String>}
  */
-async function LoadSchedulesList(chatID, tsOffset, db, language) {
-   let schedules = await db.ListSchedules(chatID);
+async function LoadSchedulesList(chatID, tsOffset, language) {
+   let schedules = await DataBase.Schedules.ListSchedules(chatID);
    if (schedules.length > 0) {
       let answers = [];
       let answer = ``;
@@ -23,7 +22,7 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
          schedule.target_date = +schedule.target_date;
          schedule.period_time = +schedule.period_time;
          schedule.max_date = +schedule.max_date;
-         let newAnswer = `${await Format.FormStringFormatSchedule(schedule, tsOffset, language, false, true, db)}\r\n`;
+         let newAnswer = `${await Format.FormStringFormatSchedule(schedule, tsOffset, language, false, true)}\r\n`;
          if (answer.length + newAnswer.length > global.MaxMessageLength) {
             answers.push(answer);
             answer = newAnswer;
@@ -43,15 +42,14 @@ async function LoadSchedulesList(chatID, tsOffset, db, language) {
 
 /**
  * @param {*} ctx 
- * @param {dbManagement} db 
  * @param {Languages} 
  */
-async function DeleteSchedules(ctx, db) {
+async function DeleteSchedules(ctx) {
    let chatID = utils.FormatChatId(ctx.chat.id)
    let msgText = ctx.message.text;
    const replies = LoadReplies(ctx.from.language_code);
    if (msgText.indexOf('all') == "/del ".length) {
-      await db.ClearAllSchedules(chatID);
+      await DataBase.Schedules.ClearAllSchedules(chatID);
       BotReply(ctx, replies.cleared);
       return;
    }
@@ -86,8 +84,8 @@ async function DeleteSchedules(ctx, db) {
          query += `id = ${schedule} OR `;
       }
       query = query.substring(0, query.length - 4);
-      await db.RemoveSchedules(chatID, query);
-      await db.ReorderSchedules(chatID);
+      await DataBase.Schedules.RemoveSchedules(chatID, query);
+      await DataBase.Schedules.ReorderSchedules(chatID);
       let end = '';
       if (nums.length > 1) {
          end = 's';
@@ -108,13 +106,12 @@ async function DeleteSchedules(ctx, db) {
 
 /**
  * @param {*} ctx 
- * @param {dbManagement} db 
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  */
-async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
-   let curTZ = (await db.GetUserById(ctx.from.id, true)).tz;
+async function StartTimeZoneDetermination(ctx, tzPendingConfirmationUsers) {
+   let curTZ = (await DataBase.Users.GetUserById(ctx.from.id, true)).tz;
    let reply = '';
-   const language = await db.GetUserLanguage(ctx.from.id);
+   const language = await DataBase.Users.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
    if (curTZ != null) {
       reply = replies.tzDefined + '<b>' + Format.TzCurrent(curTZ) + '</b>\r\n';
@@ -140,10 +137,9 @@ async function StartTimeZoneDetermination(ctx, db, tzPendingConfirmationUsers) {
 
 /**
  * @param {*} ctx 
- * @param {dbManagement} db 
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  */
-async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
+async function ConfrimTimeZone(ctx, tzPendingConfirmationUsers) {
    let userId = ctx.from.id;
    let matches = ctx.message.text.match(/(\+|-|–|—|)([0-9])+:([0-9])+/g);
    let hours, minutes, negative, ts;
@@ -169,14 +165,14 @@ async function ConfrimTimeZone(ctx, db, tzPendingConfirmationUsers) {
    if (matches != null) {
       let ts = hours * 3600;
       ts += minutes * 60 * (negative ? -1 : 1);
-      if (!await db.HasUserID(userId)) {
-         await db.AddUser(new User(userId, ts, global.defaultUserLanguage));
+      if (!await DataBase.Users.HasUserID(userId)) {
+         await DataBase.Users.AddUser(new User(userId, ts, global.defaultUserLanguage));
       } else {
-         await db.SetUserTz(userId, ts);
+         await DataBase.Users.SetUserTz(userId, ts);
       }
       tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
       try {
-         const schedulesCount = await db.GetSchedulesCount(utils.FormatChatId(ctx.chat.id));
+         const schedulesCount = await DataBase.Schedules.GetSchedulesCount(utils.FormatChatId(ctx.chat.id));
          BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>\r\n',
             schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : kbs.RemoveKeyboard());
       } catch (e) {

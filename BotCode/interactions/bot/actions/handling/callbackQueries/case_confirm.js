@@ -1,14 +1,13 @@
 const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('../../../static/replies/repliesLoader');
 const Format = require('../../../../processing/formatting');
-const { dbManagement, Schedule, User, Chat } = require('../../../../../storage/dataBase/db');
+const { DataBase, Schedule, User, Chat } = require('../../../../../storage/dataBase/DataBase');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const utils = require('../../utilities');
 const { StartTimeZoneDetermination } = require('../../technical');
 
 /**
  * @param {*} ctx 
- * @param {dbManagement} db 
  * @param {Array.<Number>} tzPendingConfirmationUsers
  * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
@@ -17,18 +16,18 @@ const { StartTimeZoneDetermination } = require('../../technical');
  * @param {Languages} language 
  * @param {*} replies 
  */
- async function CaseConfirm(ctx, db, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, chatID, user, language, replies) {
+ async function CaseConfirm(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, chatID, user, language, replies) {
    let schedules = pendingSchedules[chatID];
    try {
-      let schedulesCount = await db.GetSchedulesCount(chatID);
+      let schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID);
       if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-         await db.AddSchedules(chatID, pendingSchedules[chatID]);
+         await DataBase.Schedules.AddSchedules(chatID, pendingSchedules[chatID]);
       }
       let text = '';
       let tz = user.tz;
       for (let schedule of schedules) {
          schedule.id = ++schedulesCount;
-         text += `${await Format.FormStringFormatSchedule(schedule, tz, language, true, true, db)}\r\n`;
+         text += `${await Format.FormStringFormatSchedule(schedule, tz, language, true, true)}\r\n`;
       }
       pendingSchedules[chatID] = [];
       if (text.length > 0) {

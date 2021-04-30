@@ -1,5 +1,5 @@
 const Extra = require('telegraf/extra');
-const { dbManagement, User } = require('../../storage/dataBase/db');
+const { User } = require('../../storage/dataBase/DataBase');
 const { LoadReplies } = require('./static/replies/repliesLoader');
 const Subscriptions = require('./subscriptions/all');
 
@@ -61,11 +61,9 @@ function sendNotification(bot, inviteLink, users) {
    }, delay, delay, inviteLink, users);
 }
 
-/**@param {*} bot 
- * @param {dbManagement} db 
- */
-exports.InitBot = async function (bot, db) {
-   const subscriptionsArgs = [bot, db, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules];
+/**@param {*} bot */
+exports.InitBot = async function (bot) {
+   const subscriptionsArgs = [bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules];
    await Subscriptions.initCommands(...subscriptionsArgs);
    await Subscriptions.initAdvanced(...subscriptionsArgs);
    await Subscriptions.initBasic(...subscriptionsArgs);

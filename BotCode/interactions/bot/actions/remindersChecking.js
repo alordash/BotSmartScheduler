@@ -1,22 +1,19 @@
 const { Composer } = require('telegraf');
 const Extra = require('telegraf/extra');
 const { LoadReplies } = require('../static/replies/repliesLoader');
-const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
+const { DataBase, Schedule, User, Chat } = require('../../../storage/dataBase/DataBase');
 const { Decrypt } = require('../../../storage/encryption/encrypt');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { BotSendMessage, BotSendAttachment } = require('./replying');
 const utils = require('./utilities');
 const { Encrypt } = require('../../../storage/encryption/encrypt');
 
-/**
- * @param {Composer} bot 
- * @param {dbManagement} db 
- */
-async function CheckExpiredSchedules(bot, db) {
+/** @param {Composer} bot */
+async function CheckExpiredSchedules(bot) {
    console.log('Checking expired schedules ' + new Date());
-   db.sending = true;
+   DataBase.sending = true;
    let now = Date.now();
-   let expiredSchedules = await db.CheckActiveSchedules(now);
+   let expiredSchedules = await DataBase.Schedules.CheckActiveSchedules(now);
    if (expiredSchedules.length > 0) {
       let ChatIDs = [];
       let deletingIDs = [];
@@ -28,7 +25,7 @@ async function CheckExpiredSchedules(bot, db) {
          let expired = true;
          if (schedule.trello_card_id != null) {
             try {
-               let chat = await db.GetChatById(chatID);
+               let chat = await DataBase.Chats.GetChatById(chatID);
                if (typeof (chat) != 'undefined' && chat.trello_token != null) {
                   let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
                   let card = await trelloManager.GetCard(schedule.trello_card_id);
@@ -38,18 +35,18 @@ async function CheckExpiredSchedules(bot, db) {
                         expired = false;
 
                         if (dueTime != schedule.target_date) {
-                           db.SetScheduleTargetDate(schedule.chatid, schedule.id, dueTime);
+                           DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.id, dueTime);
                         }
 
                         const cardText = Encrypt(card.desc, schedule.chatid);
                         if (cardText != schedule.text) {
-                           db.SetScheduleText(schedule.chatid, schedule.id, cardText);
+                           DataBase.Schedules.SetScheduleText(schedule.chatid, schedule.id, cardText);
                         }
                      }
                   } else if (typeof (card) == 'undefined') {
                      let board = await trelloManager.GetBoard(chat.trello_board_id);
                      if (typeof (board) == 'undefined') {
-                        db.ClearChatFromTrello(chat.id);
+                        DataBase.Chats.ClearChatFromTrello(chat.id);
                      }
                   }
                }
@@ -72,7 +69,7 @@ async function CheckExpiredSchedules(bot, db) {
          if (schedule.username != 'none') {
             mentionUser = ' @' + schedule.username;
          }
-         let language = await db.GetUserLanguage(+chatID);
+         let language = await DataBase.Users.GetUserLanguage(+chatID);
          const replies = LoadReplies(language);
          let isBlocked = false;
          try {
@@ -119,15 +116,15 @@ async function CheckExpiredSchedules(bot, db) {
             if (schedule.period_time >= 60 && schedule.max_date >= 60) {
                if (nowSeconds < schedule.max_date) {
                   shouldDelete = false;
-                  await db.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
+                  await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
                }
             } else if (schedule.period_time >= 60 && schedule.max_date < 60) {
                shouldDelete = false;
-               await db.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
+               await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
             } else if (schedule.period_time < 60 && schedule.max_date >= 60) {
                if (nowSeconds < schedule.max_date) {
                   shouldDelete = false;
-                  await db.SetScheduleTargetDate(schedule.chatid, schedule.id, schedule.max_date);
+                  await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.id, schedule.max_date);
                }
             }
          }
@@ -146,13 +143,13 @@ async function CheckExpiredSchedules(bot, db) {
          if (index !== false) {
             let s = deletingIDs[index].s;
             s = s.substring(0, s.length - 4);
-            await db.RemoveSchedules(chatID, s);
+            await DataBase.Schedules.RemoveSchedules(chatID, s);
          }
-         await db.ReorderSchedules(chatID);
+         await DataBase.Schedules.ReorderSchedules(chatID);
       }
       console.log('Removed and reordered.');
    }
-   db.sending = false;
+   DataBase.sending = false;
    console.log(`Done checking expired schedules`);
 }
 

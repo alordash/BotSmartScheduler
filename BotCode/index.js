@@ -1,5 +1,5 @@
 const telegraf = require('telegraf');
-const { dbManagement } = require('./storage/dataBase/db');
+const { DataBase } = require('./storage/dataBase/DataBase');
 const botConfig = require('./interactions/bot/main');
 const CheckExpiredSchedules = require('./interactions/bot/actions/remindersChecking');
 
@@ -27,7 +27,8 @@ const dbOptions = {
       rejectUnauthorized: false
    }
 }
-let db = new dbManagement(dbOptions);
+
+DataBase.EstablishConnection(dbOptions);
 
 (async function Initialization() {
    const now = new Date();
@@ -37,15 +38,15 @@ let db = new dbManagement(dbOptions);
       global[key] = value;
    }
 
-   await db.InitDB();
-   await botConfig.InitBot(SmartSchedulerBot, db);
+   await DataBase.InitializeDataBase();
+   await botConfig.InitBot(SmartSchedulerBot);
 
    let ts = Date.now();
    if (process.env.ENABLE_SCHEDULES_CHEKING == 'true') {
       setTimeout(async function () {
          console.log(`Timeout expired`);
-         setInterval(function () { CheckExpiredSchedules(SmartSchedulerBot, db) }, 60000);
-         await CheckExpiredSchedules(SmartSchedulerBot, db);
+         setInterval(function () { CheckExpiredSchedules(SmartSchedulerBot) }, 60000);
+         await CheckExpiredSchedules(SmartSchedulerBot);
       }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
    }
 
