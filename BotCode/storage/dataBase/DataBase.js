@@ -1,4 +1,8 @@
 const { Pool } = require('pg');
+const Chat = require('./classes/Chat');
+const Schedule = require('./classes/Schedule');
+const User = require('./classes/User');
+const Migrations = require('./Migrations');
 
 class DataBaseOptions {
    /**@type {String} */
@@ -20,6 +24,10 @@ class DataBase {
    pool;
    /**@type {Boolean} */
    sending;
+   
+   Chats = Chat;
+   Schedules = Schedule;
+   Users = User;
 
    constructor(options) {
       this.pool = new Pool(options);
@@ -55,6 +63,21 @@ class DataBase {
          return res;
       }
    }
+   
+   static async InitializeDataBase() {
+      await Migrations.InitializeTables();
+
+      await Migrations.ExpandSchedulesTable('trello_card_id');
+
+      await Migrations.ExpandUsersIdsTable('trello_token');
+
+      await Migrations.ExpandChatsTable('trello_token');
+
+      if (process.env.SMART_SCHEDULER_ENCRYPT_SCHEDULES === 'true') {
+         await Migrations.EncryptSchedules();
+      }
+      console.log(`Data base initialization finished`);
+   }
 
    /**@type {DataBase} */
    static instance;
@@ -76,5 +99,8 @@ class DataBase {
 
 module.exports = {
    DataBaseOptions,
-   DataBase
+   DataBase,
+   Chat,
+   Schedule,
+   User
 };
