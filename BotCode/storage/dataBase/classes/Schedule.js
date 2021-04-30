@@ -1,4 +1,4 @@
-const { DataBase } = require('../DataBase');
+const { Connector } = require('../Connector');
 
 class Schedule {
    /**@type {String} */
@@ -59,7 +59,7 @@ class Schedule {
          id++;
       }
       queryString = queryString.substring(0, queryString.length - 2);
-      await DataBase.instance.paramQuery(queryString, values);
+      await Connector.instance.paramQuery(queryString, values);
    }
 
    /**
@@ -70,7 +70,7 @@ class Schedule {
       let id = await this.GetSchedulesCount(schedule.chatid) + 1;
       console.log(`Target_date = ${schedule.target_date}`);
       const text = Encrypt(schedule.text, schedule.chatid);
-      await DataBase.instance.paramQuery('INSERT INTO schedules VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      await Connector.instance.paramQuery('INSERT INTO schedules VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
          [`${schedule.chatid}`, id, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`]);
       console.log(`Added "${schedule.text}" (encrypted: "${text}") to ${schedule.target_date} from chat "${schedule.chatid}"`);
    }
@@ -81,7 +81,7 @@ class Schedule {
     * @param {Number} target_date 
     */
    static async SetScheduleTargetDate(chatID, id, target_date) {
-      await DataBase.instance.Query(
+      await Connector.instance.Query(
          `UPDATE schedules 
       SET target_date = ${target_date}
       WHERE ChatID = '${chatID}'
@@ -95,7 +95,7 @@ class Schedule {
     * @param {String} text 
     */
    static async SetScheduleText(chatID, id, text) {
-      await DataBase.instance.paramQuery(
+      await Connector.instance.paramQuery(
          `UPDATE schedules 
       SET text = $1
       WHERE ChatID = $2
@@ -111,7 +111,7 @@ class Schedule {
       console.log(`Removing schedule \r\ChatID = "${chatID}"`);
       let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND id = ${id}`;
       console.log(`QUERY = "${query}"`);
-      let res = await DataBase.instance.Query(query);
+      let res = await Connector.instance.Query(query);
       console.log(`res = ${JSON.stringify(res.rows)}`);
    }
 
@@ -123,7 +123,7 @@ class Schedule {
       console.log(`Removing schedule s = "${s}"\r\nChatID = "${chatID}" typeof(ChatID) = ${typeof (chatID)}`);
       let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND (${s})`;
       console.log(`QUERY = "${query}"`);
-      let res = await DataBase.instance.Query(query);
+      let res = await Connector.instance.Query(query);
       console.log(`res = ${JSON.stringify(res.rows)}`);
    }
 
@@ -132,7 +132,7 @@ class Schedule {
     */
    static async ClearAllSchedules(chatID) {
       console.log(`Clearing all schedules in chat ${chatID}`);
-      await DataBase.instance.Query(`DELETE FROM schedules WHERE ChatID = '${chatID}'`);
+      await Connector.instance.Query(`DELETE FROM schedules WHERE ChatID = '${chatID}'`);
       console.log(`Cleared all schedules`);
    }
 
@@ -141,7 +141,7 @@ class Schedule {
     */
    static async ReorderSchedules(chatID) {
       console.log(`Reordering schedules in chat: ${chatID}`);
-      let res = await DataBase.instance.Query(`DO
+      let res = await Connector.instance.Query(`DO
       $do$
       DECLARE
          s int;
@@ -166,7 +166,7 @@ class Schedule {
     * @returns {Array.<Schedule>}
     */
    static async ListSchedules(chatID) {
-      if (!DataBase.instance.sending) {
+      if (!Connector.instance.sending) {
          return await this.GetSchedules(chatID);
       }
       return [];
@@ -195,7 +195,7 @@ class Schedule {
     */
    static async GetScheduleByText(chatID, text) {
       const encryptedText = Encrypt(text, chatID);
-      let res = await DataBase.instance.Query(`SELECT * FROM schedules WHERE text = '${encryptedText}' AND ChatID = '${chatID}'`);
+      let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE text = '${encryptedText}' AND ChatID = '${chatID}'`);
       console.log(`Picked schedule by text ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows[0];
@@ -210,7 +210,7 @@ class Schedule {
     * @returns {Schedule}
     */
    static async GetScheduleById(chatID, id) {
-      let res = await DataBase.instance.Query(`SELECT * FROM schedules WHERE id = '${id}' AND ChatID = '${chatID}'`);
+      let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE id = '${id}' AND ChatID = '${chatID}'`);
       console.log(`Picked schedule by id ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          res.rows[0].text = Decrypt(res.rows[0].text, res.rows[0].chatid);
@@ -224,7 +224,7 @@ class Schedule {
     * @returns {Array.<Schedule>}
     */
    static async GetAllSchedules() {
-      let res = await DataBase.instance.Query(`SELECT * FROM schedules`);
+      let res = await Connector.instance.Query(`SELECT * FROM schedules`);
       console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows;
@@ -238,7 +238,7 @@ class Schedule {
     * @returns {Array.<Schedule>}
     */
    static async GetSchedules(chatID) {
-      let res = await DataBase.instance.Query(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`);
+      let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`);
       let i = res.rows.length;
       while (i--) {
          let schedule = res.rows[i];
@@ -257,7 +257,7 @@ class Schedule {
     * @returns {Number}
     */
    static async GetSchedulesCount(chatID) {
-      let res = await DataBase.instance.Query(`SELECT Count(*) FROM schedules WHERE ChatID = '${chatID}'`);
+      let res = await Connector.instance.Query(`SELECT Count(*) FROM schedules WHERE ChatID = '${chatID}'`);
       return +res.rows[0].count;
    }
 }
