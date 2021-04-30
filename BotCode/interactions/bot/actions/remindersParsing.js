@@ -2,7 +2,7 @@ const Markup = require('telegraf/markup');
 const { Languages, LoadReplies } = require('../static/replies/repliesLoader');
 const Format = require('../../processing/formatting');
 const kbs = require('../static/replies/keyboards');
-const { dbManagement, Schedule, User, Chat } = require('../../../storage/dataBase/db');
+const { DataBase, Schedule, User, Chat } = require('../../../storage/dataBase/DataBase');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList, ParsedDate } = require('@alordash/date-parser');
 const { ProcessParsedDate } = require('../../processing/timeProcessing');
@@ -13,7 +13,6 @@ const utils = require('./utilities');
 
 /**
  * @param {*} ctx 
- * @param {dbManagement} db 
  * @param {String} chatID 
  * @param {Boolean} inGroup 
  * @param {String} msgText 
@@ -23,12 +22,12 @@ const utils = require('./utilities');
  * @param {Array.<Schedule>} invalidSchedules 
  * @param {Number} prevalenceForParsing 
  */
-async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules, prevalenceForParsing) {
+async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules, prevalenceForParsing) {
    let reply = '';
    let file_id = utils.GetAttachmentId(ctx.message);
-   await db.SetUserLanguage(ctx.from.id, language);
+   await DataBase.Users.SetUserLanguage(ctx.from.id, language);
    const replies = LoadReplies(language);
-   let tz = (await db.GetUserById(ctx.from.id)).tz;
+   let tz = (await DataBase.Users.GetUserById(ctx.from.id)).tz;
    //#region PARSE SCHEDULE
    let username = 'none';
    if (inGroup) {
@@ -37,12 +36,12 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
    let parsedDates = wordsParseDate(arrayParseString(msgText, 1), 1, prevalenceForParsing, msgText);
    let count = 1;
    let shouldWarn = false;
-   let schedulesCount = await db.GetSchedulesCount(chatID);
+   let schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID);
    if (parsedDates.length == 0) {
       parsedDates[0] = new ParsedDate(new TimeList(), new TimeList(), new TimeList(), msgText, 50, []);
    }
    let parsedDateIndex = 0;
-   let chat = await db.GetChatById(`${ctx.chat.id}`);
+   let chat = await DataBase.Chats.GetChatById(`${ctx.chat.id}`);
    let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
    let keyboard;
    for (let parsedDate of parsedDates) {
@@ -55,7 +54,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
          (dateParams.target_date != 0 ||
             dateParams.period_time != 0 ||
             dateParams.max_date != 0);
-      let schedules = await db.GetSchedules(chatID);
+      let schedules = await DataBase.Schedules.GetSchedules(chatID);
       let found = false;
       let i = 0;
       for (; !found && i < schedules.length; i++) {
@@ -133,7 +132,7 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
                invalidSchedules[chatID] = undefined;
                pendingSchedules[chatID].push(newSchedule);
                count++;
-               reply += await Format.FormStringFormatSchedule(newSchedule, tz, language, true, !inGroup, db) + `\r\n`;
+               reply += await Format.FormStringFormatSchedule(newSchedule, tz, language, true, !inGroup) + `\r\n`;
             }
          } else {
             reply += replies.shouldRemove + '\r\n' + replies.maximumSchedulesCount + ` <b>${global.MaximumCountOfSchedules}</b>.`;
@@ -143,13 +142,13 @@ async function ParseScheduleMessage(ctx, db, chatID, inGroup, msgText, language,
          reply += replies.errorScheduling + '\r\n';
       }
       if (ctx.message.id >= global.MessagesUntilTzWarning
-         && !inGroup && !(await db.HasUserID(ctx.from.id))) {
+         && !inGroup && !(await DataBase.Users.HasUserID(ctx.from.id))) {
          shouldWarn = true;
       }
       parsedDateIndex++;
    }
    if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-      await db.AddSchedules(chatID, pendingSchedules[chatID]);
+      await DataBase.Schedules.AddSchedules(chatID, pendingSchedules[chatID]);
       pendingSchedules[chatID] = [];
    }
    //#endregion

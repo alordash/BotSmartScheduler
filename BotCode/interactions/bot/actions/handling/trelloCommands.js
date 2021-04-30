@@ -3,7 +3,7 @@ const { Languages, LoadReplies } = require('../../static/replies/repliesLoader')
 const rp = require('../../static/replies/repliesLoader');
 const Format = require('../../../processing/formatting');
 const kbs = require('../../static/replies/keyboards');
-const { dbManagement, Schedule, User, Chat } = require('../../../../storage/dataBase/db');
+const { DataBase, Schedule, User, Chat } = require('../../../../storage/dataBase/DataBase');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { trelloAddListCommand, trelloClear } = require('../../static/commandsList');
 const { BotReply, BotReplyMultipleMessages } = require('../replying');
@@ -12,13 +12,12 @@ const utils = require('../utilities');
 /**
  * @param {*} ctx 
  * @param {User} user 
- * @param {dbManagement} db 
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
  */
-async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
+async function TrelloCommand(user, ctx, trelloPendingConfirmationUsers) {
    const replies = LoadReplies(user.lang);
    if (ctx.message.text.indexOf(trelloClear) >= 0 && ctx.chat.id >= 0) {
-      db.ClearUserTrelloToken(ctx.from.id);
+      DataBase.Users.ClearUserTrelloToken(ctx.from.id);
       BotReply(ctx, replies.trelloRemovedToken);
    } else if (user.trello_token == null && ctx.chat.id >= 0) {
       trelloPendingConfirmationUsers.push(ctx.from.id);
@@ -33,7 +32,7 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
       let boardsList = [];
       if (typeof (owner) != 'undefined') {
          boardsList = await trelloManager.GetUserBoards(owner.id);
-         let chat = await db.GetChatById(ctx.chat.id);
+         let chat = await DataBase.Chats.GetChatById(ctx.chat.id);
          if (typeof (chat) != 'undefined'
             && chat.trello_board_id != null
             && chat.trello_list_id != null
@@ -71,15 +70,14 @@ async function TrelloCommand(user, ctx, db, trelloPendingConfirmationUsers) {
 
 /**
  * @param {*} ctx 
- * @param {dbManagement} db 
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
  */
-async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
+async function TrelloAuthenticate(ctx, trelloPendingConfirmationUsers) {
    let token = ctx.message.text;
    const replies = rp.LoadReplies(ctx.from.language_code);
    let match = token.match(/^([a-zA-Z0-9]){64}$/);
    if (match != null) {
-      db.SetUserTrelloToken(ctx.from.id, token);
+      DataBase.Users.SetUserTrelloToken(ctx.from.id, token);
       trelloPendingConfirmationUsers.splice(trelloPendingConfirmationUsers.indexOf(ctx.from.id), 1);
 
       let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, token);
@@ -92,7 +90,7 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
       if (chatID[0] == '-') {
          chatID = `_${chatID.substring(1)}`;
       }
-      const schedulesCount = await db.GetSchedulesCount(utils.FormatChatId(ctx.chat.id));
+      const schedulesCount = await DataBase.Schedules.GetSchedulesCount(utils.FormatChatId(ctx.chat.id));
       let answers = Format.SplitBigMessage(reply);
       let options = [];
       options[answers.length - 1] = schedulesCount > 0 ? kbs.ListKeyboard(ctx.from.language_code) : kbs.RemoveKeyboard();
@@ -104,24 +102,28 @@ async function TrelloAuthenticate(ctx, db, trelloPendingConfirmationUsers) {
 
 /**
  * @param {*} ctx 
- * @param {dbManagement} db 
  * @param {User} user
  */
-async function TrelloPinCommand(ctx, db, user) {
+async function TrelloPinCommand(ctx, user) {
    const replies = rp.LoadReplies(user.lang);
    let text = ctx.message.text;
-   let id = text.match(/[a-zA-Z0-9]{24}/)[0];
+   let match = text.match(/[a-zA-Z0-9]{24}/);
+   if(match == null) {
+      BotReply(ctx, replies.invalidUseOfCommand);
+      return;
+   }
+   let id = match[0];
 
-   let chat = await db.GetChatById(`${ctx.chat.id}`);
+   let chat = await DataBase.Chats.GetChatById(`${ctx.chat.id}`);
    let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, user.trello_token);
    let board = await trelloManager.GetBoard(id);
 
    if (typeof (board) != 'undefined') {
       let chatId = `${ctx.chat.id}`;
       if (typeof (chat) == 'undefined') {
-         await db.AddChat(chatId, id);
+         await DataBase.Chats.AddChat(chatId, id);
       } else {
-         await db.SetChatTrelloBoard(chatId, id);
+         await DataBase.Chats.SetChatTrelloBoard(chatId, id);
       }
       let replies = Format.SplitBigMessage(Format.FormBoardListsList(board, user.lang));
       await BotReplyMultipleMessages(ctx, replies);
@@ -130,18 +132,15 @@ async function TrelloPinCommand(ctx, db, user) {
    }
 }
 
-/**
- * @param {*} ctx 
- * @param {dbManagement} db 
- */
-async function TrelloAddList(ctx, db) {
+/** @param {*} ctx */
+async function TrelloAddList(ctx) {
    let text = ctx.message.text;
    let i = parseInt(text.substring(trelloAddListCommand.length)) - 1;
 
    let chatId = `${ctx.chat.id}`;
-   let user = await db.GetUserById(ctx.from.id);
+   let user = await DataBase.Users.GetUserById(ctx.from.id);
    const replies = rp.LoadReplies(user.lang);
-   let chat = await db.GetChatById(chatId);
+   let chat = await DataBase.Chats.GetChatById(chatId);
    if (chat.trello_board_id == null) {
       BotReply(ctx, replies.trelloNoBoardBinded);
       return;
@@ -149,18 +148,17 @@ async function TrelloAddList(ctx, db) {
    let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, user.trello_token);
    let board = await trelloManager.GetBoard(chat.trello_board_id);
    let target_list = board.lists[i];
-   await db.SetChatTrelloList(chatId, target_list.id, user.trello_token);
+   await DataBase.Chats.SetChatTrelloList(chatId, target_list.id, user.trello_token);
    BotReply(ctx, Format.FormListBinded(board, target_list, user.lang));
 }
 
 /**
  * @param {*} ctx 
- * @param {dbManagement} db 
  * @param {User} user 
  */
-async function TrelloUnpinCommand(ctx, db, user) {
-   let chat = await db.GetChatById(ctx.chat.id);
-   db.ClearChatFromTrello(ctx.chat.id);
+async function TrelloUnpinCommand(ctx, user) {
+   let chat = await DataBase.Chats.GetChatById(ctx.chat.id);
+   DataBase.Chats.ClearChatFromTrello(ctx.chat.id);
    if (chat.trello_token != null) {
       let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
       let board = await trelloManager.GetBoard(chat.trello_board_id);
