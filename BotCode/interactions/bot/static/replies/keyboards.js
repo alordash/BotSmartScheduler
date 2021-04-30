@@ -1,7 +1,7 @@
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
 const { LoadReplies } = require('./repliesLoader');
-const { Schedule } = require('../../../../storage/dataBase/DataBase');
+const { DataBase, Schedule } = require('../../../../storage/dataBase/DataBase');
 
 /**@param {Languages} language */
 function ListKeyboard(language) {
@@ -68,6 +68,15 @@ function RemoveKeyboard() {
     return { reply_markup: { remove_keyboard: true } };
 }
 
+/**
+ * @param {Languages} language 
+ * @param {String} chatID 
+ */
+async function LogicalListKeyboard(language, chatID) {
+    const schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID);
+    return schedulesCount > 0 ? ListKeyboard(language) : RemoveKeyboard();
+}
+
 module.exports = {
     ListKeyboard,
     TzDeterminationKeyboard,
@@ -75,5 +84,6 @@ module.exports = {
     CancelKeyboard,
     CancelButton,
     ConfirmSchedulesKeyboard,
-    RemoveKeyboard
+    RemoveKeyboard,
+    LogicalListKeyboard
 }
