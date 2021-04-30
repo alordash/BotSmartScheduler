@@ -89,6 +89,21 @@ class DataBase {
       return this.instance;
    }
 
+   static get sending() {
+      if (typeof (this.instance) == 'undefined') {
+         throw "Data base connection wasn't initialized before call";
+      }
+      return this.instance.sending;
+   }
+   
+   /**@param {Boolean} state */
+   static set sending(state) {
+      if (typeof (this.instance) == 'undefined') {
+         throw "Data base connection wasn't initialized before call";
+      }
+      this.instance.sending = state;
+   }
+
    /**
     * @param {DataBaseOptions} options 
     */
