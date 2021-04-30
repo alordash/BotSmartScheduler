@@ -1,4 +1,4 @@
-const { DataBase } = require('./Connection');
+const { DataBase } = require('./DataBase');
 const User = require('./classes/User');
 const Schedule = require('./classes/Schedule');
 

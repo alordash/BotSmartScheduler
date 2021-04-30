@@ -1,4 +1,4 @@
-const { DataBase } = require('../Connection');
+const { DataBase } = require('../DataBase');
 
 class Chat {
    /**@type {String} */
