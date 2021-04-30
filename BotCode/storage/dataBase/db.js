@@ -1,8 +1,8 @@
 const { Pool } = require('pg');
 const { Encrypt, Decrypt } = require('../encryption/encrypt');
-const { Schedule } = require('./Schedules/ScheduleClass');
-const { User } = require('./Users/UserClass');
-const { Chat } = require('./Chats/ChatClass');
+const Chat = require('./classes/Chat');
+const Schedule = require('./classes/Schedule');
+const User = require('./classes/User');
 
 class dbManagement {
    constructor(options) {
@@ -10,6 +10,10 @@ class dbManagement {
       this.sending = false;
       this.waitingForServiceMsgs = [];
    }
+
+   chats = Chat;
+   schedules = Schedule;
+   users = User;
 
    async Query(query) {
       const client = await this.pool.connect();
@@ -39,209 +43,6 @@ class dbManagement {
          client.release();
          return res;
       }
-   }
-
-   /**@param {Array.<Schedule>} newSchedules
-    * @param {String} chatID
-    */
-   async AddSchedules(chatID, newSchedules) {
-      let queryString = `INSERT INTO schedules VALUES `;
-      let id = await this.GetSchedulesCount(chatID) + 1;
-      let values = [];
-      let i = 0;
-      for (let schedule of newSchedules) {
-         if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') {
-            schedule.username = 'none';
-         }
-         const text = Encrypt(schedule.text, schedule.chatid);
-         queryString = `${queryString}($${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}), `;
-         values.push(`${schedule.chatid}`, id, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`);
-         id++;
-      }
-      queryString = queryString.substring(0, queryString.length - 2);
-      await this.paramQuery(queryString, values);
-   }
-
-   /**@param {Schedule} schedule */
-   async AddSchedule(schedule) {
-      if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') schedule.username = 'none';
-      let id = await this.GetSchedulesCount(schedule.chatid) + 1;
-      console.log(`Target_date = ${schedule.target_date}`);
-      const text = Encrypt(schedule.text, schedule.chatid);
-      await this.paramQuery('INSERT INTO schedules VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-         [`${schedule.chatid}`, id, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`]);
-      console.log(`Added "${schedule.text}" (encrypted: "${text}") to ${schedule.target_date} from chat "${schedule.chatid}"`);
-   }
-
-   /**@param {Number} chatID 
-    * @param {Number} id 
-    * @param {Number} target_date 
-    */
-   async SetScheduleTargetDate(chatID, id, target_date) {
-      await this.Query(
-         `UPDATE schedules 
-      SET target_date = ${target_date}
-      WHERE ChatID = '${chatID}'
-      AND id = ${id};`
-      );
-   }
-
-   /**@param {Number} chatID 
-    * @param {Number} id 
-    * @param {String} text 
-    */
-   async SetScheduleText(chatID, id, text) {
-      await this.paramQuery(
-         `UPDATE schedules 
-      SET text = $1
-      WHERE ChatID = $2
-      AND id = $3;`,
-         [text, chatID, id]);
-   }
-
-   /**@param {String} chatID
-    * @param {Number} id
-    */
-   async RemoveScheduleById(chatID, id) {
-      console.log(`Removing schedule \r\ChatID = "${chatID}"`);
-      let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND id = ${id}`;
-      console.log(`QUERY = "${query}"`);
-      let res = await this.Query(query);
-      console.log(`res = ${JSON.stringify(res.rows)}`);
-   }
-
-   /**@param {String} chatID
-    * @param {String} s
-    */
-   async RemoveSchedules(chatID, s) {
-      console.log(`Removing schedule s = "${s}"\r\nChatID = "${chatID}" typeof(ChatID) = ${typeof (chatID)}`);
-      let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND (${s})`;
-      console.log(`QUERY = "${query}"`);
-      let res = await this.Query(query);
-      console.log(`res = ${JSON.stringify(res.rows)}`);
-   }
-
-   /**@param {String} chatID */
-   async ClearAllSchedules(chatID) {
-      console.log(`Clearing all schedules in chat ${chatID}`);
-      await this.Query(`DELETE FROM schedules WHERE ChatID = '${chatID}'`);
-      console.log(`Cleared all schedules`);
-   }
-
-   /**@param {String} chatID
-    */
-   async ReorderSchedules(chatID) {
-      console.log(`Reordering schedules in chat: ${chatID}`);
-      let res = await this.Query(`DO
-      $do$
-      DECLARE
-         s int;
-      BEGIN
-         s := 1;
-         SELECT Max(id) FROM schedules WHERE chatid = '${chatID}' INTO s;
-         IF s IS NULL THEN
-            s:= 1;
-         END IF;
-         FOR i IN REVERSE s..1 LOOP
-            IF NOT EXISTS (SELECT FROM schedules WHERE chatid = '${chatID}' AND id = i) THEN
-               UPDATE schedules SET id = id - 1 WHERE chatid = '${chatID}' AND id > i;
-            END IF;
-         END LOOP;
-      END
-      $do$;`);
-      return res;
-   }
-
-   /**@param {String} chatID
-    * @returns {Array.<Schedule>}
-    */
-   async ListSchedules(chatID) {
-      if (!this.sending) {
-         return await this.GetSchedules(chatID);
-      }
-      return [];
-   }
-
-   /**@param {Number} tsNow
-    * @returns {Array.<Schedule>}
-    */
-   async CheckActiveSchedules(tsNow) {
-      let expiredSchedules = [];
-      let schedules = await this.GetAllSchedules();
-      for (let schedule of schedules) {
-         console.log(`schedule = ${JSON.stringify(schedule)}, tsNow = ${tsNow}`);
-         if (schedule.target_date <= tsNow || schedule.trello_card_id != null) {
-            expiredSchedules.push(schedule);
-         }
-      }
-      return expiredSchedules;
-   }
-
-   /**@param {String} chatID
-    * @param {String} text
-    * @returns {Schedule}
-    */
-   async GetScheduleByText(chatID, text) {
-      const encryptedText = Encrypt(text, chatID);
-      let res = await this.Query(`SELECT * FROM schedules WHERE text = '${encryptedText}' AND ChatID = '${chatID}'`);
-      console.log(`Picked schedule by text ${JSON.stringify(res.rows)}`);
-      if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return res.rows[0];
-      } else {
-         return undefined;
-      }
-   }
-
-   /**@param {String} chatID
-    * @param {Number} id
-    * @returns {Schedule}
-    */
-   async GetScheduleById(chatID, id) {
-      let res = await this.Query(`SELECT * FROM schedules WHERE id = '${id}' AND ChatID = '${chatID}'`);
-      console.log(`Picked schedule by id ${JSON.stringify(res.rows)}`);
-      if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         res.rows[0].text = Decrypt(res.rows[0].text, res.rows[0].chatid);
-         return res.rows[0];
-      } else {
-         return undefined;
-      }
-   }
-
-   /**@returns {Array.<Schedule>} */
-   async GetAllSchedules() {
-      let res = await this.Query(`SELECT * FROM schedules`);
-      console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
-      if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return res.rows;
-      } else {
-         return [];
-      }
-   }
-
-   /**@param {String} chatID
-    * @returns {Array.<Schedule>}
-    */
-   async GetSchedules(chatID) {
-      let res = await this.Query(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`);
-      let i = res.rows.length;
-      while (i--) {
-         let schedule = res.rows[i];
-         res.rows[i].text = Decrypt(schedule.text, schedule.chatid);
-      }
-      console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
-      if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return res.rows;
-      } else {
-         return [];
-      }
-   }
-
-   /**@param {String} chatID
-    * @returns {Number}
-    */
-   async GetSchedulesCount(chatID) {
-      let res = await this.Query(`SELECT Count(*) FROM schedules WHERE ChatID = '${chatID}'`);
-      return +res.rows[0].count;
    }
 
    /**@param {User} user */
@@ -366,65 +167,6 @@ class dbManagement {
          `UPDATE userids 
          SET trello_token = NULL
          WHERE id = ${id};`
-      );
-   }
-
-   /**
-    * @param {String} id 
-    * @param {String} trello_board_id 
-    */
-   async AddChat(id, trello_board_id) {
-      let query = `INSERT INTO chats VALUES ('${id}')`;
-      if (typeof (trello_board_id) != 'undefined') {
-         query = `INSERT INTO chats VALUES ('${id}', '${trello_board_id}')`;
-      }
-      return await this.Query(query);
-   }
-
-   /**
-    * @param {String} id 
-    * @returns {Chat} 
-    */
-   async GetChatById(id) {
-      return (await this.Query(
-         `SELECT * FROM chats
-         WHERE id = '${id}'`
-      )).rows[0];
-   }
-
-   /**
-    * @param {String} id 
-    * @param {String} trello_board_id 
-    */
-   async SetChatTrelloBoard(id, trello_board_id) {
-      return await this.paramQuery(
-         `UPDATE chats
-         SET trello_board_id = $1
-         WHERE id = '${id}'`,
-         [trello_board_id]
-      );
-   }
-
-   /**
-    * @param {String} id 
-    * @param {String} trello_list_id 
-    */
-   async SetChatTrelloList(id, trello_list_id, trello_token) {
-      return await this.Query(
-         `UPDATE chats
-         SET trello_list_id = '${trello_list_id}',
-         trello_token = '${trello_token}'
-         WHERE id = '${id}'`
-      );
-   }
-
-   async ClearChatFromTrello(id) {
-      return await this.Query(
-         `UPDATE chats
-         SET trello_board_id = NULL,
-         trello_list_id = NULL,
-         trello_token = NULL
-         WHERE id = '${id}'`
       );
    }
 
