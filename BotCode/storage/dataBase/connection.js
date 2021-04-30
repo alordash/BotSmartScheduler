@@ -1,6 +1,6 @@
 const { Pool } = require('pg');
 
-class DataBaseConnectionOptions {
+class DataBaseOptions {
    /**@type {String} */
    user;
    /**@type {String} */
@@ -15,7 +15,7 @@ class DataBaseConnectionOptions {
    ssl;
 }
 
-class DataBaseConnection {
+class DataBase {
    /**@type {Pool} */
    pool;
    /**@type {Boolean} */
@@ -56,7 +56,7 @@ class DataBaseConnection {
       }
    }
 
-   /**@type {DataBaseConnection} */
+   /**@type {DataBase} */
    static instance;
 
    static get instance() {
@@ -67,14 +67,14 @@ class DataBaseConnection {
    }
 
    /**
-    * @param {DataBaseConnectionOptions} options 
+    * @param {DataBaseOptions} options 
     */
    static Instantiate(options) {
-      this.instance = new DataBaseConnection(options);
+      this.instance = new DataBase(options);
    }
 }
 
 module.exports = {
-   DataBaseConnectionOptions,
-   DataBaseConnection
+   DataBaseOptions,
+   DataBase
 };
