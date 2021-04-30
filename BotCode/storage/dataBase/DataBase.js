@@ -92,7 +92,7 @@ class DataBase {
    /**
     * @param {DataBaseOptions} options 
     */
-   static Instantiate(options) {
+   static EstablishConnection(options) {
       this.instance = new DataBase(options);
    }
 }
