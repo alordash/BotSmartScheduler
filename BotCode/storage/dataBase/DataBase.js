@@ -25,9 +25,9 @@ class DataBase {
    /**@type {Boolean} */
    sending;
    
-   Chats = Chat;
-   Schedules = Schedule;
-   Users = User;
+   static Chats = Chat;
+   static Schedules = Schedule;
+   static Users = User;
 
    constructor(options) {
       this.pool = new Pool(options);
@@ -95,7 +95,7 @@ class DataBase {
       }
       return this.instance.sending;
    }
-   
+
    /**@param {Boolean} state */
    static set sending(state) {
       if (typeof (this.instance) == 'undefined') {
