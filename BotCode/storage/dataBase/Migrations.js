@@ -1,6 +1,7 @@
 const { Connector } = require('./Connector');
 const User = require('./classes/User');
 const Schedule = require('./classes/Schedule');
+const { Encrypt, Decrypt } = require('../encryption/encrypt');
 
 class Migrations {
    static async InitializeTables() {

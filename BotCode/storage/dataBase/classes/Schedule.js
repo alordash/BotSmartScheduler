@@ -1,4 +1,5 @@
 const { Connector } = require('../Connector');
+const { Encrypt, Decrypt } = require('../../encryption/encrypt');
 
 class Schedule {
    /**@type {String} */
