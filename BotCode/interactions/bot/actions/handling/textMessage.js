@@ -87,7 +87,15 @@ async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPen
       invalidSchedules[chatID] = undefined;
       return;
    }
-   let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
+
+   let user = await DataBase.Users.GetUserById(ctx.from.id, true);
+   let language = user.lang;
+   let determinedLanguage;
+   if(user.id == null) {
+      language = determinedLanguage = utils.DetermineLanguage(msgText);
+      user = new User(ctx.from.id, undefined, language, undefined, undefined);
+      await DataBase.Users.AddUser(user);
+   }
    ctx.from.language_code = language;
 
    const mentionText = `@${ctx.me}`;
@@ -116,11 +124,12 @@ async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPen
       return;
    }
 
-   let determinedLanguage = utils.DetermineLanguage(msgText);
-   if (determinedLanguage != null) {
-      language = determinedLanguage;
+   if (typeof(determinedLanguage) == 'undefined') {
+      determinedLanguage = utils.DetermineLanguage(msgText);
+      if (determinedLanguage != null) {
+         language = determinedLanguage;
+      }
    }
-   ctx.from.language_code = language;
    ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules, prevalenceForParsing);
 }
 
