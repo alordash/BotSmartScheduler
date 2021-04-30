@@ -98,7 +98,7 @@ async function DeleteSchedules(ctx) {
       return;
    }
    try {
-      BotReply(ctx, replies.invalidDelete);
+      BotReply(ctx, replies.invalidUseOfCommand);
    } catch (e) {
       console.error(e);
    }
