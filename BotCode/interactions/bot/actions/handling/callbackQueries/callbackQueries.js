@@ -12,8 +12,9 @@ const CallbackQueryCases = require('./callbackQueryCases');
  * @param {Array.<Number>} tzPendingConfirmationUsers
  * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
+ * @param {Array.<String>} trelloPendingConfirmationUsers 
  */
-async function HandleCallbackQuery(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules) {
+async function HandleCallbackQueries(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, trelloPendingConfirmationUsers) {
    let data = ctx.callbackQuery.data;
    console.log(`got callback_query, data: "${data}"`);
    let chatID = utils.FormatChatId(ctx.callbackQuery.message.chat.id);
@@ -36,4 +37,4 @@ async function HandleCallbackQuery(ctx, tzPendingConfirmationUsers, pendingSched
    }
 }
 
-module.exports = HandleCallbackQuery;
+module.exports = HandleCallbackQueries;

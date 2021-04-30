@@ -11,12 +11,13 @@ const { StartTimeZoneDetermination } = require('../../technical');
  * @param {Array.<Number>} tzPendingConfirmationUsers
  * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
+ * @param {Array.<String>} trelloPendingConfirmationUsers 
  * @param {String} chatID 
  * @param {User} user 
  * @param {Languages} language 
  * @param {*} replies 
  */
-async function CaseUnsubscribe(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, chatID, user, language, replies) {
+ async function CaseUnsubscribe(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
    try {
       await DataBase.Users.SetUserSubscription(ctx.from.id, false);
    } catch (e) {

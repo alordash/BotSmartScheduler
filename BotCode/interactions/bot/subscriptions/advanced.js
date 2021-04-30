@@ -11,7 +11,7 @@ const { Composer } = require('telegraf');
 const { DataBase, User } = require('../../../storage/dataBase/DataBase');
 const Markup = require('telegraf/markup');
 const { BotReply } = require('../actions/replying');
-const HandleCallbackQuery = require('../actions/handling/callbackQueries/callbackQueries');
+const HandleCallbackQueries = require('../actions/handling/callbackQueries/callbackQueries');
 
 /**
  * @param {Composer} bot 
@@ -87,26 +87,6 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
       }
    }
 
-   bot.action('cancel', async ctx => {
-      let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
-      const replies = LoadReplies(language);
-      utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
-      let text = replies.cancelReponse;
-      let user = await DataBase.Users.GetUserById(ctx.from.id, true);
-      if (typeof (user) == 'undefined' || user.tz == null) {
-         text += '\r\n' + replies.tzCancelWarning;
-      }
-      try {
-         let kb = await kbs.LogicalListKeyboard(language, FormatChatId(ctx.chat.id));
-         ctx.answerCbQuery();
-         await ctx.deleteMessage();
-         kb.parse_mode = 'HTML';
-         await ctx.replyWithHTML(text, kb);
-      } catch (e) {
-         console.error(e);
-      }
-   });
-
    bot.on('location', async ctx => {
       let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
       const replies = LoadReplies(language);
@@ -137,7 +117,7 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
    bot.on('callback_query', async (ctx) => {
       let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
       ctx.from.language_code = language;
-      HandleCallbackQuery(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules);
+      HandleCallbackQueries(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, trelloPendingConfirmationUsers);
    });
 }
 

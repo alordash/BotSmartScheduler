@@ -11,12 +11,13 @@ const { StartTimeZoneDetermination } = require('../../technical');
  * @param {Array.<Number>} tzPendingConfirmationUsers
  * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
+ * @param {Array.<String>} trelloPendingConfirmationUsers 
  * @param {String} chatID 
  * @param {User} user 
  * @param {Languages} language 
  * @param {*} replies 
  */
-async function CaseStartTZ(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, chatID, user, language, replies) {
+ async function CaseStartTZ(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
    try {
       ctx.from.language_code = language;
       ctx.editMessageReplyMarkup(Extra.markup((m) =>
