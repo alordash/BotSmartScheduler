@@ -1,4 +1,4 @@
 {
-    "start": "Welcome,\r\nThis is <b>Bot-Scheduler</b> ⏰.\r\nHe can help you to schedule your tasks fast and accurately.\r\nJust type your plans💬 or send voice message🗣️ and he will automatically find scheduling date and what's to schedule.\r\n\r\n<b>And before we start, please consider specifying your time zone by pressing the button below.</b>",
+    "start": "Welcome,\r\nThis is <b>Bot-Scheduler</b> ⏰.\r\nHe can help you to schedule your tasks fast and accurately.\r\nJust type your plans💬 or send voice message🗣️ and he will automatically find scheduling date and what's to schedule.\r\n\r\n<i>And before we start, please consider specifying your time zone by pressing the button below.</i>",
     "startTZ": "🌐 Specify my time zone"
 }
