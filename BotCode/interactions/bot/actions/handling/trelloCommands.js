@@ -107,7 +107,12 @@ async function TrelloAuthenticate(ctx, trelloPendingConfirmationUsers) {
 async function TrelloPinCommand(ctx, user) {
    const replies = rp.LoadReplies(user.lang);
    let text = ctx.message.text;
-   let id = text.match(/[a-zA-Z0-9]{24}/)[0];
+   let match = text.match(/[a-zA-Z0-9]{24}/);
+   if(match == null) {
+      BotReply(ctx, replies.invalidUseOfCommand);
+      return;
+   }
+   let id = match[0];
 
    let chat = await DataBase.Chats.GetChatById(`${ctx.chat.id}`);
    let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, user.trello_token);
