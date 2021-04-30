@@ -97,9 +97,11 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
          text += '\r\n' + replies.tzCancelWarning;
       }
       try {
+         let kb = await kbs.LogicalListKeyboard(language, FormatChatId(ctx.chat.id));
          ctx.answerCbQuery();
-         ctx.editMessageText(text, { parse_mode: 'HTML' });
-         ctx.editMessageReplyMarkup(await kbs.LogicalListKeyboard(language, FormatChatId(ctx.chat.id)));
+         await ctx.deleteMessage();
+         kb.parse_mode = 'HTML';
+         await ctx.replyWithHTML(text, kb);
       } catch (e) {
          console.error(e);
       }
