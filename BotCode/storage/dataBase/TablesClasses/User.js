@@ -123,7 +123,7 @@ class User {
       } else if (!real) {
          return new User();
       } else {
-         return new User(null, null, null, null, null);
+         return new User(null);
       }
    }
 
