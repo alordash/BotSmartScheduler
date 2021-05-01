@@ -226,7 +226,7 @@ class Schedule {
     */
    static async GetAllSchedules() {
       let res = await Connector.instance.Query(`SELECT * FROM schedules`);
-      console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
+      console.log(`Picked all schedules ${JSON.stringify(res.rows)} from chat "${chatID}"`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows;
       } else {
@@ -245,7 +245,7 @@ class Schedule {
          let schedule = res.rows[i];
          res.rows[i].text = Decrypt(schedule.text, schedule.chatid);
       }
-      console.log(`Picked schedules ${JSON.stringify(res.rows)}`);
+      console.log(`Picked schedules ${JSON.stringify(res.rows)} from chat "${chatID}"`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows;
       } else {
