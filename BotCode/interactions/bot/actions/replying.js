@@ -7,7 +7,14 @@ const path = require('path');
  */
 function BotReply(ctx, text, option = {}, notify = false) {
    option.disable_notification = !notify;
-   return ctx.replyWithHTML(text, option);
+   let res;
+   try {
+      res = ctx.replyWithHTML(text, option);
+   } catch (e) {
+      console.log(e);
+   } finally {
+      return res;
+   }
 }
 
 /**@param {*} bot 
@@ -58,12 +65,12 @@ async function BotSendAttachment(bot, chatID, caption, file_id, option = {}, not
  * @param {Array.<Object>} options 
  * @returns {Array.<Object>}
  */
- async function BotReplyMultipleMessages(ctx, replies, options) {
+async function BotReplyMultipleMessages(ctx, replies, options) {
    let results = [];
    if (typeof (options) == 'undefined') {
       options = [];
    }
-   
+
    try {
       for (const i in replies) {
          let reply = replies[i];
