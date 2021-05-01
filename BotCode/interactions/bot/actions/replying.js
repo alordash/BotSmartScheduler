@@ -25,7 +25,14 @@ function BotReply(ctx, text, option = {}, notify = false) {
  */
 function BotSendMessage(bot, chatID, text, option = {}, notify = false) {
    option.disable_notification = !notify;
-   return bot.telegram.sendMessage(chatID, text, option);
+   let res;
+   try {
+      res = bot.telegram.sendMessage(chatID, text, option);
+   } catch (e) {
+      console.log(e);
+   } finally {
+      return res;
+   }
 }
 
 /**
@@ -41,21 +48,28 @@ async function BotSendAttachment(bot, chatID, caption, file_id, option = {}, not
    option.disable_notification = !notify;
    let file_info = await bot.telegram.getFile(file_id);
    let file_path = path.parse(file_info.file_path);
-   if (file_path.dir == 'photos') {
-      return bot.telegram.sendPhoto(chatID, file_id, {
-         caption,
-         ...option
-      });
-   } else if (file_path.dir == 'videos') {
-      return bot.telegram.sendVideo(chatID, file_id, {
-         caption,
-         ...option
-      });
-   } else {
-      return bot.telegram.sendDocument(chatID, file_id, {
-         caption,
-         ...option
-      });
+   let res;
+   try {
+      if (file_path.dir == 'photos') {
+         res = bot.telegram.sendPhoto(chatID, file_id, {
+            caption,
+            ...option
+         });
+      } else if (file_path.dir == 'videos') {
+         res = bot.telegram.sendVideo(chatID, file_id, {
+            caption,
+            ...option
+         });
+      } else {
+         res = bot.telegram.sendDocument(chatID, file_id, {
+            caption,
+            ...option
+         });
+      }
+   } catch (e) {
+      console.log(e);
+   } finally {
+      return res;
    }
 }
 
