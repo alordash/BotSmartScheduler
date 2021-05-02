@@ -9,7 +9,7 @@ let tzPendingConfirmationUsers = [];
 let trelloPendingConfirmationUsers = [];
 
 /**@type {Array.<Array.<Schedule>>} */
-let pendingSchedules = [];0
+let pendingSchedules = [];
 /**@type {Array.<Schedule>} */
 let invalidSchedules = [];
 
