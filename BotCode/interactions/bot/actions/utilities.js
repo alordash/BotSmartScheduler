@@ -21,9 +21,9 @@ function DetermineLanguage(string) {
    let enCount = [...string.matchAll(/[A-Za-z]/g)].length;
    let result = null;
    if (ruCount > enCount) {
-      result = Languages.RU;
+      result = Languages.ru;
    } else if (enCount > ruCount) {
-      result = Languages.EN;
+      result = Languages.en;
    }
    return result;
 }

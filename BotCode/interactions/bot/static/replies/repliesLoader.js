@@ -1,7 +1,7 @@
 const Languages = Object.freeze({
     general: "general",
-    RU: "ru",
-    EN: "en"
+    ru: "ru",
+    en: "en"
 });
 
 /**@param {Languages} language */

@@ -1,5 +1,5 @@
 {
-    "commands": "<b>Available commands:</b>\r\n🗓 /list\r\n    Shows active tasks for this chat.\r\n🗑 /del <b>1, 2, ...id</b>\r\n    Deletes tasks by id.\r\n🗑 /del <b>1-10, A-B</b>\r\n    Deletes all tasks within range.\r\n#️⃣ /N\r\n    Deletes N-th task.\r\n🌐 /tz\r\n    Configures time zone.\r\n<b>This bot can duplicate reminds to</b> <a href=\"https://trello.com/\">🗄 Trello</a>.\r\nDetailed information: /help_trello",
+    "commands": "<b>Available commands:</b>\r\n🗓 /list\r\n    Shows active tasks for this chat.\r\n🗑 /del <b>1, 2, ...N</b>\r\n    Deletes tasks by their number.\r\n🗑 /del <b>1-10, A-B</b>\r\n    Deletes all tasks within range.\r\n#️⃣ /N\r\n    Deletes N-th task.\r\n🌐 /tz\r\n    Configures time zone.\r\n<b>This bot can duplicate reminds to</b> <a href=\"https://trello.com/\">🗄 Trello</a>.\r\nDetailed information: /help_trello",
     "voiceMessageTooBig": "⚠️ Voice message duration should be less than 30 seconds.",
     "showListAction": "🗓 Show list",
     "alreadyScheduled": "already scheduled at:",
@@ -7,7 +7,7 @@
     "scheduleTextInvalid": "🖊 What to remind?",
     "showList": "Show list: /list",
     "cleared": "Cleared all schedules.",
-    "deleted": "Deleted schedules with id:",
+    "deleted": "Deleted schedules with number:",
     "invalidUseOfCommand": "Invalid use of command.",
     "listIsEmpty": "List of plans is empty.",
     "shouldRemove": "⚠️ Please remove some of your schedules.",

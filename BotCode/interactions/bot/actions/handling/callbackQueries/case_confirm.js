@@ -27,7 +27,7 @@ const { StartTimeZoneDetermination } = require('../../technical');
       let text = '';
       let tz = user.tz;
       for (let schedule of schedules) {
-         schedule.id = ++schedulesCount;
+         schedule.num = ++schedulesCount;
          text += `${await Format.FormStringFormatSchedule(schedule, tz, language, true, true)}\r\n`;
       }
       pendingSchedules[chatID] = [];

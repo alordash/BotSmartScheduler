@@ -45,15 +45,15 @@ async function HandleCommandMessage(bot, ctx, chatID, msgText) {
       //#endregion
    }
    //#region DELETE CLICKED TASK 
-   let scheduleId = parseInt(msgText.substring(1, msgText.length));
-   if (isNaN(scheduleId)) {
+   let scheduleNum = parseInt(msgText.substring(1, msgText.length));
+   if (isNaN(scheduleNum)) {
       return;
    }
-   let schedule = await DataBase.Schedules.GetScheduleById(chatID, scheduleId);
+   let schedule = await DataBase.Schedules.GetScheduleByNum(chatID, scheduleNum);
    try {
-      const text = Format.Deleted(scheduleId.toString(10), false, ctx.from.language_code);
+      const text = Format.Deleted(scheduleNum.toString(10), false, ctx.from.language_code);
       if (typeof (schedule) != 'undefined') {
-         await DataBase.Schedules.RemoveScheduleById(chatID, scheduleId);
+         await DataBase.Schedules.RemoveScheduleByNum(chatID, scheduleNum);
          await DataBase.Schedules.ReorderSchedules(chatID);
          if (schedule.file_id != '~' && schedule.file_id != null) {
             BotSendAttachment(bot, +chatID, text, schedule.file_id);
