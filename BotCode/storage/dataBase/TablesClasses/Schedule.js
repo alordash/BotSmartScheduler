@@ -312,9 +312,6 @@ class Schedule {
     */
    static async GetAllSchedules(getOptions = Schedule.GetOptions.all) {
       let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules`, getOptions);
-      if (!includePending) {
-         query = `${query} WHERE pending = false`;
-      }
       let res = await Connector.instance.Query(query);
       console.log(`Picked all schedules ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
