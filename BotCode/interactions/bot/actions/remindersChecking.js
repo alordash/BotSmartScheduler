@@ -7,11 +7,12 @@ const { TrelloManager } = require('@alordash/node-js-trello');
 const { BotSendMessage, BotSendAttachment } = require('./replying');
 const utils = require('./utilities');
 const { Encrypt } = require('../../../storage/encryption/encrypt');
+const { Connector } = require('../../../storage/dataBase/Connector');
 
 /** @param {Composer} bot */
 async function CheckExpiredSchedules(bot) {
    console.log('Checking expired schedules ' + new Date());
-   DataBase.sending = true;
+   Connector.instance.sending = true;
    let now = Date.now();
    let expiredSchedules = await DataBase.Schedules.CheckActiveSchedules(now);
    if (expiredSchedules.length > 0) {
@@ -149,7 +150,7 @@ async function CheckExpiredSchedules(bot) {
       }
       console.log('Removed and reordered.');
    }
-   DataBase.sending = false;
+   Connector.instance.sending = false;
    console.log(`Done checking expired schedules`);
 }
 
