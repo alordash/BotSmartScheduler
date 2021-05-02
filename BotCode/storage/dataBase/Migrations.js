@@ -5,7 +5,7 @@ const { Encrypt, Decrypt } = require('../encryption/encrypt');
 
 class Migrations {
    static async InitializeTables() {
-      await Connector.instance.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, id INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT, trello_card_id TEXT)');
+      await Connector.instance.Query('CREATE TABLE IF NOT EXISTS schedules (ChatID TEXT, num INTEGER, text TEXT, username TEXT, target_date BIGINT, period_time BIGINT, max_date BIGINT, file_id TEXT, trello_card_id TEXT, id SERIAL)');
       await Connector.instance.Query('CREATE TABLE IF NOT EXISTS userids (id BIGINT, tz BIGINT, lang TEXT, subscribed BOOLEAN, trello_token TEXT)');
       await Connector.instance.Query('CREATE TABLE IF NOT EXISTS chats (id TEXT, trello_board_id TEXT, trello_list_id TEXT, trello_token TEXT)');
    }
@@ -25,6 +25,19 @@ class Migrations {
       await Connector.instance.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS max_date BIGINT`);
       await Connector.instance.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS file_id TEXT`);
       await Connector.instance.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS trello_card_id TEXT`);
+
+      await Connector.instance.Query(`DO $$
+      DECLARE
+         num_exist boolean;
+      BEGIN
+      SELECT COUNT(*) > 0 INTO num_exist
+      FROM information_schema.columns
+      WHERE table_name='schedules' AND column_name='num';
+      IF NOT num_exist THEN
+         ALTER TABLE schedules RENAME COLUMN id TO num;
+      END IF;
+      END$$;`);
+      await Connector.instance.Query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS id SERIAL`);
    }
 
    /**@param {String} column_name */
@@ -68,7 +81,7 @@ class Migrations {
          try {
             text = Decrypt(text, key);
          } catch (e) {
-            console.log(`Schedule #${schedule.id} in chat ${schedule.chatid} is not encrypted`);
+            console.log(`Schedule #${schedule.num} in chat ${schedule.chatid} is not encrypted`);
             encrypted = false;
             text = schedule.text;
          }
@@ -76,7 +89,7 @@ class Migrations {
             const encryptedText = Encrypt(text, key);
             await Connector.instance.Query(`UPDATE schedules
             SET text = '${encryptedText}'
-            WHERE id = ${schedule.id}`);
+            WHERE num = ${schedule.num} AND ChatID = '${schedule.chatid}'`);
             console.log(`Updated not encrypted schedule "${schedule.text}"`);
          }
       }

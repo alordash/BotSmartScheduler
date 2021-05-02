@@ -35,12 +35,12 @@ async function CheckExpiredSchedules(bot) {
                         expired = false;
 
                         if (dueTime != schedule.target_date) {
-                           DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.id, dueTime);
+                           DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.num, dueTime);
                         }
 
                         const cardText = Encrypt(card.desc, schedule.chatid);
                         if (cardText != schedule.text) {
-                           DataBase.Schedules.SetScheduleText(schedule.chatid, schedule.id, cardText);
+                           DataBase.Schedules.SetScheduleText(schedule.chatid, schedule.num, cardText);
                         }
                      }
                   } else if (typeof (card) == 'undefined') {
@@ -80,13 +80,13 @@ async function CheckExpiredSchedules(bot) {
             );
             let msg;
             let remindIcon = '⏰';
-            let scheduleId = '';
+            let scheduleNum = '';
             if (schedule.period_time > 0) {
                remindIcon = '🔄';
-               scheduleId = ` /${schedule.id}`
+               scheduleNum = ` /${schedule.num}`
             }
 
-            const remindText = `${remindIcon}${scheduleId}${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`;
+            const remindText = `${remindIcon}${scheduleNum}${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`;
             try {
                if (schedule.file_id != '~' && schedule.file_id != null) {
                   msg = await BotSendAttachment(bot, +chatID, remindText, schedule.file_id, keyboard, true);
@@ -116,24 +116,24 @@ async function CheckExpiredSchedules(bot) {
             if (schedule.period_time >= 60 && schedule.max_date >= 60) {
                if (nowSeconds < schedule.max_date) {
                   shouldDelete = false;
-                  await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
+                  await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.num, nowSeconds + schedule.period_time);
                }
             } else if (schedule.period_time >= 60 && schedule.max_date < 60) {
                shouldDelete = false;
-               await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.id, nowSeconds + schedule.period_time);
+               await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.num, nowSeconds + schedule.period_time);
             } else if (schedule.period_time < 60 && schedule.max_date >= 60) {
                if (nowSeconds < schedule.max_date) {
                   shouldDelete = false;
-                  await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.id, schedule.max_date);
+                  await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.num, schedule.max_date);
                }
             }
          }
          if (shouldDelete) {
             let index = utils.GetDeletingIDsIndex(schedule.chatid, deletingIDs);
             if (index === false) {
-               deletingIDs.push({ s: `id = ${schedule.id} OR `, chatID: schedule.chatid });
+               deletingIDs.push({ s: `num = ${schedule.num} OR `, chatID: schedule.chatid });
             } else {
-               deletingIDs[index].s += `id = ${schedule.id} OR `;
+               deletingIDs[index].s += `num = ${schedule.num} OR `;
             }
          }
       }

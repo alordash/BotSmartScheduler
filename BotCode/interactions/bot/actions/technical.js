@@ -80,8 +80,8 @@ async function DeleteSchedules(ctx) {
 
       let query = '';
       for (let i in nums) {
-         let schedule = nums[i];
-         query += `id = ${schedule} OR `;
+         let scheduleNum = nums[i];
+         query += `num = ${scheduleNum} OR `;
       }
       query = query.substring(0, query.length - 4);
       await DataBase.Schedules.RemoveSchedules(chatID, query);

@@ -5,7 +5,7 @@ class Schedule {
    /**@type {String} */
    chatid;
    /**@type {Number} */
-   id;
+   num;
    /**@type {String} */
    text;
    /**@type {Number} */
@@ -20,9 +20,11 @@ class Schedule {
    file_id;
    /**@type {String} */
    trello_card_id;
+   /**@type {Number} */
+   id;
 
    /**@param {String} chatid 
-    * @param {Number} id 
+    * @param {Number} num 
     * @param {String} text 
     * @param {String} username 
     * @param {Number} target_date 
@@ -30,9 +32,9 @@ class Schedule {
     * @param {Number} max_date 
     * @param {Number} file_id 
     */
-   constructor(chatid, id, text, username, target_date, period_time, max_date, file_id) {
+   constructor(chatid, num, text, username, target_date, period_time, max_date, file_id) {
       this.chatid = chatid;
-      this.id = id;
+      this.num = num;
       this.text = text;
       this.username = username;
       this.target_date = target_date;
@@ -47,7 +49,7 @@ class Schedule {
     */
    static async AddSchedules(chatID, newSchedules) {
       let queryString = `INSERT INTO schedules VALUES `;
-      let id = await this.GetSchedulesCount(chatID) + 1;
+      let num = await this.GetSchedulesCount(chatID) + 1;
       let values = [];
       let i = 0;
       for (let schedule of newSchedules) {
@@ -56,8 +58,8 @@ class Schedule {
          }
          const text = Encrypt(schedule.text, schedule.chatid);
          queryString = `${queryString}($${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}), `;
-         values.push(`${schedule.chatid}`, id, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`);
-         id++;
+         values.push(`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`);
+         num++;
       }
       queryString = queryString.substring(0, queryString.length - 2);
       await Connector.instance.paramQuery(queryString, values);
@@ -68,49 +70,49 @@ class Schedule {
     */
    static async AddSchedule(schedule) {
       if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') schedule.username = 'none';
-      let id = await this.GetSchedulesCount(schedule.chatid) + 1;
+      let num = await this.GetSchedulesCount(schedule.chatid) + 1;
       console.log(`Target_date = ${schedule.target_date}`);
       const text = Encrypt(schedule.text, schedule.chatid);
       await Connector.instance.paramQuery('INSERT INTO schedules VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-         [`${schedule.chatid}`, id, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`]);
+         [`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`]);
       console.log(`Added "${schedule.text}" (encrypted: "${text}") to ${schedule.target_date} from chat "${schedule.chatid}"`);
    }
 
    /**
     * @param {Number} chatID 
-    * @param {Number} id 
+    * @param {Number} num 
     * @param {Number} target_date 
     */
-   static async SetScheduleTargetDate(chatID, id, target_date) {
+   static async SetScheduleTargetDate(chatID, num, target_date) {
       await Connector.instance.Query(
          `UPDATE schedules 
       SET target_date = ${target_date}
       WHERE ChatID = '${chatID}'
-      AND id = ${id};`
+      AND num = ${num};`
       );
    }
 
    /**
     * @param {Number} chatID 
-    * @param {Number} id 
+    * @param {Number} num 
     * @param {String} text 
     */
-   static async SetScheduleText(chatID, id, text) {
+   static async SetScheduleText(chatID, num, text) {
       await Connector.instance.paramQuery(
          `UPDATE schedules 
       SET text = $1
       WHERE ChatID = $2
-      AND id = $3;`,
-         [text, chatID, id]);
+      AND num = $3;`,
+         [text, chatID, num]);
    }
 
    /**
     * @param {String} chatID
-    * @param {Number} id
+    * @param {Number} num
     */
-   static async RemoveScheduleById(chatID, id) {
+   static async RemoveScheduleByNum(chatID, num) {
       console.log(`Removing schedule \r\ChatID = "${chatID}"`);
-      let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND id = ${id}`;
+      let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND num = ${num}`;
       console.log(`QUERY = "${query}"`);
       let res = await Connector.instance.Query(query);
       console.log(`res = ${JSON.stringify(res.rows)}`);
@@ -148,13 +150,13 @@ class Schedule {
          s int;
       BEGIN
          s := 1;
-         SELECT Max(id) FROM schedules WHERE chatid = '${chatID}' INTO s;
+         SELECT Max(num) FROM schedules WHERE chatid = '${chatID}' INTO s;
          IF s IS NULL THEN
             s:= 1;
          END IF;
          FOR i IN REVERSE s..1 LOOP
-            IF NOT EXISTS (SELECT FROM schedules WHERE chatid = '${chatID}' AND id = i) THEN
-               UPDATE schedules SET id = id - 1 WHERE chatid = '${chatID}' AND id > i;
+            IF NOT EXISTS (SELECT FROM schedules WHERE chatid = '${chatID}' AND num = i) THEN
+               UPDATE schedules SET num = num - 1 WHERE chatid = '${chatID}' AND num > i;
             END IF;
          END LOOP;
       END
@@ -207,12 +209,12 @@ class Schedule {
 
    /**
     * @param {String} chatID
-    * @param {Number} id
+    * @param {Number} num
     * @returns {Schedule}
     */
-   static async GetScheduleById(chatID, id) {
-      let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE id = '${id}' AND ChatID = '${chatID}'`);
-      console.log(`Picked schedule by id ${JSON.stringify(res.rows)}`);
+   static async GetScheduleByNum(chatID, num) {
+      let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE num = '${num}' AND ChatID = '${chatID}'`);
+      console.log(`Picked schedule by num ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          res.rows[0].text = Decrypt(res.rows[0].text, res.rows[0].chatid);
          return res.rows[0];

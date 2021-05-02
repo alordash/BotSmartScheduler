@@ -18,7 +18,7 @@ class DataBase {
    static async InitializeDataBase() {
       await Migrations.InitializeTables();
 
-      await Migrations.ExpandSchedulesTable('trello_card_id');
+      await Migrations.ExpandSchedulesTable('num');
 
       await Migrations.ExpandUsersIdsTable('trello_token');
 
