@@ -18,11 +18,10 @@ const utils = require('./utilities');
  * @param {String} msgText 
  * @param {Languages} language 
  * @param {Boolean} mentioned 
- * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
  * @param {Number} prevalenceForParsing 
  */
-async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules, prevalenceForParsing) {
+async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, mentioned, invalidSchedules, prevalenceForParsing) {
    let reply = '';
    let file_id = utils.GetAttachmentId(ctx.message);
    await DataBase.Users.SetUserLanguage(ctx.from.id, language);
@@ -44,6 +43,8 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
    let chat = await DataBase.Chats.GetChatById(`${ctx.chat.id}`);
    let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
    let keyboard;
+   
+   let newSchedules = [];
    for (let parsedDate of parsedDates) {
       let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
       const dateIsValid = typeof (dateParams) != 'undefined';
@@ -70,9 +71,6 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
       } else {
          if (count + schedulesCount < global.MaximumCountOfSchedules) {
             const textIsValid = parsedDate.string.length > 0;
-            if (typeof (pendingSchedules[chatID]) == 'undefined') {
-               pendingSchedules[chatID] = [];
-            }
             let newSchedule = new Schedule(
                chatID,
                schedules.length + parsedDateIndex + 1,
@@ -130,7 +128,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
                   newSchedule.period_time = 0;
                }
                invalidSchedules[chatID] = undefined;
-               pendingSchedules[chatID].push(newSchedule);
+               newSchedules.push(newSchedule);
                count++;
                reply += await Format.FormStringFormatSchedule(newSchedule, tz, language, true, !inGroup) + `\r\n`;
             }
@@ -147,9 +145,8 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
       }
       parsedDateIndex++;
    }
-   if ((!inGroup || mentioned) && typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-      await DataBase.Schedules.AddSchedules(chatID, pendingSchedules[chatID]);
-      pendingSchedules[chatID] = [];
+   if ((!inGroup || mentioned) && typeof (newSchedules) != 'undefined' && newSchedules.length > 0) {
+      await DataBase.Schedules.AddSchedules(chatID, newSchedules);
    }
    //#endregion
    if (reply == '') {
@@ -162,19 +159,17 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
    let options = [];
    try {
       if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
-         if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
+         if (typeof (newSchedules) != 'undefined' && newSchedules.length > 0) {
             keyboard = kbs.ConfirmSchedulesKeyboard(language);
          }
          options[answers.length - 1] = keyboard;
          let results = await BotReplyMultipleMessages(ctx, answers, options);
-         let msg = results[results.length - 1];
-         setTimeout(function (ctx, msg) {
-            if (typeof (msg) != 'undefined') {
-               let chatID = utils.FormatChatId(msg.chat.id);
-               ctx.telegram.deleteMessage(msg.chat.id, msg.message_id);
-               pendingSchedules[chatID] = [];
-            }
-         }, repeatScheduleTime, ctx, msg);
+         let message_id = results[results.length - 1].message_id;
+         for(const nsi in newSchedules) {
+            newSchedules[nsi].pending = true;
+            newSchedules[nsi].message_id = message_id;
+         }
+         await DataBase.Schedules.AddSchedules(newSchedules[0].chatid, newSchedules);
       } else {
          options[answers.length - 1] = await kbs.LogicalListKeyboard(language, chatID, schedulesCount);
          if (typeof (keyboard) != 'undefined') {

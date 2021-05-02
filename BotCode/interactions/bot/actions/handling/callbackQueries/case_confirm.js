@@ -9,7 +9,6 @@ const { StartTimeZoneDetermination } = require('../../technical');
 /**
  * @param {*} ctx 
  * @param {Array.<Number>} tzPendingConfirmationUsers
- * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
  * @param {String} chatID 
@@ -17,12 +16,13 @@ const { StartTimeZoneDetermination } = require('../../technical');
  * @param {Languages} language 
  * @param {*} replies 
  */
- async function CaseConfirm(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
-   let schedules = pendingSchedules[chatID];
+async function CaseConfirm(ctx, tzPendingConfirmationUsers, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
+   let message_id = ctx.update.callback_query.message.message_id;
+   let schedules = await DataBase.Schedules.GetSchedules(chatID, Schedule.GetOptions.pending, message_id);
    try {
-      let schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID);
-      if (typeof (pendingSchedules[chatID]) != 'undefined' && pendingSchedules[chatID].length > 0) {
-         await DataBase.Schedules.AddSchedules(chatID, pendingSchedules[chatID]);
+      let schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID, Schedule.GetOptions.valid);
+      if (schedules.length > 0) {
+         await DataBase.Schedules.ConfirmSchedules(schedules);
       }
       let text = '';
       let tz = user.tz;
@@ -30,7 +30,6 @@ const { StartTimeZoneDetermination } = require('../../technical');
          schedule.num = ++schedulesCount;
          text += `${await Format.FormStringFormatSchedule(schedule, tz, language, true, true)}\r\n`;
       }
-      pendingSchedules[chatID] = [];
       if (text.length > 0) {
          ctx.editMessageText(text, { parse_mode: 'HTML' });
       }

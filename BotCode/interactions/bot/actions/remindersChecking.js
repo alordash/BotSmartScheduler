@@ -99,7 +99,7 @@ async function CheckExpiredSchedules(bot) {
                   bot.telegram.editMessageReplyMarkup(msg.chat.id, msg.message_id, Extra.markup((m) =>
                      m.inlineKeyboard([]).removeKeyboard()
                   ));
-               }, repeatScheduleTime, msg);
+               }, global.repeatScheduleTime, msg);
             } catch (e) {
                console.error(e);
                isBlocked = true;
@@ -143,7 +143,7 @@ async function CheckExpiredSchedules(bot) {
          if (index !== false) {
             let s = deletingIDs[index].s;
             s = s.substring(0, s.length - 4);
-            await DataBase.Schedules.RemoveSchedules(chatID, s);
+            await DataBase.Schedules.RemoveSchedulesQuery(chatID, s);
          }
          await DataBase.Schedules.ReorderSchedules(chatID);
       }

@@ -11,7 +11,6 @@ const { BotReply } = require('../../replying');
 /**
  * @param {*} ctx 
  * @param {Array.<Number>} tzPendingConfirmationUsers
- * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
  * @param {String} chatID 
@@ -19,7 +18,7 @@ const { BotReply } = require('../../replying');
  * @param {Languages} language 
  * @param {*} replies 
  */
-async function CaseCancel(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
+async function CaseCancel(ctx, tzPendingConfirmationUsers, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
    utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
    let text = replies.cancelReponse;
    if (typeof (user) == 'undefined' || typeof(user.id) == 'undefined') {

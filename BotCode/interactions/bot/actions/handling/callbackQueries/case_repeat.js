@@ -9,7 +9,6 @@ const { StartTimeZoneDetermination } = require('../../technical');
 /**
  * @param {*} ctx 
  * @param {Array.<Number>} tzPendingConfirmationUsers
- * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
  * @param {String} chatID 
@@ -17,7 +16,7 @@ const { StartTimeZoneDetermination } = require('../../technical');
  * @param {Languages} language 
  * @param {*} replies 
  */
- async function CaseRepeat(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
+ async function CaseRepeat(ctx, tzPendingConfirmationUsers, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
    let hasCaption = false;
    let msgText = ctx.callbackQuery.message.text;
    if (typeof (msgText) == 'undefined') {

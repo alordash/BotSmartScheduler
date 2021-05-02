@@ -8,8 +8,6 @@ let tzPendingConfirmationUsers = [];
 /**@type {Array.<String>} */
 let trelloPendingConfirmationUsers = [];
 
-/**@type {Array.<Array.<Schedule>>} */
-let pendingSchedules = [];
 /**@type {Array.<Schedule>} */
 let invalidSchedules = [];
 
@@ -63,7 +61,7 @@ function sendNotification(bot, inviteLink, users) {
 
 /**@param {*} bot */
 exports.InitBot = async function (bot) {
-   const subscriptionsArgs = [bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules];
+   const subscriptionsArgs = [bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, invalidSchedules];
    await Subscriptions.initCommands(...subscriptionsArgs);
    await Subscriptions.initAdvanced(...subscriptionsArgs);
    await Subscriptions.initBasic(...subscriptionsArgs);
