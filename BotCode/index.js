@@ -1,7 +1,7 @@
 const telegraf = require('telegraf');
 const { DataBase } = require('./storage/dataBase/DataBase');
 const botConfig = require('./interactions/bot/main');
-const CheckExpiredSchedules = require('./interactions/bot/actions/remindersChecking');
+const { CheckExpiredSchedules, CheckPendingSchedules } = require('./interactions/bot/actions/remindersChecking');
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
@@ -49,6 +49,8 @@ DataBase.EstablishConnection(dbOptions);
          await CheckExpiredSchedules(SmartSchedulerBot);
       }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
    }
+
+//   CheckPendingSchedules(SmartSchedulerBot);
 
    if (process.env.ENABLE_LOGS == 'false') {
       console.log = function () { };

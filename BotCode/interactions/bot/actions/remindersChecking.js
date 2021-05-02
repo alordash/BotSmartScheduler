@@ -154,4 +154,27 @@ async function CheckExpiredSchedules(bot) {
    console.log(`Done checking expired schedules`);
 }
 
-module.exports = CheckExpiredSchedules;
+/**@param {Composer} bot */
+async function CheckPendingSchedules(bot) {
+   let schedules = await DataBase.Schedules.GetAllSchedules(Schedule.GetOptions.pending);
+   Connector.instance.sending = true;
+   let now = Date.now();
+   for (const i in schedules) {
+      const schedule = schedules[i];
+      let chatid = schedule.chatid;
+      if (chatid[0] == '_') {
+         chatid = - +(chatid.substring(1));
+      } else {
+         chatid = +chatid;
+      }
+      const msg = await bot.telegram.callApi("getHistory", { peer: chatid, offset_id: schedule.message_id });
+      console.log('msg :>> ', msg);
+   }
+
+   Connector.instance.sending = false
+}
+
+module.exports = {
+   CheckExpiredSchedules,
+   CheckPendingSchedules
+};
