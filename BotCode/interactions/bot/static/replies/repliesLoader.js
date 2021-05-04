@@ -1,5 +1,4 @@
 const Languages = Object.freeze({
-    general: "general",
     ru: "ru",
     en: "en"
 });
