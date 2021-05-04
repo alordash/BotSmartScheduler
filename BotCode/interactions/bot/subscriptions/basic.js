@@ -18,9 +18,9 @@ const { HelpCommand, HandleTextMessage } = require('../actions/handling/textMess
  */
 function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules) {
    bot.start(async ctx => {
-      const replies = LoadReplies(Languages.general);
+      const replies = LoadReplies(ctx.from.language_code);
       try {
-         let inlineKeyboard = kbs.TzDeterminationOnStartInlineKeyboard(Languages.general);
+         let inlineKeyboard = kbs.TzDeterminationOnStartInlineKeyboard(ctx.from.language_code);
          inlineKeyboard['disable_web_page_preview'] = true;
          BotReply(ctx, replies.start, inlineKeyboard);
       } catch (e) {

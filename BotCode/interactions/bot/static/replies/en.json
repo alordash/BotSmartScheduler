@@ -1,4 +1,6 @@
 {
+    "start": "This bot will allow you to schedule your tasks easy and fast using only a messenger ⏰\r\nJust type your plans 💬 or send voice message 🗣️ and he will automatically understand scheduling date and what's to schedule.\r\n\r\n<i>Before we continue, please consider specifying your time zone by pressing the button below.</i>",
+    "startTZ": "🌐 Specify time zone",
     "commands": "<b>Available commands:</b>\r\n🗓 /list\r\n    Shows active tasks for this chat.\r\n🗑 /del <b>1, 2, ...N</b>\r\n    Deletes tasks by their number.\r\n🗑 /del <b>1-10, A-B</b>\r\n    Deletes all tasks within range.\r\n#️⃣ /N\r\n    Deletes N-th task.\r\n🌐 /tz\r\n    Configures time zone.\r\n<b>This bot can duplicate reminds to</b> <a href=\"https://trello.com/\">🗄 Trello</a>.\r\nDetailed information: /help_trello",
     "voiceMessageTooBig": "⚠️ Voice message duration should be less than 30 seconds.",
     "showListAction": "🗓 Show list",
