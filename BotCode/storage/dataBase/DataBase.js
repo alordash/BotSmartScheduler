@@ -1,6 +1,6 @@
 const { ConnectorOptions, Connector } = require('./Connector');
 const Chat = require('./TablesClasses/Chat');
-const Schedule = require('./TablesClasses/Schedule');
+const { Schedule } = require('./TablesClasses/Schedule');
 const User = require('./TablesClasses/User');
 const Migrations = require('./Migrations');
 
@@ -18,7 +18,7 @@ class DataBase {
    static async InitializeDataBase() {
       await Migrations.InitializeTables();
 
-      await Migrations.ExpandSchedulesTable('creation_date');
+      await Migrations.ExpandSchedulesTable('state');
 
       await Migrations.ExpandUsersIdsTable('trello_token');
 
