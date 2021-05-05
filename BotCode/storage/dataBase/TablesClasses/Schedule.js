@@ -25,7 +25,9 @@ class Schedule {
    /**@type {Boolean} */
    pending;
    /**@type {Number} */
-   message_id
+   message_id;
+   /**@type {Number} */
+   creation_date;
 
    /**@param {String} chatid 
     * @param {Number} num 
@@ -37,8 +39,9 @@ class Schedule {
     * @param {Number} file_id 
     * @param {Boolean} pending 
     * @param {Number} message_id 
+    * @param {Number} creation_date 
     */
-   constructor(chatid, num, text, username, target_date, period_time, max_date, file_id = '~', pending = false, message_id = null) {
+   constructor(chatid, num, text, username, target_date, period_time, max_date, file_id = '~', pending = false, message_id = null, creation_date = null) {
       this.chatid = chatid;
       this.num = num;
       this.text = text;
@@ -49,6 +52,7 @@ class Schedule {
       this.file_id = file_id;
       this.pending = pending;
       this.message_id = message_id;
+      this.creation_date = creation_date;
    }
 
    /**
@@ -117,8 +121,8 @@ class Schedule {
             schedule.username = 'none';
          }
          const text = Encrypt(schedule.text, schedule.chatid);
-         queryString = `${queryString}($${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}), `;
-         values.push(`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`, schedule.pending, schedule.message_id);
+         queryString = `${queryString}($${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}), `;
+         values.push(`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`, schedule.pending, schedule.message_id, schedule.creation_date);
          num++;
       }
       queryString = queryString.substring(0, queryString.length - 2);
@@ -134,8 +138,8 @@ class Schedule {
       console.log(`Target_date = ${schedule.target_date}`);
       const text = Encrypt(schedule.text, schedule.chatid);
       await Connector.instance.paramQuery(`INSERT INTO schedules (ChatID, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, pending, message_id) VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-         [`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`, schedule.pending, schedule.message_id]);
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+         [`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`, schedule.pending, schedule.message_id, schedule.creation_date]);
       console.log(`Added "${schedule.text}" (encrypted: "${text}") to ${schedule.target_date} from chat "${schedule.chatid}"`);
    }
 
