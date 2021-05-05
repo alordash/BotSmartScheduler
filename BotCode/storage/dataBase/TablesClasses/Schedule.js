@@ -10,7 +10,8 @@ const GetOptions = Object.freeze({
 const ScheduleStates = Object.freeze({
    valid: 'valid',
    pending: 'pending',
-   repeat: 'repeat'
+   repeat: 'repeat',
+   invalid: 'invalid'
 });
 
 class Schedule {
@@ -111,7 +112,7 @@ class Schedule {
       }
       switch (getOptions) {
          case GetOptions.draft:
-            query = `${query} ${keyWord} state != '${ScheduleStates.valid}'`;
+            query = `${query} ${keyWord} (state = '${ScheduleStates.repeat}' OR state = '${ScheduleStates.pending}')`;
             break;
 
          case GetOptions.valid:
