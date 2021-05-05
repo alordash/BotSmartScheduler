@@ -73,11 +73,14 @@ async function CheckExpiredSchedules(bot) {
          const replies = LoadReplies(language);
          let isBlocked = false;
          try {
-            let keyboard = Extra.markup((m) =>
-               m.inlineKeyboard([
-                  m.callbackButton(replies.repeatSchedule, `repeat`)
-               ]).oneTime()
-            );
+            let keyboard = {};
+            if (schedule.period_time == '0') {
+               keyboard = Extra.markup((m) =>
+                  m.inlineKeyboard([
+                     m.callbackButton(replies.repeatSchedule, `repeat`)
+                  ]).oneTime()
+               );
+            }
             let msg;
             let remindIcon = '⏰';
             let scheduleNum = '';
