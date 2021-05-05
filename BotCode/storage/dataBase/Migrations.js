@@ -2,6 +2,7 @@ const { Connector } = require('./Connector');
 const User = require('./TablesClasses/User');
 const { Schedule, GetOptions, ScheduleStates } = require('./TablesClasses/Schedule');
 const { Encrypt, Decrypt } = require('../encryption/encrypt');
+const DataBaseFunctions = require('./Functions');
 
 class Migrations {
    static async InitializeTables() {
@@ -96,6 +97,12 @@ class Migrations {
             WHERE num = ${schedule.num} AND ChatID = '${schedule.chatid}'`);
             console.log(`Updated not encrypted schedule "${schedule.text}"`);
          }
+      }
+   }
+
+   static async InitializeDataBaseFunctions() {
+      for(const [key, value] of Object.entries(DataBaseFunctions)) {
+         await Connector.instance.Query(value);
       }
    }
 }

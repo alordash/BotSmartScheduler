@@ -17,6 +17,8 @@ class DataBase {
 
    static async InitializeDataBase() {
       await Migrations.InitializeTables();
+      
+      await Migrations.InitializeDataBaseFunctions();
 
       await Migrations.ExpandSchedulesTable('state');
 
