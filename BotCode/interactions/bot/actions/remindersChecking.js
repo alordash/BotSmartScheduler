@@ -100,7 +100,7 @@ async function CheckExpiredSchedules(bot) {
                      ...keyboard
                   }, true);
                }
-               let repeatSchedule = new Schedule(schedule.chatid, undefined, schedule.text, schedule.username, +schedule.target_date + global.repeatScheduleTime, 0, 0, schedule.file_id, ScheduleStates.repeat, msg.message_id, now);
+               let repeatSchedule = new Schedule(schedule.chatid, undefined, schedule.text, schedule.username, schedule.target_date + global.repeatScheduleTime, 0, 0, schedule.file_id, ScheduleStates.repeat, msg.message_id, now);
                DataBase.Schedules.AddSchedule(repeatSchedule);
             } catch (e) {
                console.error(e);
@@ -112,9 +112,6 @@ async function CheckExpiredSchedules(bot) {
          let shouldDelete = true;
          if (!isBlocked) {
             const nowSeconds = Date.now();
-            schedule.target_date = +schedule.target_date;
-            schedule.period_time = +schedule.period_time;
-            schedule.max_date = +schedule.max_date;
             if (schedule.period_time >= 60 && schedule.max_date >= 60) {
                if (nowSeconds < schedule.max_date) {
                   shouldDelete = false;

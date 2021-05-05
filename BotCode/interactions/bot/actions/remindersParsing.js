@@ -68,7 +68,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
       if (found) {
          let schedule = schedules[i - 1];
          if (!inGroup) {
-            reply += Format.Scheduled(schedule.text, Format.FormDateStringFormat(new Date(+schedule.target_date + tz * 1000), language, true), language);
+            reply += Format.Scheduled(schedule.text, Format.FormDateStringFormat(new Date(schedule.target_date + tz * 1000), language, true), language);
          }
       } else {
          if (count + schedulesCount < global.MaximumCountOfSchedules) {

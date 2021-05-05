@@ -19,9 +19,6 @@ async function LoadSchedulesList(chatID, tsOffset, language) {
       let answer = ``;
       schedules.sort((a, b) => a.target_date - b.target_date);
       for (let schedule of schedules) {
-         schedule.target_date = +schedule.target_date;
-         schedule.period_time = +schedule.period_time;
-         schedule.max_date = +schedule.max_date;
          let newAnswer = `${await Format.FormStringFormatSchedule(schedule, tsOffset, language, false, true)}\r\n`;
          if (answer.length + newAnswer.length > global.MaxMessageLength) {
             answers.push(answer);

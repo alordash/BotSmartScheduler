@@ -296,7 +296,7 @@ class Schedule {
       let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE text = '${encryptedText}' AND ChatID = '${chatID}'`);
       console.log(`Picked schedule by text ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return res.rows[0];
+         return Schedule.FixSchedule(res.rows[0]);
       } else {
          return undefined;
       }
@@ -312,7 +312,7 @@ class Schedule {
       console.log(`Picked schedule by num ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          res.rows[0].text = Decrypt(res.rows[0].text, res.rows[0].chatid);
-         return res.rows[0];
+         return Schedule.FixSchedule(res.rows[0]);
       } else {
          return undefined;
       }
@@ -327,6 +327,9 @@ class Schedule {
       let res = await Connector.instance.Query(query);
       console.log(`Picked all schedules ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
+         for(const i in res.rows) {
+            res.rows[i] = Schedule.FixSchedule(res.rows[i]);
+         }
          return res.rows;
       } else {
          return [];
