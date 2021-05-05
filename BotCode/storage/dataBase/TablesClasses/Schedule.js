@@ -82,6 +82,17 @@ class Schedule {
    }
 
    /**
+    * @param {Array.<Schedule>} schedules 
+    * @returns {Array.<Schedule>}
+    */
+   static FixSchedulesRow(schedules) {
+      for (const i in schedules) {
+         schedules[i] = Schedule.FixSchedule(schedules[i]);
+      }
+      return schedules;
+   }
+
+   /**
     * @param {String} query 
     * @param {GetOptions} getOptions 
     * @param {Number} message_id 
@@ -241,10 +252,7 @@ class Schedule {
       console.log(`Reordering schedules in chat: ${chatID}`);
       let res = await Connector.instance.Query(`SELECT * FROM ReorderSchedules('${chatID}')`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         for (const i in res.rows) {
-            res.rows[i] = Schedule.FixSchedule(res.rows[i]);
-         }
-         return res.rows;
+         return Schedule.FixSchedulesRow(res.rows);
       } else {
          return [];
       }
@@ -318,10 +326,7 @@ class Schedule {
       let res = await Connector.instance.Query(query);
       console.log(`Picked all schedules ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         for (const i in res.rows) {
-            res.rows[i] = Schedule.FixSchedule(res.rows[i]);
-         }
-         return res.rows;
+         return Schedule.FixSchedulesRow(res.rows);
       } else {
          return [];
       }
@@ -343,10 +348,7 @@ class Schedule {
       }
       console.log(`Picked schedules ${JSON.stringify(res.rows)} from chat "${chatID}"`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         for (const i in res.rows) {
-            res.rows[i] = Schedule.FixSchedule(res.rows[i]);
-         }
-         return res.rows;
+         return Schedule.FixSchedulesRow(res.rows);
       } else {
          return [];
       }
