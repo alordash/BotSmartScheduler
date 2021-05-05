@@ -4,7 +4,8 @@ const { Encrypt, Decrypt } = require('../../encryption/encrypt');
 const GetOptions = Object.freeze({
    all: 0,
    draft: 1,
-   valid: 2
+   valid: 2,
+   invalid: 3
 });
 
 const ScheduleStates = Object.freeze({
@@ -119,6 +120,10 @@ class Schedule {
             query = `${query} ${keyWord} state = '${ScheduleStates.valid}'`;
             break;
 
+         case GetOptions.invalid:
+            query = `${query} ${keyWord} state = '${ScheduleStates.invalid}'`;
+            break;
+
          default:
             break;
       }
@@ -196,6 +201,27 @@ class Schedule {
    }
 
    /**
+    * @param {Number} id 
+    * @param {Schedule} schedule 
+    */
+   static async SetSchedule(id, schedule) {
+      await Connector.instance.paramQuery(`UPDATE schedules SET
+      ChatID = $1,
+      text = $3,
+      username = $4,
+      target_date = $5,
+      period_time = $6,
+      max_date = $7,
+      file_id = $8,
+      trello_card_id = $9,
+      state = $10,
+      message_id = $11,
+      creation_date = $12
+      WHERE id = ${id}`,
+         [`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`, schedule.state, schedule.message_id, schedule.creation_date]);
+   }
+
+   /**
     * @param {String} chatID
     * @param {Number} num
     */
@@ -228,6 +254,15 @@ class Schedule {
          query = Schedule.ApplyGetOptions(query, GetOptions.all, message_id, chatid);
       }
       await Connector.instance.Query(query);
+   }
+
+   /**
+    * @param {String} chatID 
+    * @param {ScheduleStates} state 
+    * @returns 
+    */
+   static async RemoveSchedulesByState(chatID, state) {
+      return await Connector.instance.Query(`DELETE FROM schedules WHERE chatid = '${chatID}' AND state = '${state}'`);
    }
 
    /**

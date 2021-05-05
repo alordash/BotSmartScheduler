@@ -13,9 +13,8 @@ const { HelpCommand, HandleTextMessage } = require('../actions/handling/textMess
  * @param {Composer} bot 
  * @param {Array.<String>} tzPendingConfirmationUsers 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
- * @param {Array.<Schedule>} invalidSchedules 
  */
-function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, invalidSchedules) {
+function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers) {
    bot.start(async ctx => {
       const replies = LoadReplies(ctx.from.language_code);
       try {
@@ -58,7 +57,7 @@ function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingCo
             ctx.message.text = text;
             let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
             ctx.from.language_code = language;
-            HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, invalidSchedules, 20);
+            HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, 20);
          } else {
             try {
                BotReply(ctx, rp.voiceMessageTooBig);
@@ -71,7 +70,7 @@ function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingCo
 
    bot.on('message', async ctx => {
       try {
-         HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, invalidSchedules);
+         HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);
       } catch (e) {
          console.log(e)
       }

@@ -1,7 +1,8 @@
 const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('../../../static/replies/repliesLoader');
 const Format = require('../../../../processing/formatting');
-const { DataBase, Schedule, User, Chat } = require('../../../../../storage/dataBase/DataBase');
+const { DataBase, User, Chat } = require('../../../../../storage/dataBase/DataBase');
+const { Schedule, GetOptions, ScheduleStates } = require('../../../../../storage/dataBase/TablesClasses/Schedule');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const utils = require('../../utilities');
 const { StartTimeZoneDetermination } = require('../../technical');
@@ -9,14 +10,13 @@ const { StartTimeZoneDetermination } = require('../../technical');
 /**
  * @param {*} ctx 
  * @param {Array.<Number>} tzPendingConfirmationUsers
- * @param {Array.<Schedule>} invalidSchedules 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
  * @param {String} chatID 
  * @param {User} user 
  * @param {Languages} language 
  * @param {*} replies 
  */
- async function CaseRepeat(ctx, tzPendingConfirmationUsers, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
+ async function CaseRepeat(ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, chatID, user, language, replies) {
    let hasCaption = false;
    let msgText = ctx.callbackQuery.message.text;
    if (typeof (msgText) == 'undefined') {

@@ -10,10 +10,9 @@ const CallbackQueryCases = require('./callbackQueryCases');
 /**
  * @param {*} ctx 
  * @param {Array.<Number>} tzPendingConfirmationUsers
- * @param {Array.<Schedule>} invalidSchedules 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
  */
-async function HandleCallbackQueries(ctx, tzPendingConfirmationUsers, invalidSchedules, trelloPendingConfirmationUsers) {
+async function HandleCallbackQueries(ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers) {
    let data = ctx.callbackQuery.data;
    console.log(`got callback_query, data: "${data}"`);
    let chatID = utils.FormatChatId(ctx.callbackQuery.message.chat.id);

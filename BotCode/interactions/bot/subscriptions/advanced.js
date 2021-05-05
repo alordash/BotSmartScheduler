@@ -17,9 +17,8 @@ const HandleCallbackQueries = require('../actions/handling/callbackQueries/callb
  * @param {Composer} bot 
  * @param {Array.<String>} tzPendingConfirmationUsers 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
- * @param {Array.<Schedule>} invalidSchedules 
  */
-function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, invalidSchedules) {
+function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers) {
    console.log('__dirname :>> ', __dirname);
    let repliesFiles;
    try {
@@ -116,7 +115,7 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
    bot.on('callback_query', async (ctx) => {
       let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
       ctx.from.language_code = language;
-      HandleCallbackQueries(ctx, tzPendingConfirmationUsers, invalidSchedules, trelloPendingConfirmationUsers);
+      HandleCallbackQueries(ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);
    });
 }
 

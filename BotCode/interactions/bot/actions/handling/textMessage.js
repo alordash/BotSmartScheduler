@@ -2,7 +2,8 @@ const Markup = require('telegraf/markup');
 const { Languages, LoadReplies } = require('../../static/replies/repliesLoader');
 const Format = require('../../../processing/formatting');
 const kbs = require('../../static/replies/keyboards');
-const { DataBase, Schedule, User, Chat } = require('../../../../storage/dataBase/DataBase');
+const { DataBase, User, Chat } = require('../../../../storage/dataBase/DataBase');
+const { Schedule, ScheduleStates } = require('../../../../storage/dataBase/TablesClasses/Schedule');
 const { help, trelloAddListCommand, trelloHelp } = require('../../static/commandsList');
 const { BotReply, BotSendAttachment } = require('../replying');
 const utils = require('../utilities');
@@ -71,10 +72,9 @@ async function HandleCommandMessage(bot, ctx, chatID, msgText) {
  * @param {*} ctx 
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
- * @param {Array.<Schedule>} invalidSchedules 
  * @param {Number} prevalenceForParsing 
  */
-async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, invalidSchedules, prevalenceForParsing = 50) {
+async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, prevalenceForParsing = 50) {
    let chatID = utils.FormatChatId(ctx.chat.id);
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
@@ -82,7 +82,7 @@ async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPen
       msgText = ctx.message.caption;
    }
    if (typeof (msgText) == 'undefined' || (inGroup && typeof (ctx.message.forward_date) != 'undefined')) {
-      invalidSchedules[chatID] = undefined;
+      DataBase.Schedules.RemoveSchedulesByState(chatID, ScheduleStates.invalid);
       return;
    }
 
@@ -106,18 +106,18 @@ async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPen
       }
    }
    if (tzPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
-      invalidSchedules[chatID] = undefined;
+      DataBase.Schedules.RemoveSchedulesByState(chatID, ScheduleStates.invalid);
       ConfrimTimeZone(ctx, tzPendingConfirmationUsers);
       return;
    }
    if (trelloPendingConfirmationUsers.indexOf(ctx.from.id) >= 0) {
-      invalidSchedules[chatID] = undefined;
+      DataBase.Schedules.RemoveSchedulesByState(chatID, ScheduleStates.invalid);
       TrelloAuthenticate(ctx, trelloPendingConfirmationUsers);
       return;
    }
 
    if (msgText[0] == '/') {
-      invalidSchedules[chatID] = undefined;
+      await DataBase.Schedules.RemoveSchedulesByState(chatID, ScheduleStates.invalid);
       HandleCommandMessage(bot, ctx, chatID, msgText);
       return;
    }
@@ -128,7 +128,7 @@ async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPen
          language = determinedLanguage;
       }
    }
-   ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, mentioned, invalidSchedules, prevalenceForParsing);
+   ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, mentioned, prevalenceForParsing);
 }
 
 module.exports = {

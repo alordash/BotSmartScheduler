@@ -29,5 +29,15 @@ module.exports = {
          num = s + 1
          WHERE id = _id;
    END;
-   $$ LANGUAGE plpgsql;`
+   $$ LANGUAGE plpgsql;`/*,
+   CutOutScheduleByStateFunction: `CREATE OR REPLACE FUNCTION CutOutScheduleByState(_chatID TEXT, _state TEXT) RETURNS schedules AS $$
+	DECLARE
+        schedule schedules;
+	BEGIN
+    	SELECT INTO schedule *
+        	FROM schedules WHERE chatid = _chatid AND state = _state;
+        DELETE FROM schedules WHERE chatid = chatid AND state = _state;
+        RETURN schedule;
+    END;
+$$ LANGUAGE plpgsql;`*/
 }

@@ -3,7 +3,7 @@ const { Languages, LoadReplies } = require('../static/replies/repliesLoader');
 const Format = require('../../processing/formatting');
 const kbs = require('../static/replies/keyboards');
 const { DataBase, User, Chat } = require('../../../storage/dataBase/DataBase');
-const { Schedule, ScheduleStates } = require('../../../storage/dataBase/TablesClasses/Schedule');
+const { Schedule, ScheduleStates, GetOptions } = require('../../../storage/dataBase/TablesClasses/Schedule');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList, ParsedDate } = require('@alordash/date-parser');
 const { ProcessParsedDate } = require('../../processing/timeProcessing');
@@ -19,10 +19,9 @@ const utils = require('./utilities');
  * @param {String} msgText 
  * @param {Languages} language 
  * @param {Boolean} mentioned 
- * @param {Array.<Schedule>} invalidSchedules 
  * @param {Number} prevalenceForParsing 
  */
-async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, mentioned, invalidSchedules, prevalenceForParsing) {
+async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, mentioned, prevalenceForParsing) {
    let reply = '';
    let file_id = utils.GetAttachmentId(ctx.message);
    await DataBase.Users.SetUserLanguage(ctx.from.id, language);
@@ -87,12 +86,14 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
                now);
             let proceed = dateExists && textIsValid;
             if (!proceed && !inGroup) {
-               let invalidSchedule = invalidSchedules[chatID];
+               let invalidSchedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.invalid);
+               let invalidSchedule = invalidSchedules[0];
                if (typeof (invalidSchedule) != 'undefined') {
                   const invalidText = invalidSchedule.text.length == 0;
                   if (invalidText && textIsValid) {
                      invalidSchedule.text = newSchedule.text;
                      newSchedule = invalidSchedule;
+                     newSchedule.state = ScheduleStates.valid;
                      proceed = true;
                   } else if (!invalidText && dateExists) {
                      newSchedule.text = invalidSchedule.text;
@@ -100,7 +101,9 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
                   }
                }
                if (!proceed) {
-                  invalidSchedules[chatID] = newSchedule;
+                  await DataBase.Schedules.RemoveSchedulesByState(chatID, ScheduleStates.invalid);
+                  newSchedule.state = ScheduleStates.invalid;
+                  await DataBase.Schedules.AddSchedule(newSchedule);
                   if (!dateExists) {
                      reply = `${reply}${replies.scheduleDateInvalid}\r\n`;
                      keyboard = kbs.CancelButton(language);
@@ -132,7 +135,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
                   newSchedule.max_date = 0;
                   newSchedule.period_time = 0;
                }
-               invalidSchedules[chatID] = undefined;
+               await DataBase.Schedules.RemoveSchedulesByState(chatID, ScheduleStates.invalid);
                newSchedules.push(newSchedule);
                count++;
                reply += await Format.FormStringFormatSchedule(newSchedule, tz, language, true, !inGroup) + `\r\n`;
