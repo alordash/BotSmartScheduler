@@ -27,7 +27,7 @@ async function CaseDelete(ctx, tzPendingConfirmationUsers, invalidSchedules, tre
             trelloManager.DeleteCard(schedule.trello_card_id);
          }
       }
-      await DataBase.Schedules.RemoveSchedules(undefined, message_id);
+      await DataBase.Schedules.RemoveSchedules(undefined, message_id, chatID);
    } catch (e) {
       console.log(e);
    }

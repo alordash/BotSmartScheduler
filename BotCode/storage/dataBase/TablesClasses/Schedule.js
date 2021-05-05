@@ -79,9 +79,10 @@ class Schedule {
     * @param {String} query 
     * @param {Schedule.GetOptions} getOptions 
     * @param {Number} message_id 
+    * @param {String} chatid 
     * @returns {String}
     */
-   static ApplyGetOptions(query, getOptions = Schedule.GetOptions.all, message_id = -1) {
+   static ApplyGetOptions(query, getOptions = Schedule.GetOptions.all, message_id = null, chatid = null) {
       let keyWord = 'WHERE';
       if (query.indexOf('WHERE') != -1) {
          keyWord = 'AND';
@@ -101,8 +102,8 @@ class Schedule {
       if (query.indexOf('WHERE') != -1) {
          keyWord = 'AND';
       }
-      if (message_id != -1) {
-         query = `${query} ${keyWord} message_id = ${message_id}`;
+      if ((message_id != null) && (chatid != null)) {
+         query = `${query} ${keyWord} message_id = ${message_id} AND chatid = '${chatid}'`;
       }
       return query;
    }
@@ -186,10 +187,11 @@ class Schedule {
    /**
     * @param {Array.<Schedule>} schedules 
     * @param {Number} message_id 
+    * @param {String} chatid 
     */
-   static async RemoveSchedules(schedules = [], message_id = -1) {
+   static async RemoveSchedules(schedules = [], message_id = null, chatid = null) {
       let query = `DELETE FROM schedules`;
-      if(schedules.length == 0 && message_id == -1) {
+      if(schedules.length == 0 && message_id == null) {
          return;
       }
       if (schedules.length) {
@@ -199,8 +201,8 @@ class Schedule {
          }
          query = `${query.substring(0, query.length - 3)})`;
       }
-      if(message_id != -1) {
-         query = Schedule.ApplyGetOptions(query, Schedule.GetOptions.all, message_id);
+      if((message_id != null) && (chatid != null)) {
+         query = Schedule.ApplyGetOptions(query, Schedule.GetOptions.all, message_id, chatid);
       }
       await Connector.instance.Query(query);
    }
@@ -331,8 +333,8 @@ class Schedule {
     * @param {Number} message_id 
     * @returns {Array.<Schedule>}
     */
-   static async GetSchedules(chatID, getOptions = Schedule.GetOptions.all, message_id = -1) {
-      let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`, getOptions, message_id);
+   static async GetSchedules(chatID, getOptions = Schedule.GetOptions.all, message_id = null) {
+      let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`, getOptions, message_id, chatID);
       let res = await Connector.instance.Query(query);
       let i = res.rows.length;
       while (i--) {
