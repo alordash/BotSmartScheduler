@@ -1,6 +1,18 @@
 const { Connector } = require('../Connector');
 const { Encrypt, Decrypt } = require('../../encryption/encrypt');
 
+const GetOptions = Object.freeze({
+   all: 0,
+   draft: 1,
+   valid: 2
+});
+
+const ScheduleStates = Object.freeze({
+   valid: 'valid',
+   pending: 'pending',
+   repeat: 'repeat'
+});
+
 class Schedule {
    /**@type {String} */
    chatid;
@@ -22,6 +34,12 @@ class Schedule {
    trello_card_id;
    /**@type {Number} */
    id;
+   /**@type {ScheduleStates} */
+   state;
+   /**@type {Number} */
+   message_id;
+   /**@type {Number} */
+   creation_date;
 
    /**@param {String} chatid 
     * @param {Number} num 
@@ -31,8 +49,11 @@ class Schedule {
     * @param {Number} period_time 
     * @param {Number} max_date 
     * @param {Number} file_id 
+    * @param {ScheduleStates} state 
+    * @param {Number} message_id 
+    * @param {Number} creation_date 
     */
-   constructor(chatid, num, text, username, target_date, period_time, max_date, file_id) {
+   constructor(chatid, num, text, username, target_date, period_time, max_date, file_id = '~', state = ScheduleStates.valid, message_id = null, creation_date = null) {
       this.chatid = chatid;
       this.num = num;
       this.text = text;
@@ -41,6 +62,56 @@ class Schedule {
       this.period_time = period_time;
       this.max_date = max_date;
       this.file_id = file_id;
+      this.state = state;
+      this.message_id = message_id;
+      this.creation_date = creation_date;
+   }
+
+   /**
+    * @param {Schedule} schedule 
+    * @returns {Schedule}
+    */
+   static FixSchedule(schedule) {
+      schedule.period_time = +schedule.period_time;
+      schedule.target_date = +schedule.target_date;
+      schedule.max_date = +schedule.max_date;
+      if (schedule.trello_card_id == 'undefined') {
+         schedule.trello_card_id = undefined;
+      }
+      return schedule;
+   }
+
+   /**
+    * @param {String} query 
+    * @param {GetOptions} getOptions 
+    * @param {Number} message_id 
+    * @param {String} chatid 
+    * @returns {String}
+    */
+   static ApplyGetOptions(query, getOptions = GetOptions.all, message_id = null, chatid = null) {
+      let keyWord = 'WHERE';
+      if (query.indexOf('WHERE') != -1) {
+         keyWord = 'AND';
+      }
+      switch (getOptions) {
+         case GetOptions.draft:
+            query = `${query} ${keyWord} state != '${ScheduleStates.valid}'`;
+            break;
+
+         case GetOptions.valid:
+            query = `${query} ${keyWord} state = '${ScheduleStates.valid}'`;
+            break;
+
+         default:
+            break;
+      }
+      if (query.indexOf('WHERE') != -1) {
+         keyWord = 'AND';
+      }
+      if ((message_id != null) && (chatid != null)) {
+         query = `${query} ${keyWord} message_id = ${message_id} AND chatid = '${chatid}'`;
+      }
+      return query;
    }
 
    /**
@@ -48,7 +119,7 @@ class Schedule {
     * @param {String} chatID
     */
    static async AddSchedules(chatID, newSchedules) {
-      let queryString = `INSERT INTO schedules VALUES `;
+      let queryString = `INSERT INTO schedules (ChatID, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, state, message_id, creation_date) VALUES `;
       let num = await this.GetSchedulesCount(chatID) + 1;
       let values = [];
       let i = 0;
@@ -57,8 +128,8 @@ class Schedule {
             schedule.username = 'none';
          }
          const text = Encrypt(schedule.text, schedule.chatid);
-         queryString = `${queryString}($${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}), `;
-         values.push(`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`);
+         queryString = `${queryString}($${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}), `;
+         values.push(`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`, schedule.state, schedule.message_id, schedule.creation_date);
          num++;
       }
       queryString = queryString.substring(0, queryString.length - 2);
@@ -73,8 +144,9 @@ class Schedule {
       let num = await this.GetSchedulesCount(schedule.chatid) + 1;
       console.log(`Target_date = ${schedule.target_date}`);
       const text = Encrypt(schedule.text, schedule.chatid);
-      await Connector.instance.paramQuery('INSERT INTO schedules VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-         [`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`]);
+      await Connector.instance.paramQuery(`INSERT INTO schedules (ChatID, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, state, message_id, creation_date) VALUES
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+         [`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`, schedule.state, schedule.message_id, schedule.creation_date]);
       console.log(`Added "${schedule.text}" (encrypted: "${text}") to ${schedule.target_date} from chat "${schedule.chatid}"`);
    }
 
@@ -119,10 +191,33 @@ class Schedule {
    }
 
    /**
+    * @param {Array.<Schedule>} schedules 
+    * @param {Number} message_id 
+    * @param {String} chatid 
+    */
+   static async RemoveSchedules(schedules = [], message_id = null, chatid = null) {
+      let query = `DELETE FROM schedules`;
+      if (schedules.length == 0 && message_id == null) {
+         return;
+      }
+      if (schedules.length) {
+         query = `${query} WHERE (`;
+         for (const schedule of schedules) {
+            query = `${query} id = ${schedule.id} OR`;
+         }
+         query = `${query.substring(0, query.length - 3)})`;
+      }
+      if ((message_id != null) && (chatid != null)) {
+         query = Schedule.ApplyGetOptions(query, GetOptions.all, message_id, chatid);
+      }
+      await Connector.instance.Query(query);
+   }
+
+   /**
     * @param {String} chatID
     * @param {String} s
     */
-   static async RemoveSchedules(chatID, s) {
+   static async RemoveSchedulesQuery(chatID, s) {
       console.log(`Removing schedule s = "${s}"\r\nChatID = "${chatID}" typeof(ChatID) = ${typeof (chatID)}`);
       let query = `DELETE FROM schedules WHERE ChatID = '${chatID}' AND (${s})`;
       console.log(`QUERY = "${query}"`);
@@ -170,7 +265,7 @@ class Schedule {
     */
    static async ListSchedules(chatID) {
       if (!Connector.instance.sending) {
-         return await this.GetSchedules(chatID);
+         return await this.GetSchedules(chatID, GetOptions.valid);
       }
       return [];
    }
@@ -224,10 +319,12 @@ class Schedule {
    }
 
    /**
+    * @param {GetOptions} getOptions 
     * @returns {Array.<Schedule>}
     */
-   static async GetAllSchedules() {
-      let res = await Connector.instance.Query(`SELECT * FROM schedules`);
+   static async GetAllSchedules(getOptions = GetOptions.all) {
+      let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules`, getOptions);
+      let res = await Connector.instance.Query(query);
       console.log(`Picked all schedules ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return res.rows;
@@ -237,11 +334,14 @@ class Schedule {
    }
 
    /**
-    * @param {String} chatID
+    * @param {String} chatID 
+    * @param {GetOptions} getOptions 
+    * @param {Number} message_id 
     * @returns {Array.<Schedule>}
     */
-   static async GetSchedules(chatID) {
-      let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`);
+   static async GetSchedules(chatID, getOptions = GetOptions.all, message_id = null) {
+      let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`, getOptions, message_id, chatID);
+      let res = await Connector.instance.Query(query);
       let i = res.rows.length;
       while (i--) {
          let schedule = res.rows[i];
@@ -249,6 +349,9 @@ class Schedule {
       }
       console.log(`Picked schedules ${JSON.stringify(res.rows)} from chat "${chatID}"`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
+         for (const i in res.rows) {
+            res.rows[i] = Schedule.FixSchedule(res.rows[i]);
+         }
          return res.rows;
       } else {
          return [];
@@ -256,13 +359,32 @@ class Schedule {
    }
 
    /**
-    * @param {String} chatID
+    * @param {String} chatID 
+    * @param {GetOptions} getOptions 
     * @returns {Number}
     */
-   static async GetSchedulesCount(chatID) {
-      let res = await Connector.instance.Query(`SELECT Count(*) FROM schedules WHERE ChatID = '${chatID}'`);
+   static async GetSchedulesCount(chatID, getOptions = GetOptions.all) {
+      let query = Schedule.ApplyGetOptions(`SELECT Count(*) FROM schedules WHERE ChatID = '${chatID}'`, getOptions);
+      let res = await Connector.instance.Query(query);
       return +res.rows[0].count;
+   }
+
+   /**@param {Array.<Schedule>} schedules */
+   static async ConfirmSchedules(schedules) {
+      let query = `UPDATE schedules
+      SET state = '${ScheduleStates.valid}',
+      message_id = NULL
+      WHERE (`;
+      for (const schedule of schedules) {
+         query = `${query} id = ${schedule.id} OR`;
+      }
+      query = `${query.substring(0, query.length - 3)}) AND (`;
+      for (const schedule of schedules) {
+         query = `${query} message_id = ${schedule.message_id} OR`;
+      }
+      query = `${query.substring(0, query.length - 3)})`;
+      return await Connector.instance.Query(query);
    }
 }
 
-module.exports = Schedule;
+module.exports = { Schedule, GetOptions, ScheduleStates };

@@ -71,11 +71,10 @@ async function HandleCommandMessage(bot, ctx, chatID, msgText) {
  * @param {*} ctx 
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
- * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
  * @param {Number} prevalenceForParsing 
  */
-async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, pendingSchedules, invalidSchedules, prevalenceForParsing = 50) {
+async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, invalidSchedules, prevalenceForParsing = 50) {
    let chatID = utils.FormatChatId(ctx.chat.id);
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;
@@ -129,7 +128,7 @@ async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPen
          language = determinedLanguage;
       }
    }
-   ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, mentioned, pendingSchedules, invalidSchedules, prevalenceForParsing);
+   ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, mentioned, invalidSchedules, prevalenceForParsing);
 }
 
 module.exports = {
