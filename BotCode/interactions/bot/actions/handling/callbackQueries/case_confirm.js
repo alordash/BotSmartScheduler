@@ -6,6 +6,7 @@ const { Schedule, GetOptions } = require('../../../../../storage/dataBase/Tables
 const { TrelloManager } = require('@alordash/node-js-trello');
 const utils = require('../../utilities');
 const { StartTimeZoneDetermination } = require('../../technical');
+const { Decrypt } = require('../../../../../storage/encryption/encrypt');
 
 /**
  * @param {*} ctx 
@@ -21,14 +22,17 @@ async function CaseConfirm(ctx, tzPendingConfirmationUsers, invalidSchedules, tr
    let message_id = ctx.update.callback_query.message.message_id;
    let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.draft, message_id);
    try {
-      let schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID, GetOptions.valid);
       if (schedules.length > 0) {
          await DataBase.Schedules.ConfirmSchedules(schedules);
+         schedules = await DataBase.Schedules.ReorderSchedules(chatID);
       }
       let text = '';
       let tz = user.tz;
       for (let schedule of schedules) {
-         schedule.num = ++schedulesCount;
+         if (schedule.message_id != message_id) {
+            continue;
+         }
+         schedule.text = Decrypt(schedule.text, schedule.chatid);
          text += `${await Format.FormStringFormatSchedule(schedule, tz, language, true, true)}\r\n`;
       }
       if (text.length > 0) {

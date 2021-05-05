@@ -239,24 +239,15 @@ class Schedule {
     */
    static async ReorderSchedules(chatID) {
       console.log(`Reordering schedules in chat: ${chatID}`);
-      let res = await Connector.instance.Query(`DO
-      $do$
-      DECLARE
-         s int;
-      BEGIN
-         s := 1;
-         SELECT Max(num) FROM schedules WHERE chatid = '${chatID}' INTO s;
-         IF s IS NULL THEN
-            s:= 1;
-         END IF;
-         FOR i IN REVERSE s..1 LOOP
-            IF NOT EXISTS (SELECT FROM schedules WHERE chatid = '${chatID}' AND num = i) THEN
-               UPDATE schedules SET num = num - 1 WHERE chatid = '${chatID}' AND num > i;
-            END IF;
-         END LOOP;
-      END
-      $do$;`);
-      return res;
+      let res = await Connector.instance.Query(`SELECT * FROM ReorderSchedules('${chatID}')`);
+      if (typeof (res) != 'undefined' && res.rows.length > 0) {
+         for (const i in res.rows) {
+            res.rows[i] = Schedule.FixSchedule(res.rows[i]);
+         }
+         return res.rows;
+      } else {
+         return [];
+      }
    }
 
    /**
@@ -374,18 +365,13 @@ class Schedule {
 
    /**@param {Array.<Schedule>} schedules */
    static async ConfirmSchedules(schedules) {
-      let query = `UPDATE schedules
-      SET state = '${ScheduleStates.valid}',
-      message_id = NULL
-      WHERE (`;
-      for (const schedule of schedules) {
-         query = `${query} id = ${schedule.id} OR`;
+      if(schedules.length <= 0) {
+         return;
       }
-      query = `${query.substring(0, query.length - 3)}) AND (`;
-      for (const schedule of schedules) {
-         query = `${query} message_id = ${schedule.message_id} OR`;
+      let query = '';
+      for(const schedule of schedules) {
+         query = `${query}SELECT ConfirmSchedule(${schedule.id}, '${ScheduleStates.valid}', '${ScheduleStates.valid}');\r\n`;
       }
-      query = `${query.substring(0, query.length - 3)})`;
       return await Connector.instance.Query(query);
    }
 }
