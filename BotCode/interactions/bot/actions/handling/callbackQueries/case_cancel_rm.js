@@ -9,7 +9,6 @@ const { StartTimeZoneDetermination } = require('../../technical');
 /**
  * @param {*} ctx 
  * @param {Array.<Number>} tzPendingConfirmationUsers
- * @param {Array.<Array.<Schedule>>} pendingSchedules 
  * @param {Array.<Schedule>} invalidSchedules 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
  * @param {String} chatID 
@@ -17,7 +16,7 @@ const { StartTimeZoneDetermination } = require('../../technical');
  * @param {Languages} language 
  * @param {*} replies 
  */
- async function CaseCancelRm(ctx, tzPendingConfirmationUsers, pendingSchedules, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
+ async function CaseCancelRm(ctx, tzPendingConfirmationUsers, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
    invalidSchedules[chatID] = undefined;
    try {
       ctx.deleteMessage();
