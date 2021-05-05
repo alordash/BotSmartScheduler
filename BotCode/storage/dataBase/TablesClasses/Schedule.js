@@ -69,25 +69,30 @@ class Schedule {
 
    /**
     * @param {Schedule} schedule 
+    * @param {Boolean} decrypt 
     * @returns {Schedule}
     */
-   static FixSchedule(schedule) {
+   static FixSchedule(schedule, decrypt = true) {
       schedule.period_time = +schedule.period_time;
       schedule.target_date = +schedule.target_date;
       schedule.max_date = +schedule.max_date;
       if (schedule.trello_card_id == 'undefined') {
          schedule.trello_card_id = undefined;
       }
+      if (decrypt) {
+         schedule.text = Decrypt(schedule.text, schedule.chatid);
+      }
       return schedule;
    }
 
    /**
     * @param {Array.<Schedule>} schedules 
+    * @param {Boolean} decrypt 
     * @returns {Array.<Schedule>}
     */
-   static FixSchedulesRow(schedules) {
+   static FixSchedulesRow(schedules, decrypt = true) {
       for (const i in schedules) {
-         schedules[i] = Schedule.FixSchedule(schedules[i]);
+         schedules[i] = Schedule.FixSchedule(schedules[i], decrypt);
       }
       return schedules;
    }
@@ -310,7 +315,6 @@ class Schedule {
       let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE num = '${num}' AND ChatID = '${chatID}'`);
       console.log(`Picked schedule by num ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         res.rows[0].text = Decrypt(res.rows[0].text, res.rows[0].chatid);
          return Schedule.FixSchedule(res.rows[0]);
       } else {
          return undefined;
@@ -319,14 +323,15 @@ class Schedule {
 
    /**
     * @param {GetOptions} getOptions 
+    * @param {Boolean} decrypt 
     * @returns {Array.<Schedule>}
     */
-   static async GetAllSchedules(getOptions = GetOptions.all) {
+   static async GetAllSchedules(getOptions = GetOptions.all, decrypt = true) {
       let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules`, getOptions);
       let res = await Connector.instance.Query(query);
       console.log(`Picked all schedules ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return Schedule.FixSchedulesRow(res.rows);
+         return Schedule.FixSchedulesRow(res.rows, decrypt);
       } else {
          return [];
       }
@@ -341,11 +346,6 @@ class Schedule {
    static async GetSchedules(chatID, getOptions = GetOptions.all, message_id = null) {
       let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`, getOptions, message_id, chatID);
       let res = await Connector.instance.Query(query);
-      let i = res.rows.length;
-      while (i--) {
-         let schedule = res.rows[i];
-         res.rows[i].text = Decrypt(schedule.text, schedule.chatid);
-      }
       console.log(`Picked schedules ${JSON.stringify(res.rows)} from chat "${chatID}"`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return Schedule.FixSchedulesRow(res.rows);
@@ -367,11 +367,11 @@ class Schedule {
 
    /**@param {Array.<Schedule>} schedules */
    static async ConfirmSchedules(schedules) {
-      if(schedules.length <= 0) {
+      if (schedules.length <= 0) {
          return;
       }
       let query = '';
-      for(const schedule of schedules) {
+      for (const schedule of schedules) {
          query = `${query}SELECT ConfirmSchedule(${schedule.id}, '${ScheduleStates.valid}', '${ScheduleStates.valid}');\r\n`;
       }
       return await Connector.instance.Query(query);

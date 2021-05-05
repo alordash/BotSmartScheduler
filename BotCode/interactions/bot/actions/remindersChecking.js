@@ -3,11 +3,10 @@ const Extra = require('telegraf/extra');
 const { LoadReplies } = require('../static/replies/repliesLoader');
 const { DataBase, User, Chat } = require('../../../storage/dataBase/DataBase');
 const { Schedule, GetOptions, ScheduleStates } = require('../../../storage/dataBase/TablesClasses/Schedule');
-const { Decrypt } = require('../../../storage/encryption/encrypt');
+const { Decrypt, Encrypt } = require('../../../storage/encryption/encrypt');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { BotSendMessage, BotSendAttachment } = require('./replying');
 const utils = require('./utilities');
-const { Encrypt } = require('../../../storage/encryption/encrypt');
 const { Connector } = require('../../../storage/dataBase/Connector');
 
 /** @param {Composer} bot */
@@ -40,9 +39,9 @@ async function CheckExpiredSchedules(bot) {
                            DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.num, dueTime);
                         }
 
-                        const cardText = Encrypt(card.desc, schedule.chatid);
+                        const cardText = card.desc;
                         if (cardText != schedule.text) {
-                           DataBase.Schedules.SetScheduleText(schedule.chatid, schedule.num, cardText);
+                           DataBase.Schedules.SetScheduleText(schedule.chatid, schedule.num, Encrypt(cardText, schedule.chatid));
                         }
                      }
                   } else if (typeof (card) == 'undefined') {
@@ -91,7 +90,7 @@ async function CheckExpiredSchedules(bot) {
                scheduleNum = ` /${schedule.num}`
             }
 
-            const remindText = `${remindIcon}${scheduleNum}${mentionUser} "${Decrypt(schedule.text, schedule.chatid)}"`;
+            const remindText = `${remindIcon}${scheduleNum}${mentionUser} "${schedule.text}"`;
             try {
                if (schedule.file_id != '~' && schedule.file_id != null) {
                   msg = await BotSendAttachment(bot, +chatID, remindText, schedule.file_id, keyboard, true);

@@ -78,7 +78,7 @@ class Migrations {
    }
 
    static async EncryptSchedules() {
-      let schedules = await Schedule.GetAllSchedules();
+      let schedules = await Schedule.GetAllSchedules(undefined, false);
       for (const schedule of schedules) {
          let encrypted = true;
          const key = schedule.chatid;

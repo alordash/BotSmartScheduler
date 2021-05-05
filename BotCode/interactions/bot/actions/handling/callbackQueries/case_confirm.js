@@ -6,7 +6,6 @@ const { Schedule, GetOptions } = require('../../../../../storage/dataBase/Tables
 const { TrelloManager } = require('@alordash/node-js-trello');
 const utils = require('../../utilities');
 const { StartTimeZoneDetermination } = require('../../technical');
-const { Decrypt } = require('../../../../../storage/encryption/encrypt');
 
 /**
  * @param {*} ctx 
@@ -32,7 +31,6 @@ async function CaseConfirm(ctx, tzPendingConfirmationUsers, invalidSchedules, tr
          if (schedule.message_id != message_id) {
             continue;
          }
-         schedule.text = Decrypt(schedule.text, schedule.chatid);
          text += `${await Format.FormStringFormatSchedule(schedule, tz, language, true, true)}\r\n`;
       }
       if (text.length > 0) {
