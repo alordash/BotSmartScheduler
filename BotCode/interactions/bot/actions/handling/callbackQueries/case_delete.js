@@ -1,7 +1,8 @@
 const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('../../../static/replies/repliesLoader');
 const Format = require('../../../../processing/formatting');
-const { DataBase, Schedule, User, Chat } = require('../../../../../storage/dataBase/DataBase');
+const { DataBase, User, Chat } = require('../../../../../storage/dataBase/DataBase');
+const { Schedule, GetOptions } = require('../../../../../storage/dataBase/TablesClasses/Schedule');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const utils = require('../../utilities');
 const { StartTimeZoneDetermination } = require('../../technical');
@@ -22,7 +23,7 @@ async function CaseDelete(ctx, tzPendingConfirmationUsers, invalidSchedules, tre
       let chat = await DataBase.Chats.GetChatById(chatID);
       if (typeof (chat) != 'undefined' && chat.trello_list_id != null) {
          let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
-         let schedules = await DataBase.Schedules.GetSchedules(chatID, Schedule.GetOptions.all, message_id);
+         let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.all, message_id);
          for (const schedule of schedules) {
             trelloManager.DeleteCard(schedule.trello_card_id);
          }

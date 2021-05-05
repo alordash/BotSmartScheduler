@@ -1,7 +1,8 @@
 const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('../../../static/replies/repliesLoader');
 const Format = require('../../../../processing/formatting');
-const { DataBase, Schedule, User, Chat } = require('../../../../../storage/dataBase/DataBase');
+const { DataBase, User, Chat } = require('../../../../../storage/dataBase/DataBase');
+const { Schedule, GetOptions } = require('../../../../../storage/dataBase/TablesClasses/Schedule');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const utils = require('../../utilities');
 const { StartTimeZoneDetermination } = require('../../technical');
@@ -18,9 +19,9 @@ const { StartTimeZoneDetermination } = require('../../technical');
  */
 async function CaseConfirm(ctx, tzPendingConfirmationUsers, invalidSchedules, trelloPendingConfirmationUsers, chatID, user, language, replies) {
    let message_id = ctx.update.callback_query.message.message_id;
-   let schedules = await DataBase.Schedules.GetSchedules(chatID, Schedule.GetOptions.pending, message_id);
+   let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.draft, message_id);
    try {
-      let schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID, Schedule.GetOptions.valid);
+      let schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID, GetOptions.valid);
       if (schedules.length > 0) {
          await DataBase.Schedules.ConfirmSchedules(schedules);
       }

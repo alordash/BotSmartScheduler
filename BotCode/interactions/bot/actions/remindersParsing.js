@@ -2,7 +2,8 @@ const Markup = require('telegraf/markup');
 const { Languages, LoadReplies } = require('../static/replies/repliesLoader');
 const Format = require('../../processing/formatting');
 const kbs = require('../static/replies/keyboards');
-const { DataBase, Schedule, User, Chat } = require('../../../storage/dataBase/DataBase');
+const { DataBase, User, Chat } = require('../../../storage/dataBase/DataBase');
+const { Schedule, ScheduleStates } = require('../../../storage/dataBase/TablesClasses/Schedule');
 const { arrayParseString } = require('@alordash/parse-word-to-number');
 const { wordsParseDate, TimeList, ParsedDate } = require('@alordash/date-parser');
 const { ProcessParsedDate } = require('../../processing/timeProcessing');
@@ -44,7 +45,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
    let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
    let keyboard;
    const now = Date.now();
-   
+
    let newSchedules = [];
    for (let parsedDate of parsedDates) {
       let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
@@ -169,8 +170,8 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
          options[answers.length - 1] = keyboard;
          let results = await BotReplyMultipleMessages(ctx, answers, options);
          let message_id = results[results.length - 1].message_id;
-         for(const nsi in newSchedules) {
-            newSchedules[nsi].pending = true;
+         for (const nsi in newSchedules) {
+            newSchedules[nsi].state = ScheduleStates.pending;
             newSchedules[nsi].message_id = message_id;
          }
          await DataBase.Schedules.AddSchedules(newSchedules[0].chatid, newSchedules);
