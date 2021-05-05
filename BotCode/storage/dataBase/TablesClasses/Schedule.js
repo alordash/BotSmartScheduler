@@ -276,7 +276,7 @@ class Schedule {
     */
    static async CheckActiveSchedules(tsNow) {
       let expiredSchedules = [];
-      let schedules = await this.GetAllSchedules();
+      let schedules = await this.GetAllSchedules(GetOptions.valid);
       for (let schedule of schedules) {
          console.log(`schedule = ${JSON.stringify(schedule)}, tsNow = ${tsNow}`);
          if (schedule.target_date <= tsNow || schedule.trello_card_id != null) {
@@ -327,7 +327,7 @@ class Schedule {
       let res = await Connector.instance.Query(query);
       console.log(`Picked all schedules ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         for(const i in res.rows) {
+         for (const i in res.rows) {
             res.rows[i] = Schedule.FixSchedule(res.rows[i]);
          }
          return res.rows;
