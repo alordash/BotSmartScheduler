@@ -1,7 +1,8 @@
 const { Composer } = require('telegraf');
 const Extra = require('telegraf/extra');
 const { LoadReplies } = require('../static/replies/repliesLoader');
-const { DataBase, Schedule, User, Chat } = require('../../../storage/dataBase/DataBase');
+const { DataBase, User, Chat } = require('../../../storage/dataBase/DataBase');
+const { Schedule, GetOptions, ScheduleStates } = require('../../../storage/dataBase/TablesClasses/Schedule');
 const { Decrypt } = require('../../../storage/encryption/encrypt');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { BotSendMessage, BotSendAttachment } = require('./replying');
@@ -96,11 +97,8 @@ async function CheckExpiredSchedules(bot) {
                      ...keyboard
                   }, true);
                }
-               setTimeout(function (msg) {
-                  bot.telegram.editMessageReplyMarkup(msg.chat.id, msg.message_id, Extra.markup((m) =>
-                     m.inlineKeyboard([]).removeKeyboard()
-                  ));
-               }, global.repeatScheduleTime, msg);
+               let repeatSchedule = new Schedule(schedule.chatid, undefined, schedule.text, schedule.username, +schedule.target_date + global.repeatScheduleTime, 0, 0, schedule.file_id, ScheduleStates.repeat, msg.message_id, now);
+               DataBase.Schedules.AddSchedule(repeatSchedule);
             } catch (e) {
                console.error(e);
                isBlocked = true;
@@ -156,22 +154,32 @@ async function CheckExpiredSchedules(bot) {
 
 /**@param {Composer} bot */
 async function CheckPendingSchedules(bot) {
-   let schedules = await DataBase.Schedules.GetAllSchedules(Schedule.GetOptions.pending);
+   let schedules = await DataBase.Schedules.GetAllSchedules(GetOptions.draft);
    Connector.instance.sending = true;
    let now = Date.now();
+   let deletingSchedules = [];
    for (const i in schedules) {
       const schedule = schedules[i];
+      if ((now - schedule.creation_date) >= global.repeatScheduleTime) {
+         deletingSchedules.push(schedule);
+      }
+   }
+   for (const schedule of deletingSchedules) {
       let chatid = schedule.chatid;
       if (chatid[0] == '_') {
          chatid = - +(chatid.substring(1));
       } else {
          chatid = +chatid;
       }
-      const msg = await bot.telegram.callApi("getHistory", { peer: chatid, offset_id: schedule.message_id });
-      console.log('msg :>> ', msg);
+      if (chatid < 0 && schedule.state == ScheduleStates.pending) {
+         bot.telegram.deleteMessage(chatid, schedule.message_id);
+      } else {
+         bot.telegram.editMessageReplyMarkup(chatid, schedule.message_id);
+      }
    }
+   await DataBase.Schedules.RemoveSchedules(deletingSchedules);
 
-   Connector.instance.sending = false
+   Connector.instance.sending = false;
 }
 
 module.exports = {

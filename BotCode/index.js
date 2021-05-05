@@ -45,12 +45,14 @@ DataBase.EstablishConnection(dbOptions);
    if (process.env.ENABLE_SCHEDULES_CHEKING == 'true') {
       setTimeout(async function () {
          console.log(`Timeout expired`);
-         setInterval(function () { CheckExpiredSchedules(SmartSchedulerBot) }, 60000);
+         setInterval(function () {
+            CheckExpiredSchedules(SmartSchedulerBot);
+            CheckPendingSchedules(SmartSchedulerBot);
+         }, 60000);
          await CheckExpiredSchedules(SmartSchedulerBot);
+         await CheckPendingSchedules(SmartSchedulerBot);
       }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
    }
-
-//   CheckPendingSchedules(SmartSchedulerBot);
 
    if (process.env.ENABLE_LOGS == 'false') {
       console.log = function () { };
