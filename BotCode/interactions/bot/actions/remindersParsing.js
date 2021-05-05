@@ -43,6 +43,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
    let chat = await DataBase.Chats.GetChatById(`${ctx.chat.id}`);
    let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
    let keyboard;
+   const now = Date.now();
    
    let newSchedules = [];
    for (let parsedDate of parsedDates) {
@@ -79,7 +80,10 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
                dateParams.target_date,
                dateParams.period_time,
                dateParams.max_date,
-               file_id);
+               file_id,
+               undefined,
+               undefined,
+               now);
             let proceed = dateExists && textIsValid;
             if (!proceed && !inGroup) {
                let invalidSchedule = invalidSchedules[chatID];

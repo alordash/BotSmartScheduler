@@ -29,10 +29,11 @@ const { StartTimeZoneDetermination } = require('../../technical');
    if (chatID[0] === '_') {
       username = ctx.from.username;
    }
+   const now = Date.now();
    let file_id = utils.GetAttachmentId(ctx.callbackQuery.message);
    let schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID);
-   let target_date = Date.now() + global.repeatScheduleTime;
-   let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0, file_id);
+   let target_date = now + global.repeatScheduleTime;
+   let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0, file_id, undefined, undefined, now);
    let tz = user.tz;
 
    try {
