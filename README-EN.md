@@ -30,7 +30,6 @@ Smart Scheduler supports pictures, videos and files 💾 in reminders.
 Smart Scheduler stores tasks **separately** for every chat and can work in conversations.  
 
 Smart Scheduler can be integrated to your [Trello](https://trello.com/) board!  
-More details: /help_trello  
 
 ### Supported commands:
 
