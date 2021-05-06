@@ -163,7 +163,12 @@ class Schedule {
     */
    static async AddSchedule(schedule) {
       if (schedule.chatid[0] != '_' || typeof (schedule.username) == 'undefined') schedule.username = 'none';
-      let num = await this.GetSchedulesCount(schedule.chatid) + 1;
+      let num;
+      if (schedule.state == ScheduleStates.repeat) {
+         num = -1;
+      } else {
+         num = await this.GetSchedulesCount(schedule.chatid) + 1;
+      }
       console.log(`Target_date = ${schedule.target_date}`);
       const text = Encrypt(schedule.text, schedule.chatid);
       await Connector.instance.paramQuery(`INSERT INTO schedules (ChatID, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, state, message_id, creation_date) VALUES
@@ -201,24 +206,25 @@ class Schedule {
    }
 
    /**
-    * @param {Number} id 
     * @param {Schedule} schedule 
+    * @param {Number} id 
     */
-   static async SetSchedule(id, schedule) {
+   static async SetSchedule(schedule, id = schedule.id) {
+      const text = Encrypt(schedule.text, schedule.chatid);
       await Connector.instance.paramQuery(`UPDATE schedules SET
       ChatID = $1,
-      text = $3,
-      username = $4,
-      target_date = $5,
-      period_time = $6,
-      max_date = $7,
-      file_id = $8,
-      trello_card_id = $9,
-      state = $10,
-      message_id = $11,
-      creation_date = $12
+      text = $2,
+      username = $3,
+      target_date = $4,
+      period_time = $5,
+      max_date = $6,
+      file_id = $7,
+      trello_card_id = $8,
+      state = $9,
+      message_id = $10,
+      creation_date = $11
       WHERE id = ${id}`,
-         [`${schedule.chatid}`, num, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`, schedule.state, schedule.message_id, schedule.creation_date]);
+         [`${schedule.chatid}`, `${text}`, `${schedule.username}`, schedule.target_date, schedule.period_time, schedule.max_date, `${schedule.file_id}`, `${schedule.trello_card_id}`, schedule.state, schedule.message_id, schedule.creation_date]);
    }
 
    /**

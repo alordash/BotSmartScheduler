@@ -43,6 +43,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
    let parsedDateIndex = 0;
    let chat = await DataBase.Chats.GetChatById(`${ctx.chat.id}`);
    let trelloIsOk = typeof (chat) != 'undefined' && chat.trello_list_id != null;
+   let trelloKeyboard;
    let keyboard;
    const now = Date.now();
 
@@ -122,25 +123,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             }
             if (proceed) {
                if (trelloIsOk) {
-                  let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
-
-                  let nickExtractionResult = ExtractNicknames(newSchedule.text);
-                  let ids = await GetUsersIDsFromNicknames(nickExtractionResult.nicks, trelloManager);
-                  newSchedule.text = nickExtractionResult.string;
-
-                  let text = newSchedule.text;
-                  if (text.length > global.MaxTrelloCardTextLength) {
-                     text = text.substring(0, global.MaxTrelloCardTextLength)
-                     text = `${text.substring(0, text.lastIndexOf(' '))}...`;
-                  }
-
-                  let card = await trelloManager.AddCard(chat.trello_list_id, text, newSchedule.text, 0, new Date(newSchedule.target_date), ids);
-
-                  if (typeof (card) != 'undefined') {
-                     newSchedule.trello_card_id = card.id;
-                  }
-                  newSchedule.max_date = 0;
-                  newSchedule.period_time = 0;
+                  trelloKeyboard = kbs.ToTrelloKeyboard(language);
                }
                RemoveInvalidRemindersMarkup(ctx, chatID);
                await DataBase.Schedules.RemoveSchedulesByState(chatID, ScheduleStates.invalid);
@@ -161,9 +144,6 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
       }
       parsedDateIndex++;
    }
-   if ((!inGroup || mentioned) && typeof (newSchedules) != 'undefined' && newSchedules.length > 0) {
-      await DataBase.Schedules.AddSchedules(chatID, newSchedules);
-   }
    //#endregion
    if (reply == '') {
       return;
@@ -174,30 +154,40 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
    let answers = Format.SplitBigMessage(reply);
    let options = [];
    try {
+      let results;
+      let message_id;
       if (!mentioned && inGroup && typeof (schedule) === 'undefined' && parsedDates.length > 0) {
          if (typeof (newSchedules) != 'undefined' && newSchedules.length > 0) {
             keyboard = kbs.ConfirmSchedulesKeyboard(language);
          }
+         keyboard = kbs.MergeInlineKeyboards(keyboard, trelloKeyboard);
          options[answers.length - 1] = keyboard;
-         let results = await BotReplyMultipleMessages(ctx, answers, options);
-         let message_id = results[results.length - 1].message_id;
+         results = await BotReplyMultipleMessages(ctx, answers, options);
+         message_id = results[results.length - 1].message_id;
          for (const nsi in newSchedules) {
             newSchedules[nsi].state = ScheduleStates.pending;
-            newSchedules[nsi].message_id = message_id;
          }
-         await DataBase.Schedules.AddSchedules(newSchedules[0].chatid, newSchedules);
       } else {
-         options[answers.length - 1] = await kbs.LogicalListKeyboard(language, chatID, schedulesCount);
+         let kb = await kbs.LogicalListKeyboard(language, chatID, schedulesCount);
          if (typeof (keyboard) != 'undefined') {
             keyboard.reply_markup.inline_keyboard[0][0].callback_data = 'cancel_rm';
             options[answers.length - 1] = keyboard;
+         } else {
+            kb = kbs.MergeInlineKeyboards(kb, trelloKeyboard);
          }
-         let results = await BotReplyMultipleMessages(ctx, answers, options);
+         options[answers.length - 1] = kb;
+         results = await BotReplyMultipleMessages(ctx, answers, options);
+         message_id = results[results.length - 1].message_id;
          if (typeof (invalidSchedule) != 'undefined') {
-            let message_id = results[results.length - 1].message_id;
             invalidSchedule.message_id = message_id;
             await DataBase.Schedules.AddSchedule(invalidSchedule);
          }
+      }
+      if (typeof (newSchedules) != 'undefined' && newSchedules.length > 0) {
+         for (const nsi in newSchedules) {
+            newSchedules[nsi].message_id = message_id;
+         }
+         await DataBase.Schedules.AddSchedules(chatID, newSchedules);
       }
    } catch (e) {
       console.error(e);

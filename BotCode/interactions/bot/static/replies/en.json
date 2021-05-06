@@ -39,6 +39,7 @@
     "unsubscribe": "🔕 Unsubscribe",
     "invite": "🏵 New major update is out!\r\n<b>List of changes:",
     "year": "",
+    "getBack": "⬅️ Back",
     "trelloAuthenticate0": "For integration with Trello open <a href=\"",
     "trelloAuthenticate1": "\">this link 🔗</a>, then press the bottom button <b>[ Allow ]</b>.\r\nIn opened tab <b>copy</b> your token 🔐 and <b>send it</b> in message to bot.",
     "trelloSavedToken": "🔒 Saved token.",
@@ -60,7 +61,7 @@
     "trelloHelpButton": "🗳 Trello",
     "trelloHelp": "⚙️ There are three steps to integrate your schedules with Trello:\r\n1. Authorize your Trello account.\r\n    <i>By sending command /trello</i>\r\n2. Pin one of your boards to current chat.\r\n    <i>By sending command /trello_pin &lt;id_of_board&gt;</i>\r\n3. Choose to which list of that board reminds will be duplicated.\r\n    <i>By clicking the command near required list.</i>\r\n\r\n<b>Full list of commands:</b>\r\n🗄 /trello\r\n    Authorizes user and displays all his boards with their id.\r\n🔖 /trello_pin &lt;id_of_board&gt;\r\n    Pins entered board to current chat.\r\n📌 /trello_unpin\r\n    Unpins board from current chat.\r\n<i>To deauthorize your Trello account from bot send:\r\n/trello clear</i>",
     "trelloInfoLink": "All features of working with Trello are described here:",
-    "getBack": "⬅️ Back",
+    "toTrelloButton": "📤 To trello",
     "months": [
         "January",
         "February",

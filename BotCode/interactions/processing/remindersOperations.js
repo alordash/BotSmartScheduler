@@ -1,6 +1,7 @@
 const { DataBase, Chat } = require('../../storage/dataBase/DataBase');
 const { Schedule, GetOptions, ScheduleStates } = require('../../storage/dataBase/TablesClasses/Schedule');
 const { TrelloManager } = require('@alordash/node-js-trello');
+const { ExtractNicknames, GetUsersIDsFromNicknames } = require('./nicknamesExtraction');
 const utils = require('./utilities');
 
 /**
@@ -65,7 +66,40 @@ async function RemoveInvalidRemindersMarkup(bot, chatID, message_id = null) {
    return true;
 }
 
+/**
+ * @param {Schedule} schedule 
+ * @param {Chat} chat 
+ * @returns {Schedule} 
+ */
+async function AddScheduleToTrello(schedule, chat = null) {
+   if(chat == null) {
+      chat = await DataBase.Chats.GetChatById(schedule.chatid);
+   }
+   let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
+
+   let nickExtractionResult = ExtractNicknames(schedule.text);
+   let ids = await GetUsersIDsFromNicknames(nickExtractionResult.nicks, trelloManager);
+   schedule.text = nickExtractionResult.string;
+
+   let text = schedule.text;
+   if (text.length > global.MaxTrelloCardTextLength) {
+      text = text.substring(0, global.MaxTrelloCardTextLength)
+      text = `${text.substring(0, text.lastIndexOf(' '))}...`;
+   }
+
+   let card = await trelloManager.AddCard(chat.trello_list_id, text, schedule.text, 0, new Date(schedule.target_date), ids);
+
+   if (typeof (card) != 'undefined') {
+      schedule.trello_card_id = card.id;
+   }
+   schedule.max_date = 0;
+   schedule.period_time = 0;
+   await DataBase.Schedules.SetSchedule(schedule);
+   return schedule;
+}
+
 module.exports = {
    RemoveReminders,
-   RemoveInvalidRemindersMarkup
+   RemoveInvalidRemindersMarkup,
+   AddScheduleToTrello
 };

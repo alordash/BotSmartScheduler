@@ -3,6 +3,34 @@ const Extra = require('telegraf/extra');
 const { Languages, LoadReplies } = require('./repliesLoader');
 const { DataBase, Schedule } = require('../../../../storage/dataBase/DataBase');
 
+/**
+ * @param {Array.<Extra>} keyboards 
+ */
+function MergeInlineKeyboards(...keyboards) {
+   let main_keyboard = keyboards[0];
+   if (typeof (main_keyboard.reply_markup.inline_keyboard) == 'undefined') {
+      main_keyboard.reply_markup.inline_keyboard = [];
+   }
+   let count = 0;
+   for (let i = 1; i < keyboards.length; i++) {
+      let kb = keyboards[i];
+      if(typeof(kb) == 'undefined') {
+         continue;
+      }
+      let inline_keyboard = kb.reply_markup.inline_keyboard;
+      if (typeof (inline_keyboard) != 'undefined' && inline_keyboard.length > 0) {
+         count++;
+         main_keyboard.reply_markup.inline_keyboard.push(
+            ...inline_keyboard
+         );
+      }
+   }
+   if(count > 0 && typeof(main_keyboard.reply_markup.keyboard) != 'undefined') {
+      delete main_keyboard.reply_markup.keyboard;
+   }
+   return main_keyboard;
+}
+
 /**@param {Languages} language */
 function ListKeyboard(language) {
    const replies = LoadReplies(language);
@@ -105,7 +133,20 @@ function BackKeyboard(language, cb_query) {
    );
 }
 
+/**
+ * @param {Languages} language 
+ */
+function ToTrelloKeyboard(language) {
+   const replies = LoadReplies(language);
+   return Extra.markup((m) =>
+      m.inlineKeyboard([
+         m.callbackButton(replies.toTrelloButton, 'to_trello')
+      ])
+   );
+}
+
 module.exports = {
+   MergeInlineKeyboards,
    ListKeyboard,
    TzDeterminationKeyboard,
    TzDeterminationOnStartInlineKeyboard,
@@ -115,5 +156,6 @@ module.exports = {
    RemoveKeyboard,
    LogicalListKeyboard,
    HelpSectionsKeyboards,
-   BackKeyboard
+   BackKeyboard,
+   ToTrelloKeyboard
 }
