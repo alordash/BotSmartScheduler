@@ -11,6 +11,7 @@ const { TrelloManager } = require('@alordash/node-js-trello');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../processing/nicknamesExtraction');
 const { BotReplyMultipleMessages } = require('./replying');
 const utils = require('../../processing/utilities');
+const { RemoveInvalidRemindersMarkup } = require('../../processing/remindersOperations');
 
 /**
  * @param {*} ctx 
@@ -45,6 +46,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
    let keyboard;
    const now = Date.now();
 
+   let invalidSchedule;
    let newSchedules = [];
    for (let parsedDate of parsedDates) {
       let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
@@ -56,7 +58,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
          (dateParams.target_date != 0 ||
             dateParams.period_time != 0 ||
             dateParams.max_date != 0);
-      let schedules = await DataBase.Schedules.GetSchedules(chatID);
+      let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.valid);
       let found = false;
       let i = 0;
       for (; !found && i < schedules.length; i++) {
@@ -87,7 +89,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             let proceed = dateExists && textIsValid;
             if (!proceed && !inGroup) {
                let invalidSchedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.invalid);
-               let invalidSchedule = invalidSchedules[0];
+               invalidSchedule = invalidSchedules[0];
                if (typeof (invalidSchedule) != 'undefined') {
                   const invalidText = invalidSchedule.text.length == 0;
                   if (invalidText && textIsValid) {
@@ -101,9 +103,12 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
                   }
                }
                if (!proceed) {
+                  if (typeof (invalidSchedule) != 'undefined') {
+                     RemoveInvalidRemindersMarkup(ctx, chatID, invalidSchedule.message_id);
+                  }
                   await DataBase.Schedules.RemoveSchedulesByState(chatID, ScheduleStates.invalid);
                   newSchedule.state = ScheduleStates.invalid;
-                  await DataBase.Schedules.AddSchedule(newSchedule);
+                  invalidSchedule = newSchedule;
                   if (!dateExists) {
                      reply = `${reply}${replies.scheduleDateInvalid}\r\n`;
                      keyboard = kbs.CancelButton(language);
@@ -111,6 +116,8 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
                      reply = `${reply}${replies.scheduleTextInvalid}\r\n`;
                      keyboard = kbs.CancelButton(language);
                   }
+               } else {
+                  invalidSchedule = undefined;
                }
             }
             if (proceed) {
@@ -135,6 +142,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
                   newSchedule.max_date = 0;
                   newSchedule.period_time = 0;
                }
+               RemoveInvalidRemindersMarkup(ctx, chatID);
                await DataBase.Schedules.RemoveSchedulesByState(chatID, ScheduleStates.invalid);
                newSchedules.push(newSchedule);
                count++;
@@ -184,7 +192,12 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             keyboard.reply_markup.inline_keyboard[0][0].callback_data = 'cancel_rm';
             options[answers.length - 1] = keyboard;
          }
-         BotReplyMultipleMessages(ctx, answers, options);
+         let results = await BotReplyMultipleMessages(ctx, answers, options);
+         if (typeof (invalidSchedule) != 'undefined') {
+            let message_id = results[results.length - 1].message_id;
+            invalidSchedule.message_id = message_id;
+            await DataBase.Schedules.AddSchedule(invalidSchedule);
+         }
       }
    } catch (e) {
       console.error(e);

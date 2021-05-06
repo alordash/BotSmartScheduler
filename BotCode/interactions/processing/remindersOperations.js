@@ -45,6 +45,27 @@ async function RemoveReminders(bot, schedules = []) {
    }
 }
 
+/**
+ * @param {*} bot 
+ * @param {String} chatID 
+ * @param {Number} message_id 
+ * @returns {Boolean} 
+ */
+async function RemoveInvalidRemindersMarkup(bot, chatID, message_id = null) {
+   if (message_id == null) {
+      let invalidSchedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.invalid);
+      let invalidSchedule = invalidSchedules[0];
+      if (typeof (invalidSchedule) == 'undefined') {
+         return false;
+      }
+      message_id = invalidSchedule.message_id;
+   }
+   let _chatid = utils.UnformatChatId(chatID);
+   bot.telegram.editMessageReplyMarkup(_chatid, message_id);
+   return true;
+}
+
 module.exports = {
-   RemoveReminders
+   RemoveReminders,
+   RemoveInvalidRemindersMarkup
 };
