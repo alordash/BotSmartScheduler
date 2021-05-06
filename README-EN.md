@@ -43,8 +43,6 @@ Smart Scheduler can be integrated to your [Trello](https://trello.com/) board!
 
 - 🌐 **_/tz_** - Configures time zone.
 
-- 🗄 **_/help_trello_** - Guide to working with [Trello](https://trello.com/).
-
 and /start with /help of course.
 
 
