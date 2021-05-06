@@ -1,7 +1,7 @@
 {
     "start": "This bot will allow you to schedule your tasks easy and fast using only a messenger ⏰\r\nJust type your plans 💬 or send voice message 🗣️ and he will automatically understand scheduling date and what's to schedule.\r\n\r\n<i>Before we continue, please consider specifying your time zone by pressing the button below.</i>",
     "startTZ": "🌐 Specify time zone",
-    "commands": "<b>Available commands:</b>\r\n🗓 /list\r\n    Shows active tasks for this chat.\r\n🗑 /del <b>1, 2, ...N</b>\r\n    Deletes tasks by their number.\r\n🗑 /del <b>1-10, A-B</b>\r\n    Deletes all tasks within range.\r\n#️⃣ /N\r\n    Deletes N-th task.\r\n🌐 /tz\r\n    Configures time zone.\r\n<b>This bot can duplicate reminds to</b> <a href=\"https://trello.com/\">🗄 Trello</a>.\r\nDetailed information: /help_trello",
+    "commands": "<b>Available commands:</b>\r\n🗓 /list\r\n    Shows active tasks for this chat.\r\n🗑 /del <b>1, 2, ...N</b>\r\n    Deletes tasks by their number.\r\n🗑 /del <b>1-10, A-B</b>\r\n    Deletes all tasks within range.\r\n#️⃣ /N\r\n    Deletes N-th task.\r\n🌐 /tz\r\n    Configures time zone.\r\n<b>This bot can duplicate reminds to</b> <a href=\"https://trello.com/\">🗄 Trello</a>.\r\nFor detailed information press the button below.",
     "voiceMessageTooBig": "⚠️ Voice message duration should be less than 30 seconds.",
     "showListAction": "🗓 Show list",
     "alreadyScheduled": "already scheduled at:",
@@ -57,8 +57,10 @@
     "trelloBoardUnbinded1": "unpinned from this chat.",
     "trelloBoardAlreadyBinded0": "🔖 Pinned board:",
     "trelloBoardAlreadyBinded1": "List:",
+    "trelloHelpButton": "🗳 Trello",
     "trelloHelp": "⚙️ There are three steps to integrate your schedules with Trello:\r\n1. Authorize your Trello account.\r\n    <i>By sending command /trello</i>\r\n2. Pin one of your boards to current chat.\r\n    <i>By sending command /trello_pin &lt;id_of_board&gt;</i>\r\n3. Choose to which list of that board reminds will be duplicated.\r\n    <i>By clicking the command near required list.</i>\r\n\r\n<b>Full list of commands:</b>\r\n🗄 /trello\r\n    Authorizes user and displays all his boards with their id.\r\n🔖 /trello_pin &lt;id_of_board&gt;\r\n    Pins entered board to current chat.\r\n📌 /trello_unpin\r\n    Unpins board from current chat.\r\n<i>To deauthorize your Trello account from bot send:\r\n/trello clear</i>",
     "trelloInfoLink": "All features of working with Trello are described here:",
+    "getBack": "⬅️ Back",
     "months": [
         "January",
         "February",

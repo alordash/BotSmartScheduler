@@ -15,15 +15,10 @@ const { TrelloAuthenticate, TrelloAddList } = require('./trelloCommands');
 async function HelpCommand(ctx) {
    let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
    const replies = LoadReplies(language);
-   let keyboard = await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id));
+   let keyboard = kbs.HelpSectionsKeyboards(language);
    keyboard['disable_web_page_preview'] = true;
-   let reply;
-   if (ctx.message.text.indexOf(trelloHelp) >= 0) {
-      reply = `${replies.trelloHelp}\r\n${Format.TrelloInfoLink(language, process.env.SMART_SCHEDULER_INVITE)}`;
-   } else {
-      reply = replies.commands;
-   }
-   BotReply(ctx, reply, keyboard);
+   // reply = `${replies.trelloHelp}\r\n${Format.TrelloInfoLink(language, process.env.SMART_SCHEDULER_INVITE)}`;
+   BotReply(ctx, replies.commands, keyboard);
 }
 
 /** 
