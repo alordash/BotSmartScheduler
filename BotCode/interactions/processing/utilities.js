@@ -1,4 +1,4 @@
-const { Languages } = require('../static/replies/repliesLoader');
+const { Languages } = require('../bot/static/replies/repliesLoader');
 
 /**
  * @param {Number} id 
@@ -8,6 +8,19 @@ function FormatChatId(id) {
    id = id.toString(10);
    if (id[0] == '-') {
       id = '_' + id.substring(1);
+   }
+   return id;
+}
+
+/**
+ * @param {String} id 
+ * @returns {Number}
+ */
+function UnformatChatId(id) {
+   if (id[0] == '_') {
+      id = - +(id.substring(1));
+   } else {
+      id = +id;
    }
    return id;
 }
@@ -84,6 +97,7 @@ function GetAttachmentId(message) {
 
 module.exports = {
    FormatChatId,
+   UnformatChatId,
    DetermineLanguage,
    ClearPendingConfirmation,
    GetDeletingIDsIndex,

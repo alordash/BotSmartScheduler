@@ -4,7 +4,7 @@ const Format = require('../../processing/formatting');
 const kbs = require('../static/replies/keyboards');
 const { DataBase, Schedule, User, Chat } = require('../../../storage/dataBase/DataBase');
 const { BotReply } = require('./replying');
-const utils = require('./utilities');
+const utils = require('../../processing/utilities');
 
 /**
  * @param {String} chatID 

@@ -10,7 +10,7 @@ const { ProcessParsedDate } = require('../../processing/timeProcessing');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../processing/nicknamesExtraction');
 const { BotReplyMultipleMessages } = require('./replying');
-const utils = require('./utilities');
+const utils = require('../../processing/utilities');
 
 /**
  * @param {*} ctx 

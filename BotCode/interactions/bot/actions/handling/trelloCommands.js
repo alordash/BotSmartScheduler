@@ -7,7 +7,7 @@ const { DataBase, Schedule, User, Chat } = require('../../../../storage/dataBase
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { trelloAddListCommand, trelloClear } = require('../../static/commandsList');
 const { BotReply, BotReplyMultipleMessages } = require('../replying');
-const utils = require('../utilities');
+const utils = require('../../../processing/utilities');
 
 /**
  * @param {*} ctx 

@@ -4,9 +4,8 @@ const request = require('request-promise');
 const { LoadReplies } = require('../static/replies/repliesLoader');
 const Format = require('../../processing/formatting');
 const kbs = require('../static/replies/keyboards');
-const utils = require('../actions/utilities');
+const utils = require('../../processing/utilities');
 const technicalActions = require('../actions/technical');
-const { FormatChatId } = require('../actions/utilities');
 const { Composer } = require('telegraf');
 const { DataBase, User } = require('../../../storage/dataBase/DataBase');
 const Markup = require('telegraf/markup');
@@ -63,7 +62,7 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
                reply += '\r\n' + replies.tzCancelWarning;
             }
             try {
-               BotReply(ctx, reply, await kbs.LogicalListKeyboard(language, FormatChatId(ctx.chat.id)));
+               BotReply(ctx, reply, await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id)));
             } catch (e) {
                console.error(e);
             }
@@ -71,7 +70,7 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
       }
       if (typeof (replies.showListAction) != 'undefined') {
          bot.hears(replies.showListAction, async ctx => {
-            let chatID = FormatChatId(ctx.chat.id);
+            let chatID = utils.FormatChatId(ctx.chat.id);
             let tz = (await DataBase.Users.GetUserById(ctx.from.id)).tz;
             let answers = await technicalActions.LoadSchedulesList(chatID, tz, language);
             for (const answer of answers) {
@@ -103,7 +102,7 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
          }
          try {
             utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
-            BotReply(ctx, replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>', await kbs.LogicalListKeyboard(language, FormatChatId(ctx.chat.id)));
+            BotReply(ctx, replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>', await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id)));
          } catch (e) {
             console.error(e);
          }

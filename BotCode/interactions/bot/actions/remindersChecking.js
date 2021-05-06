@@ -6,8 +6,9 @@ const { Schedule, GetOptions, ScheduleStates } = require('../../../storage/dataB
 const { Decrypt, Encrypt } = require('../../../storage/encryption/encrypt');
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { BotSendMessage, BotSendAttachment } = require('./replying');
-const utils = require('./utilities');
+const utils = require('../../processing/utilities');
 const { Connector } = require('../../../storage/dataBase/Connector');
+const { RemoveReminders } = require('../../processing/remindersOperations');
 
 /** @param {Composer} bot */
 async function CheckExpiredSchedules(bot) {
@@ -163,20 +164,7 @@ async function CheckPendingSchedules(bot) {
          deletingSchedules.push(schedule);
       }
    }
-   for (const schedule of deletingSchedules) {
-      let chatid = schedule.chatid;
-      if (chatid[0] == '_') {
-         chatid = - +(chatid.substring(1));
-      } else {
-         chatid = +chatid;
-      }
-      if (chatid < 0 && schedule.state == ScheduleStates.pending) {
-         bot.telegram.deleteMessage(chatid, schedule.message_id);
-      } else {
-         bot.telegram.editMessageReplyMarkup(chatid, schedule.message_id);
-      }
-   }
-   await DataBase.Schedules.RemoveSchedules(deletingSchedules);
+   await RemoveReminders(bot, deletingSchedules);
 
    Connector.instance.sending = false;
 }

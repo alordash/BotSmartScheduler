@@ -3,7 +3,7 @@ const { Languages, LoadReplies } = require('../../../static/replies/repliesLoade
 const Format = require('../../../../processing/formatting');
 const { DataBase, Schedule, User, Chat } = require('../../../../../storage/dataBase/DataBase');
 const { TrelloManager } = require('@alordash/node-js-trello');
-const utils = require('../../utilities');
+const utils = require('../../../../processing/utilities');
 const { StartTimeZoneDetermination } = require('../../technical');
 const CallbackQueryCases = require('./callbackQueryCases');
 

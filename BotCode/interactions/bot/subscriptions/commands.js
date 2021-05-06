@@ -1,5 +1,5 @@
 const technicalActions = require('../actions/technical');
-const { FormatChatId } = require('../actions/utilities');
+const { FormatChatId } = require('../../processing/utilities');
 const { Composer } = require('telegraf');
 const { DataBase } = require('../../../storage/dataBase/DataBase');
 const cms = require('../static/commandsList');

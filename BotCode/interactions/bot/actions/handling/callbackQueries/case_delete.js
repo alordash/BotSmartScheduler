@@ -4,8 +4,9 @@ const Format = require('../../../../processing/formatting');
 const { DataBase, User, Chat } = require('../../../../../storage/dataBase/DataBase');
 const { Schedule, GetOptions, ScheduleStates } = require('../../../../../storage/dataBase/TablesClasses/Schedule');
 const { TrelloManager } = require('@alordash/node-js-trello');
-const utils = require('../../utilities');
+const utils = require('../../../../processing/utilities');
 const { StartTimeZoneDetermination } = require('../../technical');
+const { RemoveReminders } = require('../../../../processing/remindersOperations');
 
 /**
  * @param {*} ctx 
@@ -19,19 +20,11 @@ const { StartTimeZoneDetermination } = require('../../technical');
 async function CaseDelete(ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, chatID, user, language, replies) {
    let message_id = ctx.update.callback_query.message.message_id;
    try {
-      let chat = await DataBase.Chats.GetChatById(chatID);
-      if (typeof (chat) != 'undefined' && chat.trello_list_id != null) {
-         let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
-         let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.all, message_id);
-         for (const schedule of schedules) {
-            trelloManager.DeleteCard(schedule.trello_card_id);
-         }
-      }
-      await DataBase.Schedules.RemoveSchedules(undefined, message_id, chatID);
+      let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.draft, message_id);
+      await RemoveReminders(ctx, schedules);
    } catch (e) {
       console.log(e);
    }
-   ctx.deleteMessage();
 }
 
 module.exports = CaseDelete;

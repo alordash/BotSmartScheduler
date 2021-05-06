@@ -34,6 +34,9 @@ class Chat {
     * @returns {Chat} 
     */
    static async GetChatById(id) {
+      if (id[0] == '_') {
+         id = `-${id.substring(1)}`;
+      }
       return (await Connector.instance.Query(
          `SELECT * FROM chats
       WHERE id = '${id}'`
