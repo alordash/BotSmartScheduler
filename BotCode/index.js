@@ -51,6 +51,8 @@ DataBase.EstablishConnection(dbOptions);
          await CheckDisplayStatueMessages(SmartSchedulerBot);
       });
    }
+   
+   await CheckDisplayStatueMessages(SmartSchedulerBot);
 
    if (process.env.ENABLE_LOGS == 'false') {
       console.log = function () { };
