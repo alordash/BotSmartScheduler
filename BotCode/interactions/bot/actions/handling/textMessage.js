@@ -64,6 +64,7 @@ async function HandleCommandMessage(bot, ctx, chatID, msgText) {
 }
 
 /**
+ * @param {*} bot 
  * @param {*} ctx 
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  * @param {Array.<Number>} trelloPendingConfirmationUsers 
@@ -84,7 +85,7 @@ async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPen
    let user = await DataBase.Users.GetUserById(ctx.from.id, true);
    let language = user.lang;
    let determinedLanguage;
-   if(user.id == null) {
+   if (user.id == null) {
       language = determinedLanguage = utils.DetermineLanguage(msgText);
       user = new User(ctx.from.id, undefined, language, undefined, undefined);
       await DataBase.Users.AddUser(user);
@@ -117,7 +118,7 @@ async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPen
       return;
    }
 
-   if (typeof(determinedLanguage) == 'undefined') {
+   if (typeof (determinedLanguage) == 'undefined') {
       determinedLanguage = utils.DetermineLanguage(msgText);
       if (determinedLanguage != null) {
          language = determinedLanguage;
