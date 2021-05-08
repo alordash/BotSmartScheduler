@@ -23,6 +23,7 @@
     "@alordash/parse-word-to-number": "^3.0.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "lodash": "^4.17.21",
     "pg": "^8.2.1",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
