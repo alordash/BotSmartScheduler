@@ -189,19 +189,26 @@ async function StartDisplayingStatus(ctx) {
    if (ctx.from.id != +process.env.SMART_SCHEDULER_ADMIN) {
       return;
    }
-   let text = ctx.message.text;
-   let channelId = text.substring(text.indexOf(' ') + 1);
    let channelInfo;
-   try {
-      channelInfo = await ctx.telegram.getChat(channelId);
-   } catch (e) {
-      console.log(e);
-      return;
+   let text = ctx.message.text;
+   let index = text.indexOf(' ');
+   let option;
+   if (index == -1) {
+      channelInfo = ctx.from;
+      option = kbs.CancelButton(ctx.from.language_code);
+   } else {
+      let channelId = text.substring(index + 1);
+      try {
+         channelInfo = await ctx.telegram.getChat(channelId);
+      } catch (e) {
+         console.log(e);
+         return;
+      }
    }
    let usersCount = await DataBase.Users.GetSubscribedUsersCount();
    let schedulesCount = await DataBase.Schedules.GetTotalSchedulesCount();
    text = Format.FormDisplayStatus(ctx.from.language_code, usersCount, schedulesCount);
-   let msg = await BotReply(ctx, text, undefined, undefined, channelInfo.id);
+   let msg = await BotReply(ctx, text, option, undefined, channelInfo.id);
    let schedule = new Schedule(utils.FormatChatId(channelInfo.id), -1, ctx.from.language_code, 'none', -1, -1, -1, undefined, ScheduleStates.statusDisplay, msg.message_id);
    await DataBase.Schedules.AddSchedule(schedule);
 }
