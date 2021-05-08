@@ -42,6 +42,7 @@
     "getBack": "⬅️ Back",
     "displayStatus0": "🌐 <b>Online bot statistics</b>\r\n       <b>⁃</b>  Users:            ",
     "displayStatus1": "           <b>⁃</b>  Reminders:    ",
+    "displayStatus2": "<code>updates every 24 hours</code>",
     "trelloAuthenticate0": "For integration with Trello open <a href=\"",
     "trelloAuthenticate1": "\">this link 🔗</a>, then press the bottom button <b>[ Allow ]</b>.\r\nIn opened tab <b>copy</b> your token 🔐 and <b>send it</b> in message to bot.",
     "trelloSavedToken": "🔒 Saved token.",

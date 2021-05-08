@@ -286,7 +286,8 @@ function TrelloInfoLink(language, link) {
 function FormDisplayStatus(language, usersCount, schedulesCount) {
    const replies = LoadReplies(language);
    return `${replies.displayStatus0}${usersCount}
-${replies.displayStatus1}${schedulesCount}`;
+${replies.displayStatus1}${schedulesCount}
+${replies.displayStatus2}`;
 }
 
 module.exports = {
