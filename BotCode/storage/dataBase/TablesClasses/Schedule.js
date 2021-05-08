@@ -5,14 +5,16 @@ const GetOptions = Object.freeze({
    all: 0,
    draft: 1,
    valid: 2,
-   invalid: 3
+   invalid: 3,
+   statusDisplay: 4
 });
 
 const ScheduleStates = Object.freeze({
    valid: 'valid',
    pending: 'pending',
    repeat: 'repeat',
-   invalid: 'invalid'
+   invalid: 'invalid',
+   statusDisplay: 'statusDisplay'
 });
 
 class Schedule {
@@ -112,6 +114,10 @@ class Schedule {
          keyWord = 'AND';
       }
       switch (getOptions) {
+         case GetOptions.all:
+            query = `${query} ${keyWord} state != '${ScheduleStates.statusDisplay}'`;
+            break;
+
          case GetOptions.draft:
             query = `${query} ${keyWord} (state = '${ScheduleStates.repeat}' OR state = '${ScheduleStates.pending}')`;
             break;
@@ -122,6 +128,10 @@ class Schedule {
 
          case GetOptions.invalid:
             query = `${query} ${keyWord} state = '${ScheduleStates.invalid}'`;
+            break;
+
+         case GetOptions.statusDisplay:
+            query = `${query} ${keyWord} state = '${ScheduleStates.statusDisplay}'`;
             break;
 
          default:
@@ -417,6 +427,10 @@ class Schedule {
          query = `${query}SELECT ConfirmSchedule(${schedule.id}, '${ScheduleStates.valid}', '${ScheduleStates.valid}');\r\n`;
       }
       return await Connector.instance.Query(query);
+   }
+
+   static async GetTotalSchedulesCount() {
+      return +(await Connector.instance.Query('SELECT Max(id) FROM schedules')).rows[0].max;
    }
 }
 

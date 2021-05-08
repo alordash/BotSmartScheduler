@@ -95,11 +95,25 @@ function GetAttachmentId(message) {
    return '~';
 }
 
+/**
+ * @param {Number} period 
+ * @param {Function} callback 
+ */
+function RepeatActionsWithPeriod(period, callback) {
+   const now = Date.now();
+   setTimeout(async function () {
+      console.log(`Timeout expired`);
+      setInterval(callback, period);
+      await callback();
+   }, (Math.floor(now / period) + 1) * period - now);
+}
+
 module.exports = {
    FormatChatId,
    UnformatChatId,
    DetermineLanguage,
    ClearPendingConfirmation,
    GetDeletingIDsIndex,
-   GetAttachmentId
+   GetAttachmentId,
+   RepeatActionsWithPeriod
 }

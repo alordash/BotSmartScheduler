@@ -4,12 +4,14 @@ const path = require('path');
  * @param {Text} text 
  * @param {Object} option 
  * @param {Boolean} notify 
+ * @param {String|Number} chatid
  */
-function BotReply(ctx, text, option = {}, notify = false) {
+function BotReply(ctx, text, option = {}, notify = false, chatid = ctx.chat.id) {
    option.disable_notification = !notify;
+   option.parse_mode = 'HTML';
    let res;
    try {
-      res = ctx.replyWithHTML(text, option);
+      res = ctx.telegram.sendMessage(chatid, text, option)
    } catch (e) {
       console.log(e);
    } finally {

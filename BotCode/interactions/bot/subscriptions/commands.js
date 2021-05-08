@@ -63,6 +63,13 @@ function InitCommandsSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
          console.log(e);
       }
    });
+   bot.command(cms.displayStatus, async ctx => {
+      try {
+         technicalActions.StartDisplayingStatus(ctx);
+      } catch (e) {
+         console.log(e);
+      }
+   });
 }
 
 module.exports = InitCommandsSubscriptions;

@@ -190,8 +190,8 @@ function SplitBigMessage(text) {
  * @returns {String} 
  */
 function Deleted(str, newline, language) {
-    const replies = LoadReplies(language);
-    return `${replies.deleted} ${str}. ${newline === false ? replies.showList : ``}`;
+   const replies = LoadReplies(language);
+   return `${replies.deleted} ${str}. ${newline === false ? replies.showList : ``}`;
 }
 
 /**
@@ -201,22 +201,22 @@ function Deleted(str, newline, language) {
  * @returns {String} 
  */
 function TzDetermined(hours, minutes, isNegative) {
-    let s = '+'
-    let t = '';
-    if (isNegative) {
-        s = '-';
-        hours *= -1;
-    }
-    if (hours < 10) {
-        t = '0';
-    }
-    s += t + hours + ':';
-    t = '0';
-    if (minutes >= 10) {
-        t = '';
-    }
-    s += t + minutes;
-    return s;
+   let s = '+'
+   let t = '';
+   if (isNegative) {
+      s = '-';
+      hours *= -1;
+   }
+   if (hours < 10) {
+      t = '0';
+   }
+   s += t + hours + ':';
+   t = '0';
+   if (minutes >= 10) {
+      t = '';
+   }
+   s += t + minutes;
+   return s;
 }
 
 /**
@@ -224,14 +224,14 @@ function TzDetermined(hours, minutes, isNegative) {
  * @returns {String} 
  */
 function TzLocation(tz) {
-    let t = '';
-    if (Math.abs(tz) < 10) t = '0';
-    if (tz < 0) {
-        t = '-' + t;
-        tz *= -1;
-    }
-    else t = '+' + t;
-    return t + tz;
+   let t = '';
+   if (Math.abs(tz) < 10) t = '0';
+   if (tz < 0) {
+      t = '-' + t;
+      tz *= -1;
+   }
+   else t = '+' + t;
+   return t + tz;
 }
 
 /**
@@ -239,10 +239,10 @@ function TzLocation(tz) {
  * @returns {String} 
  */
 function TzCurrent(tz) {
-    let negative = tz < 0;
-    let hour = tz / 3600 | 0;
-    let minutes = Math.abs(tz % 3600 / 60);
-    return TzDetermined(hour, minutes, negative);
+   let negative = tz < 0;
+   let hour = tz / 3600 | 0;
+   let minutes = Math.abs(tz % 3600 / 60);
+   return TzDetermined(hour, minutes, negative);
 }
 
 /**
@@ -252,8 +252,8 @@ function TzCurrent(tz) {
  * @returns {String} 
  */
 function Scheduled(text, myFormattedDate, language) {
-    const replies = LoadReplies(language);
-    return `"${text}" ${replies.alreadyScheduled} <b>${myFormattedDate}</b>\r\n`;
+   const replies = LoadReplies(language);
+   return `"${text}" ${replies.alreadyScheduled} <b>${myFormattedDate}</b>\r\n`;
 }
 
 /**
@@ -262,19 +262,31 @@ function Scheduled(text, myFormattedDate, language) {
  * @param {Languages} language 
  */
 function TrelloAuthorizationMessage(trello_key, app_name, language) {
-    const replies = LoadReplies(language);
-    let link = `https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=${app_name}&key=${trello_key}`;
-    return `${replies.trelloAuthenticate0}${link}${replies.trelloAuthenticate1}`;
+   const replies = LoadReplies(language);
+   let link = `https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=${app_name}&key=${trello_key}`;
+   return `${replies.trelloAuthenticate0}${link}${replies.trelloAuthenticate1}`;
 }
 
 /**
- * @param {String} language 
+ * @param {Languages} language 
  * @param {String} link 
  * @returns {String} 
  */
 function TrelloInfoLink(language, link) {
-    const replies = LoadReplies(language);
-    return `${replies.trelloInfoLink} ${link}`;
+   const replies = LoadReplies(language);
+   return `${replies.trelloInfoLink} ${link}`;
+}
+
+/**
+ * @param {Languages} language 
+ * @param {Number} usersCount 
+ * @param {Number} schedulesCount 
+ * @returns {String}
+ */
+function FormDisplayStatus(language, usersCount, schedulesCount) {
+   const replies = LoadReplies(language);
+   return `${replies.displayStatus0}${usersCount}
+${replies.displayStatus1}${schedulesCount}`;
 }
 
 module.exports = {
@@ -293,5 +305,6 @@ module.exports = {
    TzCurrent,
    Scheduled,
    TrelloAuthorizationMessage,
-   TrelloInfoLink
+   TrelloInfoLink,
+   FormDisplayStatus
 }

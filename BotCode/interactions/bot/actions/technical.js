@@ -5,6 +5,7 @@ const kbs = require('../static/replies/keyboards');
 const { DataBase, Schedule, User, Chat } = require('../../../storage/dataBase/DataBase');
 const { BotReply } = require('./replying');
 const utils = require('../../processing/utilities');
+const { ScheduleStates } = require('../../../storage/dataBase/TablesClasses/Schedule');
 
 /**
  * @param {String} chatID 
@@ -184,9 +185,31 @@ async function ConfrimTimeZone(ctx, tzPendingConfirmationUsers) {
    }
 }
 
+async function StartDisplayingStatus(ctx) {
+   if (ctx.from.id != +process.env.SMART_SCHEDULER_ADMIN) {
+      return;
+   }
+   let text = ctx.message.text;
+   let channelId = text.substring(text.indexOf(' ') + 1);
+   let channelInfo;
+   try {
+      channelInfo = await ctx.telegram.getChat(channelId);
+   } catch (e) {
+      console.log(e);
+      return;
+   }
+   let usersCount = await DataBase.Users.GetSubscribedUsersCount();
+   let schedulesCount = await DataBase.Schedules.GetTotalSchedulesCount();
+   text = Format.FormDisplayStatus(ctx.from.language_code, usersCount, schedulesCount);
+   let msg = await BotReply(ctx, text, undefined, undefined, channelInfo.id);
+   let schedule = new Schedule(utils.FormatChatId(channelInfo.id), -1, ctx.from.language_code, 'none', -1, -1, -1, undefined, ScheduleStates.statusDisplay, msg.message_id);
+   await DataBase.Schedules.AddSchedule(schedule);
+}
+
 module.exports = {
    LoadSchedulesList,
    DeleteSchedules,
    StartTimeZoneDetermination,
-   ConfrimTimeZone
+   ConfrimTimeZone,
+   StartDisplayingStatus
 }

@@ -9,6 +9,7 @@ const { BotSendMessage, BotSendAttachment } = require('./replying');
 const utils = require('../../processing/utilities');
 const { Connector } = require('../../../storage/dataBase/Connector');
 const { RemoveReminders } = require('../../processing/remindersOperations');
+const Format = require('../../processing/formatting');
 
 /** @param {Composer} bot */
 async function CheckExpiredSchedules(bot) {
@@ -169,7 +170,34 @@ async function CheckPendingSchedules(bot) {
    Connector.instance.sending = false;
 }
 
+async function CheckDisplayStatueMessages(bot) {
+   Connector.instance.sending = true;
+   let schedules = await DataBase.Schedules.GetAllSchedules(GetOptions.statusDisplay);
+   if (schedules.length <= 0) {
+      return;
+   }
+   let usersCount = await DataBase.Users.GetSubscribedUsersCount();
+   let schedulesCount = await DataBase.Schedules.GetTotalSchedulesCount();
+   let deletingSchedules = [];
+   for (const schedule of schedules) {
+      let message_id = schedule.message_id;
+      let text = Format.FormDisplayStatus(schedules.text, usersCount, schedulesCount);
+      let chatid = utils.UnformatChatId(schedule.chatid);
+      try {
+         await bot.telegram.editMessageText(chatid, message_id, undefined, text, { parse_mode: 'HTML' });
+      } catch (e) {
+         console.log(e);
+         if (e.description.indexOf('message is not modified') == -1) {
+            deletingSchedules.push(schedule);
+         }
+      }
+   }
+   await DataBase.Schedules.RemoveSchedules(deletingSchedules);
+   Connector.instance.sending = true;
+}
+
 module.exports = {
    CheckExpiredSchedules,
-   CheckPendingSchedules
+   CheckPendingSchedules,
+   CheckDisplayStatueMessages
 };

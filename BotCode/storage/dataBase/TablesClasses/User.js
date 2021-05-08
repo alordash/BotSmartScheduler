@@ -158,6 +158,10 @@ class User {
          WHERE id = ${id};`
       );
    }
+
+   static async GetSubscribedUsersCount() {
+      return +(await Connector.instance.Query('SELECT Count(*) FROM userids WHERE subscribed = true')).rows[0].count;
+   }
 }
 
 module.exports = User;

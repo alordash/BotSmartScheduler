@@ -1,7 +1,8 @@
 const telegraf = require('telegraf');
 const { DataBase } = require('./storage/dataBase/DataBase');
 const botConfig = require('./interactions/bot/main');
-const { CheckExpiredSchedules, CheckPendingSchedules } = require('./interactions/bot/actions/remindersChecking');
+const { CheckExpiredSchedules, CheckPendingSchedules, CheckDisplayStatueMessages } = require('./interactions/bot/actions/remindersChecking');
+const utils = require('./interactions/processing/utilities');
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
@@ -41,18 +42,17 @@ DataBase.EstablishConnection(dbOptions);
    await DataBase.InitializeDataBase();
    await botConfig.InitBot(SmartSchedulerBot);
 
-   let ts = Date.now();
    if (process.env.ENABLE_SCHEDULES_CHEKING == 'true') {
-      setTimeout(async function () {
-         console.log(`Timeout expired`);
-         setInterval(function () {
-            CheckExpiredSchedules(SmartSchedulerBot);
-            CheckPendingSchedules(SmartSchedulerBot);
-         }, 60000);
+      utils.RepeatActionsWithPeriod(60000, async function() {
          await CheckExpiredSchedules(SmartSchedulerBot);
          await CheckPendingSchedules(SmartSchedulerBot);
-      }, (Math.floor(ts / 60000) + 1) * 60000 - ts);
+      });
+      utils.RepeatActionsWithPeriod(86400000, async function() {
+         await CheckDisplayStatueMessages(SmartSchedulerBot);
+      });
    }
+   
+   await CheckDisplayStatueMessages(SmartSchedulerBot);
 
    if (process.env.ENABLE_LOGS == 'false') {
       console.log = function () { };
