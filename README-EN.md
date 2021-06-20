@@ -8,7 +8,7 @@
 
 If you need fast and handy tool to schedule your plans, Smart Scheduler Bot is the right choice.
 
-![Usage example](https://habrastorage.org/webt/br/md/wx/brmdwxnbkbo-3pu7ff77fqjrqva.png)
+![Usage example](UsageExample-EN.png)
 
 ## How to use
 
