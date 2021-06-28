@@ -369,22 +369,6 @@ class Schedule {
    //WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP
 
    /**
-    * @param {String} chatID
-    * @param {String} text
-    * @returns {Schedule}
-    */
-    static async GetScheduleByText(chatID, text) {
-      const encryptedText = Encrypt(text, chatID);
-      let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE text = '${encryptedText}' AND ChatID = '${chatID}'`);
-      console.log(`Picked schedule by text ${JSON.stringify(res.rows)}`);
-      if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return Schedule.FixSchedule(res.rows[0]);
-      } else {
-         return undefined;
-      }
-   }
-
-   /**
     * @param {String} chatID 
     * @param {Number} num 
     * @param {Boolean} decrypt 
