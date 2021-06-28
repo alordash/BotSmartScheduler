@@ -177,10 +177,12 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
          }
          options[answers.length - 1] = kb;
          results = await BotReplyMultipleMessages(ctx, answers, options);
-         message_id = results[results.length - 1].message_id;
-         if (typeof (invalidSchedule) != 'undefined') {
-            invalidSchedule.message_id = message_id;
-            await DataBase.Schedules.AddSchedule(invalidSchedule);
+         if(results.length > 0) {
+            message_id = results[results.length - 1].message_id;
+            if (typeof (invalidSchedule) != 'undefined') {
+               invalidSchedule.message_id = message_id;
+               await DataBase.Schedules.AddSchedule(invalidSchedule);
+            }
          }
       }
       if (typeof (newSchedules) != 'undefined' && newSchedules.length > 0) {
