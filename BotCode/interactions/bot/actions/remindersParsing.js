@@ -92,8 +92,8 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             if (!proceed && !inGroup) {
                let invalidSchedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.invalid);
                invalidSchedule = invalidSchedules[0];
-               invalidSchedule.text = Decrypt(invalidSchedule.text, invalidSchedule.chatid);
                if (typeof (invalidSchedule) != 'undefined') {
+                  invalidSchedule.text = Decrypt(invalidSchedule.text, invalidSchedule.chatid);
                   const invalidText = invalidSchedule.text.length == 0;
                   if (invalidText && textIsValid) {
                      invalidSchedule.text = newSchedule.text;
