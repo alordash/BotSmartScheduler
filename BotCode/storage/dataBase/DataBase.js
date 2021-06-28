@@ -20,7 +20,7 @@ class DataBase {
       
       await Migrations.InitializeDataBaseFunctions();
 
-      await Migrations.ExpandSchedulesTable('state');
+      await Migrations.ExpandSchedulesTable('creator');
 
       await Migrations.ExpandUsersIdsTable('trello_token');
 
