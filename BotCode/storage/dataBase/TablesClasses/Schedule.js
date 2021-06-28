@@ -44,6 +44,8 @@ class Schedule {
    message_id;
    /**@type {Number} */
    creation_date;
+   /**@type {Number} */
+   creator;
 
    /**@param {String} chatid 
     * @param {Number} num 
@@ -56,8 +58,9 @@ class Schedule {
     * @param {ScheduleStates} state 
     * @param {Number} message_id 
     * @param {Number} creation_date 
+    * @param {Number} creator 
     */
-   constructor(chatid, num, text, username, target_date, period_time, max_date, file_id = '~', state = ScheduleStates.valid, message_id = null, creation_date = null) {
+   constructor(chatid, num, text, username, target_date, period_time, max_date, file_id = '~', state = ScheduleStates.valid, message_id = null, creation_date = null, creator = null) {
       this.chatid = chatid;
       this.num = num;
       this.text = text;
@@ -69,6 +72,7 @@ class Schedule {
       this.state = state;
       this.message_id = message_id;
       this.creation_date = creation_date;
+      this.creator = creator;
    }
 
    /**
@@ -80,6 +84,7 @@ class Schedule {
       schedule.period_time = +schedule.period_time;
       schedule.target_date = +schedule.target_date;
       schedule.max_date = +schedule.max_date;
+      schedule.creator = + schedule.creator;
       if (schedule.trello_card_id == 'undefined') {
          schedule.trello_card_id = undefined;
       }
@@ -343,6 +348,22 @@ class Schedule {
    }
 
    /**
+    * @returns {Array.<Schedule>}
+    */
+   static async GetExpiredSchedules() {
+      const now = Date.now();
+      let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules`, GetOptions.valid);
+      query = `${query} AND (${now} >= target_date OR (trello_card_id != "undefined" AND trello_card_id IS NOT NULL))`;
+      let schedules = await Connector.instance.Query(query);
+      console.log(`Picked expired schedules, count: ${res.rows.length}`);
+      if (typeof (schedules) != 'undefined' && schedules.rows.length > 0) {
+         return Schedule.FixSchedulesRow(schedules.rows, decrypt);
+      } else {
+         return [];
+      }
+   }
+
+   /**
     * @param {String} chatID
     * @param {String} text
     * @returns {Schedule}
@@ -381,7 +402,7 @@ class Schedule {
    static async GetAllSchedules(getOptions = GetOptions.all, decrypt = true) {
       let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules`, getOptions);
       let res = await Connector.instance.Query(query);
-      console.log(`Picked all schedules ${JSON.stringify(res.rows)}`);
+      console.log(`Picked all schedules, count: ${res.rows.length}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return Schedule.FixSchedulesRow(res.rows, decrypt);
       } else {
