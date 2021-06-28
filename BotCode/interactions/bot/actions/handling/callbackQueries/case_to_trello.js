@@ -19,7 +19,7 @@ const { AddScheduleToTrello } = require('../../../../processing/remindersOperati
  */
 async function CaseToTrello(ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, chatID, user, language, replies) {
    let message_id = ctx.update.callback_query.message.message_id;
-   let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.all, message_id);
+   let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.all, message_id, true);
    try {
       let unconfirmedSchedules = [];
       for(const si in schedules) {

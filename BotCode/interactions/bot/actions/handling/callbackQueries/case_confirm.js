@@ -22,7 +22,7 @@ async function CaseConfirm(ctx, tzPendingConfirmationUsers, trelloPendingConfirm
    try {
       if (schedules.length > 0) {
          await DataBase.Schedules.ConfirmSchedules(schedules);
-         schedules = await DataBase.Schedules.ReorderSchedules(chatID);
+         schedules = await DataBase.Schedules.ReorderSchedules(chatID, true);
       }
       let text = '';
       let tz = user.tz;

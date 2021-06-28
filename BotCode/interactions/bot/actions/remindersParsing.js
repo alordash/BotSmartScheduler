@@ -12,6 +12,7 @@ const { ExtractNicknames, GetUsersIDsFromNicknames } = require('../../processing
 const { BotReplyMultipleMessages } = require('./replying');
 const utils = require('../../processing/utilities');
 const { RemoveInvalidRemindersMarkup } = require('../../processing/remindersOperations');
+const { Decrypt } = require('../../../storage/encryption/encrypt');
 
 /**
  * @param {*} ctx 
@@ -59,7 +60,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
          (dateParams.target_date != 0 ||
             dateParams.period_time != 0 ||
             dateParams.max_date != 0);
-      let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.valid);
+      let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.valid, undefined, true);
       let found = false;
       let i = 0;
       for (; !found && i < schedules.length; i++) {
@@ -91,6 +92,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             if (!proceed && !inGroup) {
                let invalidSchedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.invalid);
                invalidSchedule = invalidSchedules[0];
+               invalidSchedule.text = Decrypt(invalidSchedule.text, invalidSchedule.chatid);
                if (typeof (invalidSchedule) != 'undefined') {
                   const invalidText = invalidSchedule.text.length == 0;
                   if (invalidText && textIsValid) {

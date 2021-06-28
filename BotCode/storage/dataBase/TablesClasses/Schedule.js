@@ -80,7 +80,7 @@ class Schedule {
     * @param {Boolean} decrypt 
     * @returns {Schedule}
     */
-   static FixSchedule(schedule, decrypt = true) {
+   static FixSchedule(schedule, decrypt = false) {
       schedule.period_time = +schedule.period_time;
       schedule.target_date = +schedule.target_date;
       schedule.max_date = +schedule.max_date;
@@ -99,7 +99,7 @@ class Schedule {
     * @param {Boolean} decrypt 
     * @returns {Array.<Schedule>}
     */
-   static FixSchedulesRow(schedules, decrypt = true) {
+   static FixSchedulesRow(schedules, decrypt = false) {
       for (const i in schedules) {
          schedules[i] = Schedule.FixSchedule(schedules[i], decrypt);
       }
@@ -308,13 +308,14 @@ class Schedule {
    }
 
    /**
-    * @param {String} chatID
+    * @param {String} chatID 
+    * @param {Boolean} decrypt 
     */
-   static async ReorderSchedules(chatID) {
+   static async ReorderSchedules(chatID, decrypt = false) {
       console.log(`Reordering schedules in chat: ${chatID}`);
       let res = await Connector.instance.Query(`SELECT * FROM ReorderSchedules('${chatID}')`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return Schedule.FixSchedulesRow(res.rows);
+         return Schedule.FixSchedulesRow(res.rows, decrypt);
       } else {
          return [];
       }
@@ -326,18 +327,19 @@ class Schedule {
     */
    static async ListSchedules(chatID) {
       if (!Connector.instance.sending) {
-         return await this.GetSchedules(chatID, GetOptions.valid);
+         return await this.GetSchedules(chatID, GetOptions.valid, undefined, true);
       }
       return [];
    }
 
    /**
-    * @param {Number} tsNow
+    * @param {Number} tsNow 
+    * @param {Boolean} decrypt 
     * @returns {Array.<Schedule>}
     */
-   static async CheckActiveSchedules(tsNow) {
+   static async CheckActiveSchedules(tsNow, decrypt = false) {
       let expiredSchedules = [];
-      let schedules = await this.GetAllSchedules(GetOptions.valid);
+      let schedules = await this.GetAllSchedules(GetOptions.valid, decrypt);
       for (let schedule of schedules) {
          console.log(`schedule = ${JSON.stringify(schedule)}, tsNow = ${tsNow}`);
          if (schedule.target_date <= tsNow || schedule.trello_card_id != null) {
@@ -351,6 +353,7 @@ class Schedule {
    /**
     * @returns {Array.<Schedule>}
     */
+   
    static async GetExpiredSchedules() {
       const now = Date.now();
       let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules`, GetOptions.valid);
@@ -370,7 +373,7 @@ class Schedule {
     * @param {String} text
     * @returns {Schedule}
     */
-   static async GetScheduleByText(chatID, text) {
+    static async GetScheduleByText(chatID, text) {
       const encryptedText = Encrypt(text, chatID);
       let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE text = '${encryptedText}' AND ChatID = '${chatID}'`);
       console.log(`Picked schedule by text ${JSON.stringify(res.rows)}`);
@@ -382,15 +385,16 @@ class Schedule {
    }
 
    /**
-    * @param {String} chatID
-    * @param {Number} num
+    * @param {String} chatID 
+    * @param {Number} num 
+    * @param {Boolean} decrypt 
     * @returns {Schedule}
     */
-   static async GetScheduleByNum(chatID, num) {
+   static async GetScheduleByNum(chatID, num, decrypt = false) {
       let res = await Connector.instance.Query(`SELECT * FROM schedules WHERE num = '${num}' AND ChatID = '${chatID}'`);
       console.log(`Picked schedule by num ${JSON.stringify(res.rows)}`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return Schedule.FixSchedule(res.rows[0]);
+         return Schedule.FixSchedule(res.rows[0], decrypt);
       } else {
          return undefined;
       }
@@ -401,7 +405,7 @@ class Schedule {
     * @param {Boolean} decrypt 
     * @returns {Array.<Schedule>}
     */
-   static async GetAllSchedules(getOptions = GetOptions.all, decrypt = true) {
+   static async GetAllSchedules(getOptions = GetOptions.all, decrypt = false) {
       let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules`, getOptions);
       let res = await Connector.instance.Query(query);
       console.log(`Picked all schedules, count: ${res.rows.length}`);
@@ -416,14 +420,15 @@ class Schedule {
     * @param {String} chatID 
     * @param {GetOptions} getOptions 
     * @param {Number} message_id 
+    * @param {Boolean} decrypt 
     * @returns {Array.<Schedule>}
     */
-   static async GetSchedules(chatID, getOptions = GetOptions.all, message_id = null) {
+   static async GetSchedules(chatID, getOptions = GetOptions.all, message_id = null, decrypt = false) {
       let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`, getOptions, message_id, chatID);
       let res = await Connector.instance.Query(query);
       console.log(`Picked schedules ${JSON.stringify(res.rows)} from chat "${chatID}"`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
-         return Schedule.FixSchedulesRow(res.rows);
+         return Schedule.FixSchedulesRow(res.rows, decrypt);
       } else {
          return [];
       }

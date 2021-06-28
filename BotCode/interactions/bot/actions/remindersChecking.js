@@ -26,6 +26,7 @@ async function CheckExpiredSchedules(bot) {
             chatID = '-' + chatID.substring(1, chatID.length);
          }
          let expired = true;
+         let decrypted = false;
          if (schedule.trello_card_id != null) {
             try {
                let chat = await DataBase.Chats.GetChatById(chatID);
@@ -42,6 +43,8 @@ async function CheckExpiredSchedules(bot) {
                         }
 
                         const cardText = card.desc;
+                        schedule.text = Decrypt(schedule.text, schedule.chatid);
+                        decrypted = true;
                         if (cardText != schedule.text) {
                            DataBase.Schedules.SetScheduleText(schedule.chatid, schedule.num, Encrypt(cardText, schedule.chatid));
                         }
@@ -92,6 +95,9 @@ async function CheckExpiredSchedules(bot) {
                scheduleNum = ` /${schedule.num}`
             }
 
+            if(!decrypted) {
+               schedule.text = Decrypt(schedule.text, schedule.chatid);
+            }
             const remindText = `${remindIcon}${scheduleNum}${mentionUser} "${schedule.text}"`;
             try {
                if (schedule.file_id != '~' && schedule.file_id != null) {
