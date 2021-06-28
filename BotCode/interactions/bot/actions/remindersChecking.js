@@ -181,7 +181,7 @@ async function CheckDisplayStatueMessages(bot) {
    let deletingSchedules = [];
    for (const schedule of schedules) {
       let message_id = schedule.message_id;
-      let text = Format.FormDisplayStatus(schedules.text, usersCount, schedulesCount);
+      let text = Format.FormDisplayStatus(global.defaultUserLanguage, usersCount, schedulesCount);
       let chatid = utils.UnformatChatId(schedule.chatid);
       try {
          await bot.telegram.editMessageText(chatid, message_id, undefined, text, { parse_mode: 'HTML' });
