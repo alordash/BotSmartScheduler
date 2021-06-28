@@ -23,9 +23,9 @@ async function RemoveReminders(bot, schedules = []) {
       let chat = await DataBase.Chats.GetChatById(schedule.chatid);
       if (typeof (chat) != 'undefined' && chat.trello_list_id != null) {
          let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
-         let schedules = await DataBase.Schedules.GetSchedules(schedule.chatid, GetOptions.all, schedule.message_id);
-         for (const schedule of schedules) {
-            RemoveTrelloBoard(schedule, trelloManager);
+         let _schedules = await DataBase.Schedules.GetSchedules(schedule.chatid, GetOptions.all, schedule.message_id);
+         for (const _schedule of _schedules) {
+            RemoveTrelloBoard(_schedule, trelloManager);
          }
       }
    }
