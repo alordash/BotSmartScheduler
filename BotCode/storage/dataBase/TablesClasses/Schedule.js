@@ -353,7 +353,7 @@ class Schedule {
    /**
     * @returns {Array.<Schedule>}
     */
-   
+   /*
    static async GetExpiredSchedules() {
       const now = Date.now();
       let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules`, GetOptions.valid);
@@ -365,7 +365,7 @@ class Schedule {
       } else {
          return [];
       }
-   }
+   }*/
    //WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP
 
    /**
