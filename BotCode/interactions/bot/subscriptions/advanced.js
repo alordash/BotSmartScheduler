@@ -41,18 +41,6 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
             }
          });
       }
-      if (typeof (replies.tzTypeManually) != 'undefined') {
-         bot.hears(replies.tzTypeManually, ctx => {
-            if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
-               tzPendingConfirmationUsers.push(ctx.from.id);
-            }
-            try {
-               BotReply(ctx, replies.tzTypeManuallyReponse);
-            } catch (e) {
-               console.error(e);
-            }
-         });
-      }
       if (typeof (replies.cancel) != 'undefined') {
          bot.hears(replies.cancel, async ctx => {
             utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);

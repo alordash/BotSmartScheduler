@@ -115,19 +115,19 @@ async function StartTimeZoneDetermination(ctx, tzPendingConfirmationUsers) {
       reply = replies.tzDefined + '<b>' + Format.TzCurrent(curTZ) + '</b>\r\n';
    }
    let isPrivateChat = ctx.chat.id >= 0;
+   if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
+      tzPendingConfirmationUsers.push(ctx.from.id);
+   }
    if (isPrivateChat) {
-      reply += replies.tzConfiguration + '\r\n' + replies.tzViaLoc + '\r\n' + replies.tzManually;
+      reply = `${reply}${replies.tzManualConfiguration}\r\n${replies.tzLocationConfiguration}`;
       try {
          return await BotReply(ctx, reply, kbs.TzDeterminationKeyboard(language));
       } catch (e) {
          console.error(e);
       }
    }
-   if (tzPendingConfirmationUsers.indexOf(ctx.from.id) < 0) {
-      tzPendingConfirmationUsers.push(ctx.from.id);
-   }
    try {
-      return await BotReply(ctx, replies.tzGroupChatConfiguration);
+      return await BotReply(ctx, replies.tzManualConfiguration);
    } catch (e) {
       console.error(e);
    }
