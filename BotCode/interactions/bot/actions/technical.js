@@ -158,7 +158,7 @@ async function ConfirmLocation(ctx, lat, lng, tzPendingConfirmationUsers, cityNa
    try {
       utils.ClearPendingConfirmation(tzPendingConfirmationUsers, undefined, ctx.from.id);
       let reply = replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>';
-      if(cityName != '') {
+      if (cityName != '') {
          reply = `${replies.tzAddress} "${cityName}"\r\n${reply}`;
       }
       BotReply(ctx, reply, await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id)));
@@ -211,18 +211,23 @@ async function ConfrimTimeZone(ctx, tzPendingConfirmationUsers) {
       }
       return;
    }
-   let geocodes = JSON.parse(await request(`https://maps.googleapis.com/maps/api/geocode/json?address=${ctx.message.text}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
-   if (geocodes.results.length > 0) {
-      let geocode = geocodes.results[0];
-      let location = geocode.geometry.location;
-      ConfirmLocation(ctx, location.lat, location.lng, tzPendingConfirmationUsers, geocode.formatted_address);
-      return;
-   }
-   console.log(`Can't determine tz in "${ctx.message.text}"`);
    try {
-      BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
+      let geocodes = JSON.parse(await request(`https://maps.googleapis.com/maps/api/geocode/json?address=${ctx.message.text}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
+      if (geocodes.results.length > 0) {
+         let geocode = geocodes.results[0];
+         let location = geocode.geometry.location;
+         ConfirmLocation(ctx, location.lat, location.lng, tzPendingConfirmationUsers, geocode.formatted_address);
+         return;
+      }
    } catch (e) {
-      console.error(e);
+      console.log(e);
+   } finally {
+      console.log(`Can't determine tz in "${ctx.message.text}"`);
+      try {
+         BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
+      } catch (e) {
+         console.error(e);
+      }
    }
 }
 
