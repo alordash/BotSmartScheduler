@@ -73,16 +73,18 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
    }
 
    bot.on('location', async ctx => {
+      if(typeof(process.env.SMART_SCHEDULER_GOOGLE_API_KEY) == 'undefined') {
+         return;
+      }
       let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
       const replies = LoadReplies(language);
       let location = ctx.message.location;
       try {
-         let tz = JSON.parse(await request(`http://api.geonames.org/timezoneJSON?lat=${location.latitude}&lng=${location.longitude}&username=alordash`));
          console.log(`Received location: ${JSON.stringify(location)}`);
+         let tz = JSON.parse(await request(`https://maps.googleapis.com/maps/api/timezone/json?location=${location.latitude},${location.longitude}&timestamp=${Date.now().div(1000)}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
          console.log(`tz = ${JSON.stringify(tz)}`);
-         let rawOffset = tz.rawOffset;
          let userId = ctx.from.id;
-         let ts = rawOffset * 3600;
+         let ts = tz.rawOffset;
          if (!await DataBase.Users.HasUserID(userId)) {
             await DataBase.Users.AddUser(new User(userId, ts, global.defaultUserLanguage));
          } else {
