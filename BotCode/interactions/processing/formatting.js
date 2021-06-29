@@ -223,21 +223,6 @@ function TzDetermined(hours, minutes, isNegative) {
  * @param {Number} tz 
  * @returns {String} 
  */
-function TzLocation(tz) {
-   let t = '';
-   if (Math.abs(tz) < 10) t = '0';
-   if (tz < 0) {
-      t = '-' + t;
-      tz *= -1;
-   }
-   else t = '+' + t;
-   return t + tz;
-}
-
-/**
- * @param {Number} tz 
- * @returns {String} 
- */
 function TzCurrent(tz) {
    let negative = tz < 0;
    let hour = tz / 3600 | 0;
@@ -302,7 +287,6 @@ module.exports = {
    FormAlreadyBoardBinded,
    SplitBigMessage,
    Deleted,
-   TzLocation,
    TzCurrent,
    Scheduled,
    TrelloAuthorizationMessage,
