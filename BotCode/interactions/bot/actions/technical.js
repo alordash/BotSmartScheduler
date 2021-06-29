@@ -141,8 +141,9 @@ async function StartTimeZoneDetermination(ctx, tzPendingConfirmationUsers) {
  * @param {Number} lng 
  * @param {Array.<String>} tzPendingConfirmationUsers 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
+ * @param {String} cityName 
  */
-async function ConfirmLocation(ctx, lat, lng, tzPendingConfirmationUsers) {
+async function ConfirmLocation(ctx, lat, lng, tzPendingConfirmationUsers, cityName = '') {
    let language = ctx.from.language_code;
    const replies = LoadReplies(language);
    let tz = JSON.parse(await request(`https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${Date.now().div(1000)}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
@@ -156,7 +157,11 @@ async function ConfirmLocation(ctx, lat, lng, tzPendingConfirmationUsers) {
    }
    try {
       utils.ClearPendingConfirmation(tzPendingConfirmationUsers, undefined, ctx.from.id);
-      BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>', await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id)));
+      let reply = replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>';
+      if(cityName != '') {
+         reply = `${replies.tzAddress} "${cityName}"\r\n${reply}`;
+      }
+      BotReply(ctx, reply, await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id)));
    } catch (e) {
       console.error(e);
    }
@@ -210,7 +215,7 @@ async function ConfrimTimeZone(ctx, tzPendingConfirmationUsers) {
    if (geocodes.results.length > 0) {
       let geocode = geocodes.results[0];
       let location = geocode.geometry.location;
-      ConfirmLocation(ctx, location.lat, location.lng, tzPendingConfirmationUsers);
+      ConfirmLocation(ctx, location.lat, location.lng, tzPendingConfirmationUsers, geocode.formatted_address);
       return;
    }
    console.log(`Can't determine tz in "${ctx.message.text}"`);

@@ -29,6 +29,7 @@
     "tzUseLocation": "🔍 Use my geoposition",
     "tzUseLocationResponse": "Configuring...",
     "tzInvalidInput": "🚫 Please enter valid GMT offset in <b>±HH</b>:<b>MM</b> format,\r\nwhere ± — plus or minus, HH - hours, MM - minutes.",
+    "tzAddress": "Address:",
     "tzDefined": "🌐 Your time zone: GMT",
     "cancel": "❌ Cancel",
     "cancelReponse": "🚫 Cancelled.",
