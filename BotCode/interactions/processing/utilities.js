@@ -46,7 +46,7 @@ function DetermineLanguage(string) {
  * @param {Array.<Number>} trello 
  * @param {Number} id 
  */
-function ClearPendingConfirmation(tzs, trellos, id) {
+function ClearPendingConfirmation(tzs = [], trellos = [], id) {
    let index = tzs.indexOf(id)
    if (index >= 0) {
       tzs.splice(index, 1);

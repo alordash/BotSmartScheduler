@@ -6,6 +6,7 @@ const { DataBase, Schedule, User, Chat } = require('../../../storage/dataBase/Da
 const { BotReply } = require('./replying');
 const utils = require('../../processing/utilities');
 const { ScheduleStates } = require('../../../storage/dataBase/TablesClasses/Schedule');
+const request = require('request-promise');
 
 /**
  * @param {String} chatID 
@@ -134,6 +135,34 @@ async function StartTimeZoneDetermination(ctx, tzPendingConfirmationUsers) {
 }
 
 /**
+ * 
+ * @param {*} ctx 
+ * @param {Number} lat 
+ * @param {Number} lng 
+ * @param {Array.<String>} tzPendingConfirmationUsers 
+ * @param {Array.<String>} trelloPendingConfirmationUsers 
+ */
+async function ConfirmLocation(ctx, lat, lng, tzPendingConfirmationUsers) {
+   let language = ctx.from.language_code;
+   const replies = LoadReplies(language);
+   let tz = JSON.parse(await request(`https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${Date.now().div(1000)}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
+   console.log(`tz = ${JSON.stringify(tz)}`);
+   let userId = ctx.from.id;
+   let ts = tz.rawOffset;
+   if (!await DataBase.Users.HasUserID(userId)) {
+      await DataBase.Users.AddUser(new User(userId, ts, global.defaultUserLanguage));
+   } else {
+      await DataBase.Users.SetUserTz(userId, ts);
+   }
+   try {
+      utils.ClearPendingConfirmation(tzPendingConfirmationUsers, undefined, ctx.from.id);
+      BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>', await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id)));
+   } catch (e) {
+      console.error(e);
+   }
+}
+
+/**
  * @param {*} ctx 
  * @param {Array.<Number>} tzPendingConfirmationUsers 
  */
@@ -168,20 +197,27 @@ async function ConfrimTimeZone(ctx, tzPendingConfirmationUsers) {
       } else {
          await DataBase.Users.SetUserTz(userId, ts);
       }
-      tzPendingConfirmationUsers.splice(tzPendingConfirmationUsers.indexOf(ctx.from.id), 1);
+      utils.ClearPendingConfirmation(tzPendingConfirmationUsers, undefined, ctx.from.id);
       try {
          let chatID = utils.FormatChatId(ctx.chat.id);
          BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>\r\n', await kbs.LogicalListKeyboard(ctx.from.language_code, chatID));
       } catch (e) {
          console.error(e);
       }
-   } else {
-      console.log(`Can't determine tz in "${ctx.message.text}"`);
-      try {
-         BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
-      } catch (e) {
-         console.error(e);
-      }
+      return;
+   }
+   let geocodes = JSON.parse(await request(`https://maps.googleapis.com/maps/api/geocode/json?address=${ctx.message.text}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
+   if (geocodes.results.length > 0) {
+      let geocode = geocodes.results[0];
+      let location = geocode.geometry.location;
+      ConfirmLocation(ctx, location.lat, location.lng, tzPendingConfirmationUsers);
+      return;
+   }
+   console.log(`Can't determine tz in "${ctx.message.text}"`);
+   try {
+      BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
+   } catch (e) {
+      console.error(e);
    }
 }
 
@@ -217,6 +253,7 @@ module.exports = {
    LoadSchedulesList,
    DeleteSchedules,
    StartTimeZoneDetermination,
+   ConfirmLocation,
    ConfrimTimeZone,
    StartDisplayingStatus
 }

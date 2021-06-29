@@ -1,8 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const request = require('request-promise');
 const { LoadReplies } = require('../static/replies/repliesLoader');
-const Format = require('../../processing/formatting');
 const kbs = require('../static/replies/keyboards');
 const utils = require('../../processing/utilities');
 const technicalActions = require('../actions/technical');
@@ -76,29 +74,8 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
       if(typeof(process.env.SMART_SCHEDULER_GOOGLE_API_KEY) == 'undefined') {
          return;
       }
-      let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
-      const replies = LoadReplies(language);
       let location = ctx.message.location;
-      try {
-         console.log(`Received location: ${JSON.stringify(location)}`);
-         let tz = JSON.parse(await request(`https://maps.googleapis.com/maps/api/timezone/json?location=${location.latitude},${location.longitude}&timestamp=${Date.now().div(1000)}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
-         console.log(`tz = ${JSON.stringify(tz)}`);
-         let userId = ctx.from.id;
-         let ts = tz.rawOffset;
-         if (!await DataBase.Users.HasUserID(userId)) {
-            await DataBase.Users.AddUser(new User(userId, ts, global.defaultUserLanguage));
-         } else {
-            await DataBase.Users.SetUserTz(userId, ts);
-         }
-         try {
-            utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
-            BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>', await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id)));
-         } catch (e) {
-            console.error(e);
-         }
-      } catch (e) {
-         console.error(e);
-      }
+      technicalActions.ConfirmLocation(ctx, location.latitude, location.longitude, tzPendingConfirmationUsers);
    });
 
    bot.on('callback_query', async (ctx) => {
