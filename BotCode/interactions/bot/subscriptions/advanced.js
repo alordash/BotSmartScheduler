@@ -90,7 +90,7 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
          }
          try {
             utils.ClearPendingConfirmation(tzPendingConfirmationUsers, trelloPendingConfirmationUsers, ctx.from.id);
-            BotReply(ctx, replies.tzDefined + '<b>' + Format.TzLocation(rawOffset) + '</b>', await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id)));
+            BotReply(ctx, replies.tzDefined + '<b>' + Format.TzCurrent(ts) + '</b>', await kbs.LogicalListKeyboard(language, utils.FormatChatId(ctx.chat.id)));
          } catch (e) {
             console.error(e);
          }
