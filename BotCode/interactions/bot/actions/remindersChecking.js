@@ -122,11 +122,11 @@ async function CheckExpiredSchedules(bot) {
             if (schedule.period_time >= 60 && schedule.max_date >= 60) {
                if (nowSeconds < schedule.max_date) {
                   shouldDelete = false;
-                  await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.num, nowSeconds + schedule.period_time);
+                  await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.num, schedule.target_date + schedule.period_time);
                }
             } else if (schedule.period_time >= 60 && schedule.max_date < 60) {
                shouldDelete = false;
-               await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.num, nowSeconds + schedule.period_time);
+               await DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.num, schedule.target_date + schedule.period_time);
             } else if (schedule.period_time < 60 && schedule.max_date >= 60) {
                if (nowSeconds < schedule.max_date) {
                   shouldDelete = false;
