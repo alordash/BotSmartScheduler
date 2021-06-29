@@ -59,15 +59,19 @@ Smart Scheduler может быть интегрирован в Вашу [Trello
 5. **SMART_SCHEDULER_DB_URL** (опционально): URL базы данных PostreSQL.  
 6. **IS_HEROKU**: "true" или "false". Если **true**, то для базы данных используется **DATABASE_URL**, иначе **SMART_SCHEDULER_DB_URL**.  
 7. **SMART_SCHEDULER_TLGRM_API_TOKEN**: токен бота в телеграмме.  
+
+Для определения часового пояса по геолокации (опционально):  
+
+8. **SMART_SCHEDULER_GOOGLE_API_KEY**: api-ключ для сервисов Google.  
   
 Для голосовых сообщений (опционально):  
 
-8. **YC_API_KEY**: Yandex api key.  
-9. **YC_FOLDER_ID**: Yandex catalog id.  
+9. **YC_API_KEY**: Yandex api key.  
+10. **YC_FOLDER_ID**: Yandex catalog id.  
   
 Для интеграции с [Trello](https://trello.com/) (опционально):  
 
-10. **TRELLO_TOKEN**: Trello api token.  
+11. **TRELLO_TOKEN**: Trello api token.  
 
 ### На локальном сервере
 

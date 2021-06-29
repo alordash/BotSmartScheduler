@@ -61,15 +61,19 @@ Make sure you set following environment variables before starting the bot:
 5. **SMART_SCHEDULER_DB_URL** (optional): URL of your PostgreSQL data base.  
 6. **IS_HEROKU**: "true" or "false". If **true**, then use **DATABASE_URL** for data base URL, else **SMART_SCHEDULER_DB_URL**.  
 7. **SMART_SCHEDULER_TLGRM_API_TOKEN**: telegram bot token.  
+
+For time zone definition via geolocation (optional):  
+
+8. **SMART_SCHEDULER_GOOGLE_API_KEY**: api-key for Google services.  
   
 For voice messages (optional):  
 
-8. **YC_API_KEY**: Yandex api key.  
-9. **YC_FOLDER_ID**: Yandex catalog id.  
+9. **YC_API_KEY**: Yandex api key.  
+10. **YC_FOLDER_ID**: Yandex catalog id.  
 
 For integration with [Trello](https://trello.com/) (optional):  
 
-10. **TRELLO_TOKEN**: Trello api token.  
+11. **TRELLO_TOKEN**: Trello api token.  
 
 ### On local server
 
