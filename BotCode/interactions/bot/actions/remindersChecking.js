@@ -98,7 +98,7 @@ async function CheckExpiredSchedules(bot) {
             if(!decrypted) {
                schedule.text = Decrypt(schedule.text, schedule.chatid);
             }
-            const remindText = `${remindIcon}${scheduleNum}${mentionUser} "${schedule.text}"`;
+            const remindText = `${remindIcon}${scheduleNum}${mentionUser} ${schedule.text}`;
             try {
                if (schedule.file_id != '~' && schedule.file_id != null) {
                   msg = await BotSendAttachment(bot, +chatID, remindText, schedule.file_id, keyboard, true);
