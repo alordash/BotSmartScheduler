@@ -16,29 +16,19 @@ const { StartTimeZoneDetermination } = require('../../technical');
  * @param {Languages} language 
  * @param {*} replies 
  */
- async function CaseRepeat(ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, chatID, user, language, replies) {
-   let hasCaption = false;
-   let msgText = ctx.callbackQuery.message.text;
-   if (typeof (msgText) == 'undefined') {
-      hasCaption = true;
-      msgText = ctx.callbackQuery.message.caption;
+async function CaseRepeat(ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, chatID, user, language, replies) {
+   let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.draft, ctx.callbackQuery.message.message_id, true);
+   if (schedules.length == 0) {
+      return 0;
    }
-   let text = msgText.match(/"[\S\s]+"/);
-   text = text[0].substring(1, text[0].length - 1);
-   let username = 'none';
-   if (chatID[0] === '_') {
-      username = ctx.from.username;
-   }
-   const now = Date.now();
-   let file_id = utils.GetAttachmentId(ctx.callbackQuery.message);
-   let schedulesCount = await DataBase.Schedules.GetSchedulesCount(chatID);
-   let target_date = now + global.repeatScheduleTime;
-   let schedule = new Schedule(chatID, schedulesCount, text, username, target_date, 0, 0, file_id, undefined, undefined, now);
+   let hasCaption = typeof (ctx.callbackQuery.message.text) == 'undefined' ? true : false;
+   let schedule = schedules[0];
+   let text = schedule.text;
    let tz = user.tz;
 
    try {
-      await DataBase.Schedules.AddSchedule(schedule);
-      let newText = text + '\r\n' + replies.remindSchedule + ' <b>' + Format.FormDateStringFormat(new Date(target_date + tz * 1000), language, false) + '</b>';
+      await DataBase.Schedules.ConfirmSchedules([schedule]);
+      let newText = `"${text}"\r\n${replies.remindSchedule} <b>${Format.FormDateStringFormat(new Date(schedule.target_date + tz * 1000), language, false)}</b>`;
       if (hasCaption) {
          ctx.editMessageCaption(newText, { parse_mode: 'HTML' });
       } else {
