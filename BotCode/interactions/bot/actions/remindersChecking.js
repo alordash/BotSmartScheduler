@@ -25,6 +25,9 @@ async function CheckExpiredSchedules(bot) {
          if (chatID[0] == '_') {
             chatID = '-' + chatID.substring(1, chatID.length);
          }
+         if(process.env.SMART_SCHEDULER_DEBUG_MODE === 'true' && chatID != process.env.SMART_SCHEDULER_ADMIN) {
+            continue;
+         }
          let expired = true;
          let decrypted = false;
          if (schedule.trello_card_id != null) {

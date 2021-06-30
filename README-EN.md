@@ -62,18 +62,23 @@ Make sure you set following environment variables before starting the bot:
 6. **IS_HEROKU**: "true" or "false". If **true**, then use **DATABASE_URL** for data base URL, else **SMART_SCHEDULER_DB_URL**.  
 7. **SMART_SCHEDULER_TLGRM_API_TOKEN**: telegram bot token.  
 
+For debugging (optional):  
+
+8. **SMART_SCHEDULER_ADMIN**: telegram-id of bot administrator user.  
+9. **SMART_SCHEDULER_DEBUG_MODE**: "true" or "false". If enabled, then bot will check only those reminders, which were created by **SMART_SCHEDULER_ADMIN**.  
+
 For time zone definition via geolocation (optional):  
 
-8. **SMART_SCHEDULER_GOOGLE_API_KEY**: api-key for Google services.  
+10. **SMART_SCHEDULER_GOOGLE_API_KEY**: api-key for Google services.  
   
-For voice messages (optional):  
+For voice messages processing (optional):  
 
-9. **YC_API_KEY**: Yandex api key.  
-10. **YC_FOLDER_ID**: Yandex catalog id.  
+11. **YC_API_KEY**: Yandex api key.  
+12. **YC_FOLDER_ID**: Yandex catalog id.  
 
 For integration with [Trello](https://trello.com/) (optional):  
 
-11. **TRELLO_TOKEN**: Trello api token.  
+13. **TRELLO_TOKEN**: Trello api token.  
 
 ### On local server
 
