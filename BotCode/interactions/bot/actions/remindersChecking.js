@@ -202,7 +202,7 @@ async function CheckDisplayStatueMessages(bot) {
       }
    }
    await DataBase.Schedules.RemoveSchedules(deletingSchedules);
-   Connector.instance.sending = true;
+   Connector.instance.sending = false;
 }
 
 module.exports = {
