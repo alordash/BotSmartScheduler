@@ -480,7 +480,7 @@ class Schedule {
    static async GetSchedules(chatID, getOptions = GetOptions.all, message_id = null, decrypt = false) {
       let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules WHERE ChatID = '${chatID}'`, getOptions, message_id, chatID);
       let res = await Connector.instance.Query(query);
-      console.log(`Picked schedules ${JSON.stringify(res.rows)} from chat "${chatID}"`);
+      console.log(`Picked ${res.rows.length} schedules from chat "${chatID}"`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return Schedule.FixSchedulesRow(res.rows, decrypt);
       } else {
