@@ -353,7 +353,7 @@ class Schedule {
 
    //WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP
    /**
-    * @returns {{schedules: Array.<Schedule>, langs: Array.<Languages>}}
+    * @returns {Array.<{schedule, lang: String}>}
     */
 
    static async GetExpiredSchedules() {
@@ -365,11 +365,13 @@ class Schedule {
          return [];
       }
       console.log(`Picked expired schedules, count: ${res.rows.length}`);
-      let langs = [];
+      let result = [];
       for (let row of res.rows) {
-         langs.push(row.lang);
+         let lang = row.lang;
+         delete(row.lang);
+         result.push({schedule: Schedule.FixSchedule(row), lang});
       }
-      return { schedules: Schedule.FixSchedulesRow(res.rows, true), langs };
+      return result;
    }
    //WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP
 
