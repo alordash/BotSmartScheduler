@@ -85,7 +85,8 @@ class Schedule {
       schedule.period_time = +schedule.period_time;
       schedule.target_date = +schedule.target_date;
       schedule.max_date = +schedule.max_date;
-      schedule.creator = + schedule.creator;
+      schedule.creation_date = +schedule.creation_date;
+      schedule.creator = +schedule.creator;
       if (schedule.trello_card_id == 'undefined') {
          schedule.trello_card_id = undefined;
       }
