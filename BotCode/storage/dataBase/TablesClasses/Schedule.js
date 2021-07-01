@@ -1,5 +1,6 @@
 const { Connector } = require('../Connector');
 const { Encrypt, Decrypt } = require('../../encryption/encrypt');
+const { Languages } = require('../../../interactions/bot/static/replies/repliesLoader');
 
 const GetOptions = Object.freeze({
    all: 0,
@@ -351,21 +352,24 @@ class Schedule {
 
    //WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP
    /**
-    * @returns {Array.<Schedule>}
+    * @returns {{schedules: Array.<Schedule>, langs: Array.<Languages>}}
     */
-   /*
+
    static async GetExpiredSchedules() {
-      const now = Date.now();
-      let query = Schedule.ApplyGetOptions(`SELECT * FROM schedules`, GetOptions.valid);
-      query = `${query} AND (${now} >= target_date OR (trello_card_id != "undefined" AND trello_card_id IS NOT NULL))`;
-      let schedules = await Connector.instance.Query(query);
-      console.log(`Picked expired schedules, count: ${res.rows.length}`);
-      if (typeof (schedules) != 'undefined' && schedules.rows.length > 0) {
-         return Schedule.FixSchedulesRow(schedules.rows, decrypt);
-      } else {
+      let query = Schedule.ApplyGetOptions(`SELECT chatid, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, schedules.id, state, message_id, creation_date, creator, userids.lang FROM schedules
+      LEFT JOIN userids ON schedules.creator = userids.id`, GetOptions.valid);
+      query = `${query} AND (extract(epoch from now())::bigint >= target_date OR (trello_card_id != 'undefined' AND trello_card_id IS NOT NULL))`;
+      let res = await Connector.instance.Query(query);
+      if (typeof (res) == 'undefined' || res.rows.length == 0) {
          return [];
       }
-   }*/
+      console.log(`Picked expired schedules, count: ${res.rows.length}`);
+      let langs = [];
+      for (let row of res.rows) {
+         langs.push(row.lang);
+      }
+      return { schedules: Schedule.FixSchedulesRow(res.rows, true), langs };
+   }
    //WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP
 
    /**
