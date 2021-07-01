@@ -267,11 +267,11 @@ class Schedule {
          return;
       }
       if (schedules.length) {
-         query = `${query} WHERE (`;
+         query = `${query} WHERE id IN(`;
          for (const schedule of schedules) {
-            query = `${query} id = ${schedule.id} OR`;
+            query = `${query}${schedule.id}, `;
          }
-         query = `${query.substring(0, query.length - 3)})`;
+         query = `${query.substring(0, query.length - 2)})`;
       }
       if ((message_id != null) && (chatid != null)) {
          query = Schedule.ApplyGetOptions(query, GetOptions.all, message_id, chatid);
