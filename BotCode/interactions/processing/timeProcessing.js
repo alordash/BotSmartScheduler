@@ -156,7 +156,7 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
          return undefined;
       }
    }
-   if(TodayCheck(parsedDate.target_date, tz)) {
+   if (TodayCheck(parsedDate.target_date, tz)) {
       parsedDate.target_date = new TimeList();
    }
    let dateValues = parsedDate.valueOf();
@@ -201,8 +201,10 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
       max_date = parsedDate.valueOf().max_date.getTime().div(1000);
       if (!parsedDate.max_date.isOffset) {
          console.log(`max_date is not offset, max_date :>> ${max_date}, will be: ${max_date - tz}, tz: ${tz}`);
-         parsedDate.max_date.hours -= hours;
-         parsedDate.max_date.minutes -= minutes;
+         if (parsedDate.max_date.hours != null)
+            parsedDate.max_date.hours -= hours;
+         if (parsedDate.max_date.minutes != null)
+            parsedDate.max_date.minutes -= minutes;
          max_date -= tz;
       }
    } else {
