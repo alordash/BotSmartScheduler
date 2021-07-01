@@ -275,6 +275,19 @@ ${replies.displayStatus1}${schedulesCount}
 ${replies.displayStatus2}`;
 }
 
+/**
+ * 
+ * @param {Schedule} schedule 
+ * @returns {String}
+ */
+function FormReminderMessage(schedule) {
+   let mention = schedule.username != 'none' ? ` @${schedule.username}` : '';
+   let isPeriodic = schedule.period_time > 0;
+   let slashCommand = isPeriodic ? ` /${schedule.num}` : '';
+   let remindIcon = isPeriodic ? '🔄' : '⏰';
+   return `${remindIcon}${slashCommand}${mention} ${schedule.text}`;
+}
+
 module.exports = {
    TimeListIsEmpty,
    FormDateStringFormat,
@@ -291,5 +304,6 @@ module.exports = {
    Scheduled,
    TrelloAuthorizationMessage,
    TrelloInfoLink,
-   FormDisplayStatus
+   FormDisplayStatus,
+   FormReminderMessage
 }
