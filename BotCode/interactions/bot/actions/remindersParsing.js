@@ -70,7 +70,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             i = j;
             found = true;
          }
-         if(_schedule.num > max_num) {
+         if(_schedule.num > max_num && _schedule.state == ScheduleStates.valid) {
             max_num = _schedule.num;
          }
       }
