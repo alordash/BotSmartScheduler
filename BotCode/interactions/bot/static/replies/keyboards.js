@@ -14,7 +14,7 @@ function MergeInlineKeyboards(...keyboards) {
    let count = 0;
    for (let i = 1; i < keyboards.length; i++) {
       let kb = keyboards[i];
-      if(typeof(kb) == 'undefined') {
+      if (typeof (kb) == 'undefined') {
          continue;
       }
       let inline_keyboard = kb.reply_markup.inline_keyboard;
@@ -25,7 +25,7 @@ function MergeInlineKeyboards(...keyboards) {
          );
       }
    }
-   if(count > 0 && typeof(main_keyboard.reply_markup.keyboard) != 'undefined') {
+   if (count > 0 && typeof (main_keyboard.reply_markup.keyboard) != 'undefined') {
       delete main_keyboard.reply_markup.keyboard;
    }
    return main_keyboard;
@@ -37,6 +37,16 @@ function ListKeyboard(language) {
    return Markup.keyboard([
       [{ text: replies.showListAction }]
    ]).removeKeyboard().resize().extra();
+}
+
+/**@param {Languages} language */
+function RepeatButton(language) {
+   const replies = LoadReplies(language);
+   return Extra.markup((m) =>
+      m.inlineKeyboard([
+         m.callbackButton(replies.repeatSchedule, `repeat`)
+      ])
+   );
 }
 
 /**@param {Languages} language */
@@ -147,6 +157,7 @@ function ToTrelloKeyboard(language) {
 module.exports = {
    MergeInlineKeyboards,
    ListKeyboard,
+   RepeatButton,
    TzDeterminationKeyboard,
    TzDeterminationOnStartInlineKeyboard,
    CancelKeyboard,
