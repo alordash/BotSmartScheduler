@@ -154,12 +154,25 @@ class Schedule {
    }
 
    /**
+    * @param {String} chatID 
+    * @returns {Number}
+    */
+   static async GetActiveSchedulesNumber(chatID) {
+      let query = `SELECT Max(num) FROM schedules WHERE chatid = $1`;
+      let res = await Connector.instance.paramQuery(query, [`${chatID}`]);
+      if(typeof(res) == 'undefined' || typeof(res.rows) == 'undefined' || res.rows.length == 0 || res.rows[0].length == 0) {
+         return 0;
+      }
+      return res.rows[0][0];
+   }
+
+   /**
     * @param {Array.<Schedule>} newSchedules
     * @param {String} chatID
     */
    static async AddSchedules(chatID, newSchedules) {
       let queryString = `INSERT INTO schedules (ChatID, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, state, message_id, creation_date) VALUES `;
-      let num = await this.GetSchedulesCount(chatID) + 1;
+      let num = await this.GetActiveSchedulesNumber(chatID) + 1;
       let values = [];
       let i = 0;
       for (let schedule of newSchedules) {

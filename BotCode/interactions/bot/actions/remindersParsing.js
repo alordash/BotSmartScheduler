@@ -61,11 +61,17 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             dateParams.period_time != 0 ||
             dateParams.max_date != 0);
       let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.valid, undefined, true);
+      let max_num = 0;
       let found = false;
       let i = 0;
-      for (; !found && i < schedules.length; i++) {
-         if (schedules[i].text == parsedDate.string) {
+      for (let j = 0; j < schedules.length; j++) {
+         let _schedule = schedules[j];
+         if (_schedule.text == parsedDate.string) {
+            i = j;
             found = true;
+         }
+         if(_schedule.num > max_num) {
+            max_num = _schedule.num;
          }
       }
       if (found) {
@@ -78,7 +84,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             const textIsValid = parsedDate.string.length > 0;
             let newSchedule = new Schedule(
                chatID,
-               schedules.length + parsedDateIndex + 1,
+               max_num + parsedDateIndex + 1,
                parsedDate.string,
                username,
                dateParams.target_date,
