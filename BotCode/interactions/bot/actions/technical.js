@@ -7,6 +7,8 @@ const { BotReply } = require('./replying');
 const utils = require('../../processing/utilities');
 const { ScheduleStates } = require('../../../storage/dataBase/TablesClasses/Schedule');
 const request = require('request-promise');
+const { Decrypt, Encrypt } = require('../../../storage/encryption/encrypt');
+const { TrelloManager } = require('@alordash/node-js-trello');
 
 /**
  * @param {String} chatID 
@@ -259,11 +261,58 @@ async function StartDisplayingStatus(ctx) {
    await DataBase.Schedules.AddSchedule(schedule);
 }
 
+/**
+ * @param {Schedule} schedule 
+ * @param {string} chatID 
+ * @returns {{expired: Boolean, decrypted: Boolean}}
+ */
+async function ProcessTrelloReminder(schedule, chatID) {
+   const now = Date.now();
+   let expired = true;
+   let decrypted = false;
+   try {
+      if (schedule.trello_card_id != null && typeof (schedule.trello_card_id) != 'undefined') {
+         let chat = await DataBase.Chats.GetChatById(chatID);
+         if (typeof (chat) != 'undefined' && typeof (chat.trello_token) != 'undefined') {
+            let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
+            let card = await trelloManager.GetCard(schedule.trello_card_id);
+            if (typeof (card) != 'undefined' && typeof (card.due) != 'undefined') {
+               let dueTime = new Date(card.due).getTime();
+               if (now < dueTime) {
+                  expired = false;
+
+                  if (dueTime != schedule.target_date) {
+                     DataBase.Schedules.SetScheduleTargetDate(schedule.chatid, schedule.num, dueTime);
+                  }
+
+                  const cardText = card.desc;
+                  schedule.text = Decrypt(schedule.text, schedule.chatid);
+                  decrypted = true;
+                  if (cardText != schedule.text) {
+                     DataBase.Schedules.SetScheduleText(schedule.chatid, schedule.num, Encrypt(cardText, schedule.chatid));
+                  }
+               }
+            } else if (typeof (card) == 'undefined') {
+               let board = await trelloManager.GetBoard(chat.trello_board_id);
+               if (typeof (board) == 'undefined') {
+                  DataBase.Chats.ClearChatFromTrello(chat.id);
+               }
+            }
+         }
+      }
+   } catch (e) {
+      console.error(e);
+   } finally {
+      return { expired, decrypted };
+   }
+}
+
 module.exports = {
    LoadSchedulesList,
    DeleteSchedules,
    StartTimeZoneDetermination,
    ConfirmLocation,
    ConfrimTimeZone,
-   StartDisplayingStatus
+   StartDisplayingStatus,
+   ProcessTrelloReminder
 }
