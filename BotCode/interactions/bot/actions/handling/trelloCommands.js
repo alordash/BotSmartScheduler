@@ -16,53 +16,57 @@ const utils = require('../../../processing/utilities');
  */
 async function TrelloCommand(user, ctx, trelloPendingConfirmationUsers) {
    const replies = LoadReplies(user.lang);
-   if (ctx.message.text.indexOf(trelloClear) >= 0 && ctx.chat.id >= 0) {
-      DataBase.Users.ClearUserTrelloToken(ctx.from.id);
-      BotReply(ctx, replies.trelloRemovedToken);
-   } else if (user.trello_token == null && ctx.chat.id >= 0) {
-      trelloPendingConfirmationUsers.push(ctx.from.id);
-      BotReply(ctx, Format.TrelloAuthorizationMessage(process.env.TRELLO_TOKEN, process.env.SMART_SCHEDULER_BOT_NAME, user.lang),
-         kbs.CancelKeyboard(user.lang));
-   } else {
-      let reply = '';
+   const inGroup = ctx.chat.id < 0;
+   let reply = '';
+   //#region in group
+   let chat = await DataBase.Chats.GetChatById(ctx.chat.id);
+   if (chat != null && chat.trello_board_id != null && chat.trello_token != null) {
+      let boardTrelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
+      let board = await boardTrelloManager.GetBoard(chat.trello_board_id);
+      if (board != null) {
+         let list = board.lists.find(x => x.id == chat.trello_list_id);
 
-      let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, user.trello_token);
-      let owner = await trelloManager.GetTokenOwner(user.trello_token);
-      let noBoardBinded = false;
-      let boardsList = [];
-      if (typeof (owner) != 'undefined') {
-         boardsList = await trelloManager.GetUserBoards(owner.id);
-         let chat = await DataBase.Chats.GetChatById(ctx.chat.id);
-         if (typeof (chat) != 'undefined'
-            && chat.trello_board_id != null
-            && chat.trello_list_id != null
-            && chat.trello_token != null) {
-            let boardTrelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
-            let board = await boardTrelloManager.GetBoard(chat.trello_board_id);
-            if (typeof (board) == 'undefined') {
-               noBoardBinded = true;
-            } else {
-               let list = board.lists.find(x => x.id == chat.trello_list_id);
-
-               if (list != null) {
-                  reply = `${Format.FormAlreadyBoardBinded(board, list, user.lang)}\r\n`;
-               } else {
-                  noBoardBinded = true;
-               }
-            }
-         } else {
-            noBoardBinded = true;
+         if (list != null) {
+            reply = `${Format.FormAlreadyBoardBinded(board, list, user.lang)}\r\n`;
          }
+      }
+   }
+   if (reply == '') {
+      reply = `${replies.trelloNoBoardBinded}\r\n`;
+   }
+   if (!inGroup) {
+      if (user.trello_token != null) {
+         //#region authorized
+         let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, user.trello_token);
+         let owner = await trelloManager.GetTokenOwner(user.trello_token);
+         let boardsList = [];
+         if (owner != null) {
+            boardsList = await trelloManager.GetUserBoards(owner.id);
+            if (boardsList != null && boardsList.length > 0) {
+               reply = `${reply}${Format.FormBoardsList(boardsList, user.lang)}`;
+            }
+         }
+         //#endregion
       } else {
-         noBoardBinded = true;
+         //#region not authorized
+         trelloPendingConfirmationUsers.push(ctx.from.id);
+         BotReply(ctx, Format.TrelloAuthorizationMessage(process.env.TRELLO_TOKEN, process.env.SMART_SCHEDULER_BOT_NAME, user.lang),
+            kbs.CancelKeyboard(user.lang));
+         //#endregion
+         return;
       }
-      if (noBoardBinded) {
-         reply = `${replies.trelloNoBoardBinded}\r\n`;
+   }
+   if (ctx.message.text.indexOf(trelloClear) >= 0) {
+      if (!inGroup) {
+         DataBase.Users.ClearUserTrelloToken(ctx.from.id);
+         BotReply(ctx, replies.trelloRemovedToken);
+         return;
+      } else {
+         reply = `${reply}${replies.trelloClearGroupWarn}\r\n`;
       }
+   }
 
-      if (ctx.chat.id >= 0) {
-         reply = `${reply}${Format.FormBoardsList(boardsList, user.lang)}`;
-      }
+   if (reply.length > 0) {
       let answers = Format.SplitBigMessage(reply);
       BotReplyMultipleMessages(ctx, answers);
    }
@@ -107,7 +111,7 @@ async function TrelloPinCommand(ctx, user) {
    const replies = rp.LoadReplies(user.lang);
    let text = ctx.message.text;
    let match = text.match(/[a-zA-Z0-9]{24}/);
-   if(match == null) {
+   if (match == null) {
       BotReply(ctx, replies.invalidUseOfCommand);
       return;
    }
