@@ -378,7 +378,8 @@ class Schedule {
    static async GetExpiredSchedules(decrypt = false) {
       let query = Schedule.ApplyGetOptions(`SELECT chatid, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, schedules.id, state, message_id, creation_date, creator, userids.lang FROM schedules
       LEFT JOIN userids ON schedules.creator = userids.id`, GetOptions.valid);
-      query = `${query} AND ((extract(epoch from now()) * 1000)::bigint >= target_date OR (trello_card_id != 'undefined' AND trello_card_id IS NOT NULL))`;
+      query = `${query} AND ((extract(epoch from now()) * 1000)::bigint >= target_date OR (trello_card_id != 'undefined' AND trello_card_id IS NOT NULL))
+      ORDER BY schedules.id;`;
       let res = await Connector.instance.Query(query);
       if (typeof (res) == 'undefined' || res.rows.length == 0) {
          return [];
