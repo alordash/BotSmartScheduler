@@ -353,10 +353,11 @@ class Schedule {
 
    //WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP
    /**
-    * @returns {Array.<{schedule, lang: String}>}
+    * @param {Boolean} decrypt 
+    * @returns {Array.<{schedule: Schedule, lang: String}>}
     */
 
-   static async GetExpiredSchedules() {
+   static async GetExpiredSchedules(decrypt = false) {
       let query = Schedule.ApplyGetOptions(`SELECT chatid, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, schedules.id, state, message_id, creation_date, creator, userids.lang FROM schedules
       LEFT JOIN userids ON schedules.creator = userids.id`, GetOptions.valid);
       query = `${query} AND (extract(epoch from now())::bigint >= target_date OR (trello_card_id != 'undefined' AND trello_card_id IS NOT NULL))`;
@@ -369,7 +370,7 @@ class Schedule {
       for (let row of res.rows) {
          let lang = row.lang;
          delete(row.lang);
-         result.push({schedule: Schedule.FixSchedule(row), lang});
+         result.push({schedule: Schedule.FixSchedule(row, decrypt), lang});
       }
       return result;
    }
