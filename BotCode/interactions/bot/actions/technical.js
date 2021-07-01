@@ -257,7 +257,7 @@ async function StartDisplayingStatus(ctx) {
    let schedulesCount = await DataBase.Schedules.GetTotalSchedulesCount();
    text = Format.FormDisplayStatus(ctx.from.language_code, usersCount, schedulesCount);
    let msg = await BotReply(ctx, text, option, undefined, channelInfo.id);
-   let schedule = new Schedule(utils.FormatChatId(channelInfo.id), -1, ctx.from.language_code, 'none', -1, -1, -1, undefined, ScheduleStates.statusDisplay, msg.message_id);
+   let schedule = new Schedule(utils.FormatChatId(channelInfo.id), -1, ctx.from.language_code, 'none', -1, -1, -1, undefined, ScheduleStates.statusDisplay, msg.message_id, Date.now(), ctx.from.id);
    await DataBase.Schedules.AddSchedule(schedule);
 }
 
