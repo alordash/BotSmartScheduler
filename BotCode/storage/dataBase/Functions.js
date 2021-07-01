@@ -16,6 +16,16 @@ module.exports = {
       RETURN QUERY SELECT * FROM schedules WHERE chatid = _chatid;
    END;
    $$ LANGUAGE plpgsql;`,
+   ReorderMultipleSchedulesFunction: `CREATE OR REPLACE FUNCTION ReorderMultipleSchedules(_chatids TEXT[]) RETURNS VOID AS $$
+   DECLARE
+      i TEXT;
+      _s schedules;
+   BEGIN
+      FOREACH i IN ARRAY _chatids LOOP
+         SELECT * FROM ReorderSchedules(i) INTO _s;
+      END LOOP;
+    END;
+   $$ LANGUAGE plpgsql;`,
    ConfirmScheduleFunction: `CREATE OR REPLACE FUNCTION ConfirmSchedule(_id INT, _state TEXT, _filter_state TEXT) RETURNS VOID AS $$
    DECLARE
       s int;

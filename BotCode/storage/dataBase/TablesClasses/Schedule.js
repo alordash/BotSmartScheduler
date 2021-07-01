@@ -324,6 +324,24 @@ class Schedule {
    }
 
    /**
+    * @param {Array.<Schedule>} schedules 
+    */
+   static async ReorderMultipleSchedules(schedules) {
+      let chats = [];
+      let query = `SELECT ReorderMultipleSchedules (ARRAY[''`;
+      for(const schedule of schedules) {
+         if(chats.indexOf(schedule.chatid) == -1) {
+            chats.push(schedule.chatid);
+            query = `${query}, '${schedule.chatid}'`;
+         }
+      }
+      query = `${query}])`;
+      console.log(`Reordering schedules in multiple chats: ${JSON.stringify(chats)}`);
+      let res = await Connector.instance.Query(query);
+      return res;
+   }
+
+   /**
     * @param {String} chatID
     * @returns {Array.<Schedule>}
     */
