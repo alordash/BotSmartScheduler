@@ -93,7 +93,8 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
                file_id,
                undefined,
                undefined,
-               now);
+               now,
+               ctx.from.id);
             let proceed = dateExists && textIsValid;
             if (!proceed && !inGroup) {
                let invalidSchedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.invalid);
