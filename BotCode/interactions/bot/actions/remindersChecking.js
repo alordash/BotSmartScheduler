@@ -59,7 +59,7 @@ async function CheckExpiredSchedules(bot) {
          console.log(`The chat "${chatID}" has blocked bot`);
       }
       if (!isBlocked) {
-         let repeatSchedule = new Schedule(schedule.chatid, undefined, schedule.text, schedule.username, schedule.target_date + global.repeatScheduleTime, 0, 0, schedule.file_id, ScheduleStates.repeat, msg.message_id, now);
+         let repeatSchedule = new Schedule(schedule.chatid, undefined, schedule.text, schedule.username, schedule.target_date + global.repeatScheduleTime, 0, 0, schedule.file_id, ScheduleStates.repeat, msg.message_id, now, schedule.creator);
          DataBase.Schedules.AddSchedule(repeatSchedule);
          let isPeriodic = schedule.period_time > 0;
          let isLimited = schedule.max_date > 0;
