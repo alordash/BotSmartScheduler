@@ -36,7 +36,7 @@ async function CaseToTrello(ctx, tzPendingConfirmationUsers, trelloPendingConfir
          if (schedule.message_id != message_id) {
             continue;
          }
-         schedule = await AddScheduleToTrello(schedule);
+         schedule = await AddScheduleToTrello(ctx, schedule);
          text += `${await Format.FormStringFormatSchedule(schedule, tz, language, true, true)}\r\n`;
       }
       if (text.length > 0) {

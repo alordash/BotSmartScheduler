@@ -3,6 +3,8 @@ const { Schedule, GetOptions, ScheduleStates } = require('../../storage/dataBase
 const { TrelloManager } = require('@alordash/node-js-trello');
 const { ExtractNicknames, GetUsersIDsFromNicknames } = require('./nicknamesExtraction');
 const utils = require('./utilities');
+const request = require('request-promise');
+const path = require('path');
 
 /**
  * @param {Schedule} schedule 
@@ -67,12 +69,13 @@ async function RemoveInvalidRemindersMarkup(bot, chatID, message_id = null) {
 }
 
 /**
+ * @param {*} ctx 
  * @param {Schedule} schedule 
  * @param {Chat} chat 
  * @returns {Schedule} 
  */
-async function AddScheduleToTrello(schedule, chat = null) {
-   if(chat == null) {
+async function AddScheduleToTrello(ctx, schedule, chat = null) {
+   if (chat == null) {
       chat = await DataBase.Chats.GetChatById(schedule.chatid);
    }
    let trelloManager = new TrelloManager(process.env.TRELLO_TOKEN, chat.trello_token);
@@ -88,6 +91,19 @@ async function AddScheduleToTrello(schedule, chat = null) {
    }
 
    let card = await trelloManager.AddCard(chat.trello_list_id, text, schedule.text, 0, new Date(schedule.target_date), ids);
+
+   if (schedule.file_id != undefined && schedule.file_id != '~') {
+      let fileInfo;
+      try {
+         fileInfo = await ctx.telegram.getFile(schedule.file_id);
+         let uri = `https://api.telegram.org/file/bot${process.env.SMART_SCHEDULER_TLGRM_API_TOKEN}/${fileInfo.file_path}`;
+         let file = await request.get({ uri, encoding: null });
+         let fileName = path.basename(fileInfo.file_path);
+          await trelloManager.AddAttachment(card.id, file, { name: fileName });
+      } catch (e) {
+         console.log(e);
+      }
+   }
 
    if (typeof (card) != 'undefined') {
       schedule.trello_card_id = card.id;
