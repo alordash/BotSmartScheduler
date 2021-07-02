@@ -412,7 +412,6 @@ class Schedule {
       return expiredSchedules;
    }
 
-   //WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP
    /**
     * @param {Boolean} decrypt 
     * @returns {Array.<{schedule: Schedule, lang: String}>}
@@ -436,7 +435,6 @@ class Schedule {
       }
       return result;
    }
-   //WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP — WIP
 
    /**
     * @param {String} chatID 
