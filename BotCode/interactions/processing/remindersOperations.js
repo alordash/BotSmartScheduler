@@ -99,7 +99,7 @@ async function AddScheduleToTrello(ctx, schedule, chat = null) {
          let uri = `https://api.telegram.org/file/bot${process.env.SMART_SCHEDULER_TLGRM_API_TOKEN}/${fileInfo.file_path}`;
          let file = await request.get({ uri, encoding: null });
          let fileName = path.basename(fileInfo.file_path);
-          await trelloManager.AddAttachment(card.id, file, { name: fileName });
+         await trelloManager.AddAttachment(card.id, file, { name: fileName });
       } catch (e) {
          console.log(e);
       }
