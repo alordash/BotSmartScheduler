@@ -212,23 +212,29 @@ async function ConfrimTimeZone(ctx, tzPendingConfirmationUsers) {
          console.error(e);
       }
       return;
-   }
-   try {
-      let geocodes = JSON.parse(await request(`https://maps.googleapis.com/maps/api/geocode/json?address=${ctx.message.text}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
-      if (geocodes.results.length > 0) {
-         let geocode = geocodes.results[0];
-         let location = geocode.geometry.location;
-         ConfirmLocation(ctx, location.lat, location.lng, tzPendingConfirmationUsers, geocode.formatted_address);
-         return;
-      }
-   } catch (e) {
-      console.log(e);
-   } finally {
-      console.log(`Can't determine tz in "${ctx.message.text}"`);
+   } else {
       try {
-         BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
+         let geocodes = JSON.parse(await request(`https://maps.googleapis.com/maps/api/geocode/json?address=${ctx.message.text}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
+         if (geocodes.results.length > 0) {
+            let geocode = geocodes.results[0];
+            let location = geocode.geometry.location;
+            ConfirmLocation(ctx, location.lat, location.lng, tzPendingConfirmationUsers, geocode.formatted_address);
+            return;
+         } else {
+            console.log(`Can't determine tz in "${ctx.message.text}"`);
+            try {
+               BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
+            } catch (e) {
+               console.error(e);
+            }
+         }
       } catch (e) {
-         console.error(e);
+         console.log(e);
+         try {
+            BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
+         } catch (e) {
+            console.error(e);
+         }
       }
    }
 }
