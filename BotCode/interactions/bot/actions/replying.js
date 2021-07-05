@@ -7,9 +7,12 @@ const path = require('path');
  * @param {String|Number} chatid
  */
 function BotReply(ctx, text, option = {}, notify = false, chatid = ctx.chat.id) {
+   let res;
+   if (text.length == 0) {
+      return res;
+   }
    option.disable_notification = !notify;
    option.parse_mode = 'HTML';
-   let res;
    try {
       res = ctx.telegram.sendMessage(chatid, text, option)
    } catch (e) {
