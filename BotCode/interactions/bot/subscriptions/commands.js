@@ -13,8 +13,9 @@ const { TrelloCommand, TrelloPinCommand, TrelloUnpinCommand } = require('../acti
  */
 function InitCommandsSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers) {
    bot.command(cms.listSchedules, async ctx => {
-      let tz = (await DataBase.Users.GetUserById(ctx.from.id)).tz;
-      let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
+      let user = await DataBase.Users.GetUserById(ctx.from.id);
+      let tz = user.tz;
+      let language = user.lang;
       let chatID = FormatChatId(ctx.chat.id);
       let answers = await technicalActions.LoadSchedulesList(chatID, tz, language);
       for (const answer of answers) {
