@@ -71,6 +71,7 @@ async function HandleCommandMessage(bot, ctx, chatID, msgText) {
  * @param {Number} prevalenceForParsing 
  */
 async function HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, prevalenceForParsing = 50) {
+   console.log(`Handling text msg in chat "${ctx.chat.id}"`);
    let chatID = utils.FormatChatId(ctx.chat.id);
    let inGroup = chatID[0] === '_';
    let msgText = ctx.message.text;

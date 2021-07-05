@@ -118,6 +118,7 @@ class User {
     */
    static async GetUserById(id, real = false) {
       let res = await Connector.instance.Query(`SELECT * FROM userids WHERE id = ${id}`);
+      console.log(`Got user by id "${id}"`);
       if (typeof (res) != 'undefined' && res.rows.length > 0) {
          return new User(res.rows[0]);
       } else if (!real) {
