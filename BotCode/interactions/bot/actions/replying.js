@@ -8,7 +8,7 @@ const path = require('path');
  */
 function BotReply(ctx, text, option = {}, notify = false, chatid = ctx.chat.id) {
    let res;
-   if (text.length == 0) {
+   if (text == undefined || text.length == 0) {
       return res;
    }
    option.disable_notification = !notify;
