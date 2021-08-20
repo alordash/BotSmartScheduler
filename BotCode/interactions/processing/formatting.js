@@ -293,10 +293,18 @@ function FormReminderMessage(schedule) {
  * @param {Number} length 
  * @returns 
  */
-function ShortenString(s, length = global.MaxShortStringLength) {
+function ShortenString(s, length = global.MaxShortStringLength, countWords = false, endFiller = '...') {
+   if(countWords) {
+      let words = s.split(' ');
+      if(words.length <= length) {
+         return words.join(' ');
+      }
+      words.splice(length);
+      return `${words.join(' ')}${endFiller}`;
+   }
    if (s.length > length) {
-      s = s.substring(0, global.MaxShortStringLength)
-      s = `${s.substring(0, s.lastIndexOf(' '))}...`;
+      s = s.substring(0, length)
+      s = `${s.substring(0, s.lastIndexOf(' '))}${endFiller}`;
    }
    return s;
 }
