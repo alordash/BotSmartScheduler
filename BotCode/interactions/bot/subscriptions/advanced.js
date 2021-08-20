@@ -9,6 +9,7 @@ const { DataBase, User } = require('../../../storage/dataBase/DataBase');
 const Markup = require('telegraf/markup');
 const { BotReply } = require('../actions/replying');
 const HandleCallbackQueries = require('../actions/handling/callbackQueries/callbackQueries');
+const HandleInlineQuery = require('../actions/handling/inlineQuery');
 
 /**
  * @param {Composer} bot 
@@ -71,7 +72,7 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
    }
 
    bot.on('location', async ctx => {
-      if(typeof(process.env.SMART_SCHEDULER_GOOGLE_API_KEY) == 'undefined') {
+      if (typeof (process.env.SMART_SCHEDULER_GOOGLE_API_KEY) == 'undefined') {
          return;
       }
       let location = ctx.message.location;
@@ -82,6 +83,10 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
       let language = await DataBase.Users.GetUserLanguage(ctx.from.id);
       ctx.from.language_code = language;
       HandleCallbackQueries(ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);
+   });
+
+   bot.on('inline_query', async (ctx) => {
+      HandleInlineQuery(ctx);
    });
 }
 

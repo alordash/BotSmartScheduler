@@ -5,6 +5,7 @@ const { ExtractNicknames, GetUsersIDsFromNicknames } = require('./nicknamesExtra
 const utils = require('./utilities');
 const request = require('request-promise');
 const path = require('path');
+const { ShortenString } = require('./formatting');
 
 /**
  * @param {Schedule} schedule 
@@ -84,11 +85,8 @@ async function AddScheduleToTrello(ctx, schedule, chat = null) {
    let ids = await GetUsersIDsFromNicknames(nickExtractionResult.nicks, trelloManager);
    schedule.text = nickExtractionResult.string;
 
-   let text = schedule.text;
-   if (text.length > global.MaxTrelloCardTextLength) {
-      text = text.substring(0, global.MaxTrelloCardTextLength)
-      text = `${text.substring(0, text.lastIndexOf(' '))}...`;
-   }
+   
+   let text = ShortenString(schedule.text);
 
    let card = await trelloManager.AddCard(chat.trello_list_id, text, schedule.text, 0, new Date(schedule.target_date), ids);
 

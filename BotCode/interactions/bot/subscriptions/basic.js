@@ -70,6 +70,10 @@ function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingCo
 
    bot.on('message', async ctx => {
       try {
+         let via_bot = ctx.message.via_bot;
+         if (via_bot != undefined && via_bot.id == ctx.botInfo.id) {
+            return;
+         }
          HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);
       } catch (e) {
          console.log(e)
