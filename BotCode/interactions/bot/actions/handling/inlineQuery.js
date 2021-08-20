@@ -18,7 +18,7 @@ async function HandleInlineQuery(ctx) {
     for (let schedule of schedules) {
         if (!schedule.text.includes(query))
             continue;
-        let title = ShortenString(schedule.text, 20, false, '');
+        let title = `▪️ ${ShortenString(schedule.text, 20, false, '')}`;
         let message_text = await FormStringFormatSchedule(schedule, tz, language, false, false);
         let result = { type: 'article', id: id++, title, input_message_content: { message_text, parse_mode: 'html' } };
         if (schedule.text.length > 20) {
