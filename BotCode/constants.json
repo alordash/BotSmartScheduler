@@ -4,7 +4,7 @@
    "MaximumCountOfSchedules": 25,
    "MaxMessageLength": 4096,
    "MessagesUntilTzWarning": 8,
-   "MaxTrelloCardTextLength": 128,
+   "MaxShortStringLength": 128,
    "defaultUserLanguage": "ru",
    "defaultUserTimezone": 10800
 }

@@ -288,6 +288,19 @@ function FormReminderMessage(schedule) {
    return `${remindIcon}${slashCommand}${mention} ${schedule.text}`;
 }
 
+/**
+ * @param {String} s 
+ * @param {Number} length 
+ * @returns 
+ */
+function ShortenString(s, length = global.MaxShortStringLength) {
+   if (s.length > length) {
+      s = s.substring(0, global.MaxShortStringLength)
+      s = `${s.substring(0, s.lastIndexOf(' '))}...`;
+   }
+   return s;
+}
+
 module.exports = {
    TimeListIsEmpty,
    FormDateStringFormat,
@@ -305,5 +318,6 @@ module.exports = {
    TrelloAuthorizationMessage,
    TrelloInfoLink,
    FormDisplayStatus,
-   FormReminderMessage
+   FormReminderMessage,
+   ShortenString
 }
