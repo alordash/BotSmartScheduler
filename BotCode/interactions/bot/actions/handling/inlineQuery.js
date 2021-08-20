@@ -6,7 +6,9 @@ const { FormStringFormatSchedule, ShortenString } = require("../../../processing
  * @param {*} inlineQuery 
  */
 async function HandleInlineQuery(ctx) {
-    const query = ctx.inlineQuery.query;
+    let query = ctx.inlineQuery.query;
+    if (query == ' ')
+        query = '';
     let results = [];
     let id = 0;
 
