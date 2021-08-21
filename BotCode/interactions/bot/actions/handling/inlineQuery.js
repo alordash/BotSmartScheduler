@@ -4,11 +4,32 @@ const { DataBase, Schedule } = require("../../../../storage/dataBase/DataBase");
 const { FormStringFormatSchedule, ShortenString, FormDateStringFormat } = require("../../../processing/formatting");
 const { ProcessParsedDate } = require("../../../processing/timeProcessing");
 
+class InlineSchedules {
+    /**@type {Array.<Schedule>} */
+    schedules = [];
+    /**@type {NodeJS.Timeout} */
+    timer;
+}
+
+/**
+ * @param {Array.<InlineSchedules>} inlineSchedules 
+ * @param {Number} id 
+ * @param {InlineSchedules}
+ */
+function RemoveInlineSchedule(inlineSchedules, id, newInlineSchedule) {
+    let inlineSchedule = inlineSchedules.splice(id, 1)[0];
+    if (inlineSchedule != undefined)
+        clearTimeout(inlineSchedule.timer);
+    if (newInlineSchedule != undefined)
+        inlineSchedules[id] = newInlineSchedule;
+}
+
 /**
  * @param {*} ctx 
+ * @param {Array.<InlineSchedules>} inlineSchedules 
  * @param {String} query 
  */
-async function TryInlineQuerySchedule(ctx, query = ctx.inlineQuery.query) {
+async function TryInlineQuerySchedule(ctx, inlineSchedules, query = ctx.inlineQuery.query) {
     let results = [];
     let id = 0;
     let parsedDates = wordsParseDate(arrayParseString(query, 1), 1, 40, query);
@@ -21,6 +42,11 @@ async function TryInlineQuerySchedule(ctx, query = ctx.inlineQuery.query) {
     const tz = user.tz;
     const language = user.lang;
 
+    let inlineSchedule = new InlineSchedules();
+    inlineSchedule.timer = setTimeout(() => {
+        inlineSchedules.splice(ctx.from.id, 1);
+    }, global.inlineQueryScheduleTimeout);
+
     for (let parsedDate of parsedDates) {
         let dateParams = ProcessParsedDate(parsedDate, tz, false);
         const dateIsValid = typeof (dateParams) != 'undefined';
@@ -31,7 +57,7 @@ async function TryInlineQuerySchedule(ctx, query = ctx.inlineQuery.query) {
         const textIsValid = parsedDate.string.length > 0;
         if (!dateExists || !textIsValid)
             continue;
-            
+
         let newSchedule = new Schedule(
             ctx.from.id.toString(),
             -1,
@@ -46,16 +72,22 @@ async function TryInlineQuerySchedule(ctx, query = ctx.inlineQuery.query) {
             now,
             ctx.from.id);
 
+        inlineSchedule.schedules.push(newSchedule);
+
         let title = FormDateStringFormat(new Date(newSchedule.target_date + tz * 1000));
         let description = ShortenString(newSchedule.text, 50);
         let message_text = await FormStringFormatSchedule(newSchedule, tz, language, false, false);
         let result = { type: 'article', id: id++, description, title, input_message_content: { message_text, parse_mode: 'html' } };
         results.push(result);
     }
+    RemoveInlineSchedule(inlineSchedules, ctx.from.id, inlineSchedule);
     ctx.answerInlineQuery(results, 10);
     return true;
 }
 
+/**
+ * @param {*} ctx 
+ */
 async function InlineQuerySearch(ctx) {
     let query = ctx.inlineQuery.query.toLocaleLowerCase();
     let results = [];
@@ -82,13 +114,13 @@ async function InlineQuerySearch(ctx) {
 
 /**
  * @param {*} ctx 
- * @param {*} inlineQuery 
+ * @param {Array.<InlineSchedules>} inlineSchedules 
  */
-async function HandleInlineQuery(ctx) {
-    if (await TryInlineQuerySchedule(ctx))
+async function HandleInlineQuery(ctx, inlineSchedules) {
+    if (await TryInlineQuerySchedule(ctx, inlineSchedules))
         return;
-
+    RemoveInlineSchedule(inlineSchedules, ctx.from.id);
     InlineQuerySearch(ctx);
 }
 
-module.exports = HandleInlineQuery;
+module.exports = { InlineSchedules, HandleInlineQuery };

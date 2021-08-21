@@ -13,8 +13,9 @@ const { HelpCommand, HandleTextMessage } = require('../actions/handling/textMess
  * @param {Composer} bot 
  * @param {Array.<String>} tzPendingConfirmationUsers 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
+ * @param {Array.<InlineSchedules>} inlineSchedules 
  */
-function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers) {
+function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, inlineSchedules) {
    bot.start(async ctx => {
       const replies = LoadReplies(ctx.from.language_code);
       try {
