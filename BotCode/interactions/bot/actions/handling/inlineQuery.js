@@ -15,14 +15,17 @@ async function TryInlineQuerySchedule(ctx, query = ctx.inlineQuery.query) {
     let id = 0;
 
     let parsedDates = FormParsedDates(query, 40);
+    console.log('parsedDates.length :>> ', parsedDates.length);
     if (parsedDates.length <= 0) {
         return;
     }
 
     let user = await DataBase.Users.GetUserById(ctx.from.id);
+    console.log('user :>> ', user);
     const language = user.lang;
 
     let schedules = SimpleScheduleParse(parsedDates, user);
+    console.log('schedules.length :>> ', schedules.length);
     if (schedules.length <= 0) {
         return false;
     }
