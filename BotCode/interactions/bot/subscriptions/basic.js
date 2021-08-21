@@ -8,15 +8,13 @@ const { speechToText } = require('../actions/stt/stt');
 const stt = new speechToText(process.env.YC_API_KEY, process.env.YC_FOLDER_ID);
 const { BotReply } = require('../actions/replying');
 const { HelpCommand, HandleTextMessage } = require('../actions/handling/textMessage');
-const { ConfirmInlineQuerySchedule } = require('../actions/handling/inlineQuery');
 
 /**
  * @param {Composer} bot 
  * @param {Array.<String>} tzPendingConfirmationUsers 
  * @param {Array.<String>} trelloPendingConfirmationUsers 
- * @param {Array.<InlineSchedules>} inlineSchedules 
  */
-function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, inlineSchedules) {
+function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers) {
    bot.start(async ctx => {
       const replies = LoadReplies(ctx.from.language_code);
       try {
@@ -72,10 +70,8 @@ function InitBasicSubscriptions(bot, tzPendingConfirmationUsers, trelloPendingCo
 
    bot.on('message', async ctx => {
       try {
-         console.log('inlineSchedules :>> ', inlineSchedules);
          let via_bot = ctx.message.via_bot;
          if (via_bot != undefined && via_bot.id == ctx.botInfo.id) {
-            ConfirmInlineQuerySchedule(ctx, inlineSchedules);
             return;
          }
          HandleTextMessage(bot, ctx, tzPendingConfirmationUsers, trelloPendingConfirmationUsers);

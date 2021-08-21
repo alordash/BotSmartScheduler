@@ -1,86 +1,39 @@
 const { wordsParseDate } = require("@alordash/date-parser");
 const { arrayParseString } = require("@alordash/parse-word-to-number");
 const { DataBase, Schedule } = require("../../../../storage/dataBase/DataBase");
+const { ScheduleStates } = require("../../../../storage/dataBase/TablesClasses/Schedule");
 const { FormStringFormatSchedule, ShortenString, FormDateStringFormat } = require("../../../processing/formatting");
 const { ProcessParsedDate } = require("../../../processing/timeProcessing");
-
-class InlineSchedules {
-    /**@type {Array.<Schedule>} */
-    schedules = [];
-    /**@type {NodeJS.Timeout} */
-    timer;
-}
-
-/**
- * @param {Array.<InlineSchedules>} inlineSchedules 
- * @param {Number} id 
- * @param {InlineSchedules}
- */
-function RemoveInlineSchedule(inlineSchedules, id, newInlineSchedule) {
-    let inlineSchedule = inlineSchedules.splice(id, 1)[0];
-    if (inlineSchedule != undefined)
-        clearTimeout(inlineSchedule.timer);
-    if (newInlineSchedule != undefined)
-        inlineSchedules[id] = newInlineSchedule;
-}
+const { SimpleScheduleParse, FormParsedDates } = require("../remindersParsing");
 
 /**
  * @param {*} ctx 
- * @param {Array.<InlineSchedules>} inlineSchedules 
  * @param {String} query 
  */
-async function TryInlineQuerySchedule(ctx, inlineSchedules, query = ctx.inlineQuery.query) {
+async function TryInlineQuerySchedule(ctx, query = ctx.inlineQuery.query) {
     let results = [];
     let id = 0;
-    let parsedDates = wordsParseDate(arrayParseString(query, 1), 1, 40, query);
-    if (parsedDates.length <= 0) {
-        return false;
-    }
-    const now = Date.now();
 
-    const user = await DataBase.Users.GetUserById(ctx.from.id);
-    const tz = user.tz;
+    let parsedDates = FormParsedDates(query, 40);
+    if (parsedDates.length <= 0) {
+        return;
+    }
+
+    let user = await DataBase.Users.GetUserById(ctx.from.id);
     const language = user.lang;
 
-    let inlineSchedule = new InlineSchedules();
-    inlineSchedule.timer = setTimeout(() => {
-        inlineSchedules.splice(ctx.from.id, 1);
-    }, global.inlineQueryScheduleTimeout);
+    let schedules = SimpleScheduleParse(parsedDates, user);
+    if (schedules.length <= 0) {
+        return false;
+    }
 
-    for (let parsedDate of parsedDates) {
-        let dateParams = ProcessParsedDate(parsedDate, tz, false);
-        const dateIsValid = typeof (dateParams) != 'undefined';
-        const dateExists = dateIsValid &&
-            (dateParams.target_date != 0 ||
-                dateParams.period_time != 0 ||
-                dateParams.max_date != 0);
-        const textIsValid = parsedDate.string.length > 0;
-        if (!dateExists || !textIsValid)
-            continue;
-
-        let newSchedule = new Schedule(
-            ctx.from.id.toString(),
-            -1,
-            parsedDate.string,
-            'none',
-            dateParams.target_date,
-            dateParams.period_time,
-            dateParams.max_date,
-            undefined,
-            undefined,
-            undefined,
-            now,
-            ctx.from.id);
-
-        inlineSchedule.schedules.push(newSchedule);
-
-        let title = FormDateStringFormat(new Date(newSchedule.target_date + tz * 1000));
-        let description = ShortenString(newSchedule.text, 50);
-        let message_text = await FormStringFormatSchedule(newSchedule, tz, language, false, false);
+    for (let schedule of schedules) {
+        let title = FormDateStringFormat(new Date(schedule.target_date + user.tz * 1000));
+        let description = ShortenString(schedule.text, 50);
+        let message_text = await FormStringFormatSchedule(schedule, user.tz, language, false, false);
         let result = { type: 'article', id: id++, description, title, input_message_content: { message_text, parse_mode: 'html' } };
         results.push(result);
     }
-    RemoveInlineSchedule(inlineSchedules, ctx.from.id, inlineSchedule);
     ctx.answerInlineQuery(results, 10);
     return true;
 }
@@ -99,7 +52,7 @@ async function InlineQuerySearch(ctx) {
     const language = user.lang;
 
     for (let schedule of schedules) {
-        if (!schedule.text.toLocaleLowerCase().includes(query))
+        if (schedule.state != ScheduleStates.valid || !schedule.text.toLocaleLowerCase().includes(query))
             continue;
         let title = `▪️ ${ShortenString(schedule.text, 20, false, '')}`;
         let message_text = await FormStringFormatSchedule(schedule, tz, language, false, false);
@@ -109,39 +62,27 @@ async function InlineQuerySearch(ctx) {
         }
         results.push(result);
     }
-    ctx.answerInlineQuery(results, 10);
+    ctx.answerInlineQuery(results, { cache_time: 5 });
 }
 
 /**
  * @param {*} ctx 
- * @param {Array.<InlineSchedules>} inlineSchedules 
  */
-async function HandleInlineQuery(ctx, inlineSchedules) {
-    if (await TryInlineQuerySchedule(ctx, inlineSchedules))
+async function HandleInlineQuery(ctx) {
+    if (await TryInlineQuerySchedule(ctx))
         return;
-    RemoveInlineSchedule(inlineSchedules, ctx.from.id);
     InlineQuerySearch(ctx);
 }
 
 /**
  * @param {*} ctx 
- * @param {Array.<InlineSchedules>} inlineSchedules 
+ * @param {String} text 
  */
-async function ConfirmInlineQuerySchedule(ctx, inlineSchedules) {
-    let inlineSchedule = inlineSchedules[ctx.from.id];
-    if (inlineSchedule == undefined)
-        return;
-
-    let text = ctx.message.text;
-    text = text.substring(text.indexOf('"') + 1);
-    let scheduleText = text.substring(0, text.length - 1);
-
-    for (let schedule of inlineSchedule.schedules) {
-        if (schedule.text == scheduleText) {
-            await DataBase.Schedules.AddSchedule(schedule);
-            return;
-        }
-    }
+async function ConfirmInlineQuerySchedule(ctx, text) {
+    let id = parseInt(ctx.chosenInlineResult.result_id);
+    let schedule = SimpleScheduleParse(ctx.chosenInlineResult.query, await DataBase.Users.GetUserById(ctx.from.id), 40, id)[0];
+    if (schedule != undefined)
+        DataBase.Schedules.AddSchedule(schedule);
 }
 
-module.exports = { InlineSchedules, HandleInlineQuery, ConfirmInlineQuerySchedule };
+module.exports = { HandleInlineQuery, ConfirmInlineQuerySchedule };

@@ -2,14 +2,11 @@ const Extra = require('telegraf/extra');
 const { User } = require('../../storage/dataBase/DataBase');
 const { LoadReplies } = require('./static/replies/repliesLoader');
 const Subscriptions = require('./subscriptions/all');
-const { InlineSchedules } = require('./actions/handling/inlineQuery');
 
 /**@type {Array.<String>} */
 let tzPendingConfirmationUsers = [];
 /**@type {Array.<String>} */
 let trelloPendingConfirmationUsers = [];
-/**@type {InlineSchedules} */
-let inlineSchedules = [];
 
 var i = 0;
 var errorsCount = 0;
@@ -61,7 +58,7 @@ function sendNotification(bot, inviteLink, users) {
 
 /**@param {*} bot */
 exports.InitBot = async function (bot) {
-   const subscriptionsArgs = [bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers, inlineSchedules];
+   const subscriptionsArgs = [bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers];
    await Subscriptions.initCommands(...subscriptionsArgs);
    await Subscriptions.initAdvanced(...subscriptionsArgs);
    await Subscriptions.initBasic(...subscriptionsArgs);
