@@ -33,7 +33,7 @@ async function TryInlineQuerySchedule(ctx, query = ctx.inlineQuery.query) {
     for (let schedule of schedules) {
         let title = ShortenString(schedule.text, 50);
         let description = `📝 ${FormDateStringFormat(new Date(schedule.target_date + user.tz * 1000))}`;
-        let message_text = await FormStringFormatSchedule(schedule, user.tz, language, false, false);
+        let message_text = await FormStringFormatSchedule(schedule, user.tz, language, false, false, true);
         let result = { type: 'article', id: id++, description, title, input_message_content: { message_text, parse_mode: 'html' } };
         results.push(result);
     }
