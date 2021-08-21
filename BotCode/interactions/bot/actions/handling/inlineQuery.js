@@ -123,4 +123,25 @@ async function HandleInlineQuery(ctx, inlineSchedules) {
     InlineQuerySearch(ctx);
 }
 
-module.exports = { InlineSchedules, HandleInlineQuery };
+/**
+ * @param {*} ctx 
+ * @param {Array.<InlineSchedules>} inlineSchedules 
+ */
+async function ConfirmInlineQuerySchedule(ctx, inlineSchedules) {
+    let inlineSchedule = inlineSchedules[ctx.from.id];
+    if (inlineSchedule == undefined)
+        return;
+
+    let text = ctx.message.text;
+    text = text.substring(text.indexOf('"') + 1);
+    let scheduleText = text.substring(0, text.length - 1);
+
+    for (let schedule of inlineSchedule.schedules) {
+        if (schedule.text == scheduleText) {
+            await DataBase.Schedules.AddSchedule(schedule);
+            return;
+        }
+    }
+}
+
+module.exports = { InlineSchedules, HandleInlineQuery, ConfirmInlineQuerySchedule };
