@@ -42,16 +42,16 @@ async function CheckExpiredSchedules(bot) {
       if (!decrypted) {
          schedule.text = Decrypt(schedule.text, schedule.chatid);
       }
-      let repeatButton = schedule.period_time > 0 ? {} : kbs.RepeatButton(lang);
+      let keyboardButton = schedule.period_time > 0 ? kbs.CompleteReminderButton(lang) : kbs.RepeatButton(lang);
       let msgText = Format.FormReminderMessage(schedule);
       let isBlocked = false;
       let msg;
       let shouldDelete = true;
       try {
          if (schedule.file_id != '~' && schedule.file_id != null) {
-            msg = await BotSendAttachment(bot, +chatID, msgText, schedule.file_id, repeatButton, true);
+            msg = await BotSendAttachment(bot, +chatID, msgText, schedule.file_id, keyboardButton, true);
          } else {
-            msg = await BotSendMessage(bot, +chatID, msgText, repeatButton, true);
+            msg = await BotSendMessage(bot, +chatID, msgText, keyboardButton, true);
          }
       } catch (e) {
          console.error(e);

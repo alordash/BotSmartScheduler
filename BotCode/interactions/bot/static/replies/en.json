@@ -64,6 +64,7 @@
     "trelloInfoLink": "All features of working with Trello are described here:",
     "trelloClearGroupWarn": "<i>To deauthorize your Trello account send:\"/trello clear\" to bot's PM.</i>",
     "toTrelloButton": "📤 To trello",
+    "completeReminder": "Complete ✔️",
     "months": [
         "January",
         "February",
