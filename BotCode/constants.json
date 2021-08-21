@@ -7,5 +7,7 @@
    "MaxShortStringLength": 128,
    "defaultUserLanguage": "ru",
    "defaultUserTimezone": 10800,
-   "inlineQueryScheduleTimeout": 300000
+   "inlineQueryScheduleTimeout": 300000,
+   "minReminderTimeDifferenceSec": 250,
+   "maxReminderTimeDifferenceSec": 35078400
 }

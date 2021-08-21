@@ -65,6 +65,8 @@
     "trelloClearGroupWarn": "<i>To deauthorize your Trello account send:\"/trello clear\" to bot's PM.</i>",
     "toTrelloButton": "📤 To trello",
     "completeReminder": "Complete ✔️",
+    "reminderMinTimeLimit": "⚠️ Minimum time to remind - 5 minutes.",
+    "reminderMaxTimeLimit": "⚠️ Maximum time to remind - 1 year 1 month.",
     "months": [
         "January",
         "February",

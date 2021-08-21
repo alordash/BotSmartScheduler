@@ -150,21 +150,22 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
          max_date: 0
       };
    }
-   if (requireHours && max_date_empty && period_time_empty) {
+   if (requireHours && max_date_empty && period_time_empty)
       if (typeof (parsedDate.target_date.hours) == 'undefined'
-         && typeof (parsedDate.target_date.minutes) == 'undefined') {
+         && typeof (parsedDate.target_date.minutes) == 'undefined')
          return undefined;
-      }
-   }
-   if (TodayCheck(parsedDate.target_date, tz)) {
+
+   if (TodayCheck(parsedDate.target_date, tz))
       parsedDate.target_date = new TimeList();
-   }
+
    let dateValues = parsedDate.valueOf();
    let target_date = dateValues.target_date.getTime().div(1000);
    let period_time = dateValues.period_time.getTime().div(1000);
    let max_date = dateValues.max_date.getTime().div(1000);
+
    const hours = Math.floor(tz / 3600);
    const minutes = Math.floor((tz % 3600) / 60);
+
    console.log('hours :>> ', hours);
    console.log('minutes :>> ', minutes);
    parsedDate.target_date = FillMinutes(parsedDate.target_date);
@@ -211,9 +212,9 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
       let zeroDate = new Date(0);
       parsedDate.max_date = TimeListFromDate(parsedDate.max_date, zeroDate);
    }
-   if (typeof (parsedDate.target_date) == 'undefined') {
+   if (typeof (parsedDate.target_date) == 'undefined')
       return undefined;
-   }
+
    dateValues = parsedDate.valueOf();
    dateValues.target_date.setSeconds(0, 0);
    dateValues.period_time.setSeconds(0, 0);
@@ -221,6 +222,21 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
    target_date = dateValues.target_date.getTime();
    period_time = dateValues.period_time.getTime();
    max_date = dateValues.max_date.getTime();
+
+   let dif = (target_date - Date.now()).div(1000);
+   if (minReminderTimeDifferenceSec >= dif)
+      return {
+         target_date: -1,
+         period_time: 0,
+         max_date: 0
+      };
+   else if (dif >= maxReminderTimeDifferenceSec)
+      return {
+         target_date: -2,
+         period_time: 0,
+         max_date: 0
+      }
+
    return {
       target_date,
       period_time,

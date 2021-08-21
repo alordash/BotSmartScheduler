@@ -133,9 +133,18 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             continue;
         }
         const dateExists = dateIsValid &&
-            (dateParams.target_date != 0 ||
-                dateParams.period_time != 0 ||
-                dateParams.max_date != 0);
+            (dateParams.target_date > 0 ||
+                dateParams.period_time > 0 ||
+                dateParams.max_date > 0);
+        if (!dateExists)
+            if (dateParams.target_date == -1) {
+                reply += replies.reminderMinTimeLimit;
+                continue;
+            } else if (dateParams.target_date == -2) {
+                reply += replies.reminderMaxTimeLimit;
+                continue;
+            }
+
         let schedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.valid, undefined, true);
         let max_num = 0;
         let found = false;
