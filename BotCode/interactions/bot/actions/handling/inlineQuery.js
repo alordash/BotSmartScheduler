@@ -28,8 +28,8 @@ async function TryInlineQuerySchedule(ctx, query = ctx.inlineQuery.query) {
     }
 
     for (let schedule of schedules) {
-        let title = FormDateStringFormat(new Date(schedule.target_date + user.tz * 1000));
-        let description = ShortenString(schedule.text, 50);
+        let title = ShortenString(schedule.text, 50);
+        let description = `📝 ${FormDateStringFormat(new Date(schedule.target_date + user.tz * 1000))}`;
         let message_text = await FormStringFormatSchedule(schedule, user.tz, language, false, false);
         let result = { type: 'article', id: id++, description, title, input_message_content: { message_text, parse_mode: 'html' } };
         results.push(result);
@@ -48,17 +48,18 @@ async function InlineQuerySearch(ctx) {
 
     const schedules = await DataBase.Schedules.GetSchedules(ctx.from.id, undefined, undefined, true);
     const user = await DataBase.Users.GetUserById(ctx.from.id);
-    const tz = user.tz;
-    const language = user.lang;
 
     for (let schedule of schedules) {
         if (schedule.state != ScheduleStates.valid || !schedule.text.toLocaleLowerCase().includes(query))
             continue;
-        let title = `▪️ ${ShortenString(schedule.text, 20, false, '')}`;
-        let message_text = await FormStringFormatSchedule(schedule, tz, language, false, false);
+        let title = ShortenString(schedule.text, 30);
+        let description = `▪️ ${FormDateStringFormat(new Date(schedule.target_date + user.tz * 1000))}`;
+
+        let message_text = await FormStringFormatSchedule(schedule, user.tz, user.lang, false, false);
+
         let result = { type: 'article', id: id++, title, input_message_content: { message_text, parse_mode: 'html' } };
-        if (schedule.text.length > 20) {
-            result['description'] = ShortenString(schedule.text, 50);
+        if (true || schedule.text.length > 20) {
+            result['description'] = description;
         }
         results.push(result);
     }
