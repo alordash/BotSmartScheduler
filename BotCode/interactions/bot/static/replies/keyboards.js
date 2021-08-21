@@ -154,6 +154,18 @@ function ToTrelloKeyboard(language) {
    );
 }
 
+/**
+ * @param {Languages} language 
+ */
+function CompleteReminderButton(language) {
+   const replies = LoadReplies(language);
+   return Extra.markup((m) =>
+      m.inlineKeyboard([
+         m.callbackButton(replies.completeReminder, 'complete_reminder')
+      ])
+   );
+}
+
 module.exports = {
    MergeInlineKeyboards,
    ListKeyboard,
@@ -167,5 +179,6 @@ module.exports = {
    LogicalListKeyboard,
    HelpSectionsKeyboards,
    BackKeyboard,
-   ToTrelloKeyboard
+   ToTrelloKeyboard,
+   CompleteReminderButton
 }
