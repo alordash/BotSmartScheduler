@@ -8,6 +8,6 @@
    "defaultUserLanguage": "ru",
    "defaultUserTimezone": 10800,
    "inlineQueryScheduleTimeout": 300000,
-   "minReminderTimeDifferenceSec": 250,
+   "minReminderTimeDifferenceSec": 240,
    "maxReminderTimeDifferenceSec": 35078400
 }
