@@ -6,5 +6,6 @@
    "MessagesUntilTzWarning": 8,
    "MaxShortStringLength": 128,
    "defaultUserLanguage": "ru",
-   "defaultUserTimezone": 10800
+   "defaultUserTimezone": 10800,
+   "inlineQueryScheduleTimeout": 300000
 }

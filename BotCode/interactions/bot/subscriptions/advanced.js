@@ -9,7 +9,7 @@ const { DataBase, User } = require('../../../storage/dataBase/DataBase');
 const Markup = require('telegraf/markup');
 const { BotReply } = require('../actions/replying');
 const HandleCallbackQueries = require('../actions/handling/callbackQueries/callbackQueries');
-const HandleInlineQuery = require('../actions/handling/inlineQuery');
+const { HandleInlineQuery, ConfirmInlineQuerySchedule } = require('../actions/handling/inlineQuery');
 
 /**
  * @param {Composer} bot 
@@ -88,6 +88,12 @@ function InitAdvancedSubscriptions(bot, tzPendingConfirmationUsers, trelloPendin
    bot.on('inline_query', async (ctx) => {
       HandleInlineQuery(ctx);
    });
+
+   bot.on('chosen_inline_result', async (ctx) => {
+      let res = ctx.message;
+      console.log('res :>> ', res);
+      ConfirmInlineQuerySchedule(ctx, ctx.chosenInlineResult.query);
+   })
 }
 
 module.exports = InitAdvancedSubscriptions;

@@ -7,7 +7,7 @@ const { Schedule, ScheduleStates } = require('../../../../storage/dataBase/Table
 const { help, trelloAddListCommand, trelloHelp } = require('../../static/commandsList');
 const { BotReply, BotSendAttachment } = require('../replying');
 const utils = require('../../../processing/utilities');
-const ParseScheduleMessage = require('../remindersParsing');
+const { ParseScheduleMessage } = require('../remindersParsing');
 const { ConfrimTimeZone } = require('../technical');
 const { TrelloAuthenticate, TrelloAddList } = require('./trelloCommands');
 
