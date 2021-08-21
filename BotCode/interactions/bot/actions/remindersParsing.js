@@ -127,7 +127,7 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
     let invalidSchedule;
     let newSchedules = [];
     for (let parsedDate of parsedDates) {
-        let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned);
+        let dateParams = ProcessParsedDate(parsedDate, tz, inGroup && !mentioned, chatID == process.env.SMART_SCHEDULER_ADMIN);
         const dateIsValid = typeof (dateParams) != 'undefined';
         if (inGroup && !dateIsValid) {
             continue;

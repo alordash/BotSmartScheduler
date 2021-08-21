@@ -137,9 +137,10 @@ function TodayCheck(target_date, tz) {
  * @param {ParsedDate} parsedDate 
  * @param {Number} tz 
  * @param {Boolean} requireHours 
+ * @param {Boolean} ignoreLimits 
  * @returns {{target_date: Number, period_time: Number, max_date: Number}}
  */
-function ProcessParsedDate(parsedDate, tz, requireHours) {
+function ProcessParsedDate(parsedDate, tz, requireHours, ignoreLimits = false) {
    const max_date_empty = TimeListIsEmpty(parsedDate.max_date);
    const period_time_empty = TimeListIsEmpty(parsedDate.period_time);
    if (max_date_empty && period_time_empty
@@ -222,21 +223,22 @@ function ProcessParsedDate(parsedDate, tz, requireHours) {
    target_date = dateValues.target_date.getTime();
    period_time = dateValues.period_time.getTime();
    max_date = dateValues.max_date.getTime();
-
-   let dif = (target_date - Date.now()).div(1000);
-   if (minReminderTimeDifferenceSec >= dif)
-      return {
-         target_date: -1,
-         period_time: 0,
-         max_date: 0
-      };
-   else if (dif >= maxReminderTimeDifferenceSec)
-      return {
-         target_date: -2,
-         period_time: 0,
-         max_date: 0
-      }
-
+   if (!ignoreLimits) {
+      
+      let dif = (target_date - Date.now()).div(1000);
+      if (minReminderTimeDifferenceSec >= dif)
+         return {
+            target_date: -1,
+            period_time: 0,
+            max_date: 0
+         };
+      else if (dif >= maxReminderTimeDifferenceSec)
+         return {
+            target_date: -2,
+            period_time: 0,
+            max_date: 0
+         }
+   }
    return {
       target_date,
       period_time,
