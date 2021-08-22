@@ -34,9 +34,9 @@ function FormSchedule(parsedDate, tz, userId, now = Date.now()) {
     let dateParams = ProcessParsedDate(parsedDate, tz, false);
     const dateIsValid = typeof (dateParams) != 'undefined';
     const dateExists = dateIsValid &&
-        (dateParams.target_date != 0 ||
-            dateParams.period_time != 0 ||
-            dateParams.max_date != 0);
+        (dateParams.target_date > 0 ||
+            dateParams.period_time > 0 ||
+            dateParams.max_date > 0);
     const textIsValid = parsedDate.string.length > 0;
     if (!dateExists || !textIsValid)
         return undefined;
