@@ -28,10 +28,6 @@ async function HelpCommand(ctx) {
  * @returns 
  */
 async function HandleCommandMessage(bot, ctx, chatID, msgText) {
-   if (msgText.startsWith(`/${help}`)) {
-      HelpCommand(ctx);
-      return;
-   }
    let regExp = new RegExp(`^${trelloAddListCommand}[0-9]+`);
    let match = msgText.match(regExp);
    if (match != null) {
