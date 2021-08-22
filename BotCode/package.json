@@ -18,7 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@alordash/date-parser": "^2.3.15",
+    "@alordash/date-parser": "^2.3.16",
     "@alordash/node-js-trello": "^1.1.4",
     "@alordash/parse-word-to-number": "^3.0.5",
     "dotenv": "^8.2.0",
