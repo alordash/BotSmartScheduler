@@ -197,6 +197,16 @@ function Deleted(str, newline, language) {
 }
 
 /**
+ * @param {Number} num 
+ * @param {Boolean} newline 
+ * @param {Languages} language 
+ */
+function DeletedGreater(num, newline, language) {
+   const replies = LoadReplies(language);
+   return `${replies.deletedGreater} ${num}.${newline === false ? replies.showList : ''}`;
+}
+
+/**
  * @param {Number} hours 
  * @param {Number} minutes 
  * @param {Boolean} isNegative 
@@ -295,9 +305,9 @@ function FormReminderMessage(schedule) {
  * @returns 
  */
 function ShortenString(s, length = global.MaxShortStringLength, countWords = false, endFiller = '...') {
-   if(countWords) {
+   if (countWords) {
       let words = s.split(' ');
-      if(words.length <= length) {
+      if (words.length <= length) {
          return words.join(' ');
       }
       words.splice(length);
@@ -322,6 +332,7 @@ module.exports = {
    FormAlreadyBoardBinded,
    SplitBigMessage,
    Deleted,
+   DeletedGreater,
    TzCurrent,
    Scheduled,
    TrelloAuthorizationMessage,

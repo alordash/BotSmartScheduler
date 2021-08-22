@@ -54,6 +54,20 @@ async function DeleteSchedules(ctx) {
       BotReply(ctx, replies.cleared);
       return;
    }
+
+   let deletePlus = msgText.match(/[0-9]+\+/g);
+   if (deletePlus != null) {
+      let num = parseInt(deletePlus[0]);
+      let query = `num >= ${num}`;
+      try {
+         await DataBase.Schedules.RemoveSchedulesQuery(chatID, query);
+         BotReply(ctx, Format.DeletedGreater(num, false, ctx.message.from.language_code));
+      } catch (e) {
+         console.error(e);
+      }
+      return;
+   }
+
    let nums = msgText.match(/[0-9]+/g);
    let ranges = msgText.match(/[0-9]+-[0-9]+/g);
    for (let i in nums) {
