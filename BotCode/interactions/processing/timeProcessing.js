@@ -221,10 +221,14 @@ function ProcessParsedDate(parsedDate, tz, requireHours, ignoreLimits = false) {
    dateValues.period_time.setSeconds(0, 0);
    dateValues.max_date.setSeconds(0, 0);
    target_date = dateValues.target_date.getTime();
+   let periodYear = dateValues.period_time.getFullYear();
+   if(periodYear < 1970) {
+      console.log("Etwas");
+      dateValues.period_time.setFullYear(periodYear + 70);
+   }
    period_time = dateValues.period_time.getTime();
    max_date = dateValues.max_date.getTime();
    if (!ignoreLimits) {
-      
       let dif = (target_date - Date.now()).div(1000);
       if (minReminderTimeDifferenceSec >= dif)
          return {
