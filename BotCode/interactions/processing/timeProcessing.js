@@ -161,6 +161,11 @@ function ProcessParsedDate(parsedDate, tz, requireHours, ignoreLimits = false) {
 
    let dateValues = parsedDate.valueOf();
    let target_date = dateValues.target_date.getTime().div(1000);
+   let periodYear = dateValues.period_time.getFullYear();
+   if(periodYear < 1970) {
+      console.log("Etwas");
+      dateValues.period_time.setFullYear(periodYear + 70);
+   }
    let period_time = dateValues.period_time.getTime().div(1000);
    let max_date = dateValues.max_date.getTime().div(1000);
 
@@ -221,7 +226,7 @@ function ProcessParsedDate(parsedDate, tz, requireHours, ignoreLimits = false) {
    dateValues.period_time.setSeconds(0, 0);
    dateValues.max_date.setSeconds(0, 0);
    target_date = dateValues.target_date.getTime();
-   let periodYear = dateValues.period_time.getFullYear();
+   periodYear = dateValues.period_time.getFullYear();
    if(periodYear < 1970) {
       console.log("Etwas");
       dateValues.period_time.setFullYear(periodYear + 70);
