@@ -1,8 +1,6 @@
-# Bot Smart Scheduler
+# [t.me/SmartScheduler_bot](https://t.me/SmartScheduler_bot)
 
-## Links
-
-- [Версия на русском языке](README.md)
+- [Описание на русском](README.md)
 
 ## Bot understands English and Russian languages
 
