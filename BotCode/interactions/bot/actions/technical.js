@@ -136,7 +136,7 @@ async function StartTimeZoneDetermination(ctx, tzPendingConfirmationUsers) {
       tzPendingConfirmationUsers.push(ctx.from.id);
    }
    if (isPrivateChat) {
-      reply = `${reply}${replies.tzManualConfiguration}\r\n${replies.tzLocationConfiguration}`;
+      reply = `${reply}${replies.tzManualConfiguration}`;
       try {
          return await BotReply(ctx, reply, kbs.TzDeterminationKeyboard(language));
       } catch (e) {
@@ -228,28 +228,33 @@ async function ConfrimTimeZone(ctx, tzPendingConfirmationUsers) {
       return;
    } else {
       try {
-         let geocodes = JSON.parse(await request(`https://maps.googleapis.com/maps/api/geocode/json?address=${ctx.message.text}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
-         if (geocodes.results.length > 0) {
-            let geocode = geocodes.results[0];
-            let location = geocode.geometry.location;
-            ConfirmLocation(ctx, location.lat, location.lng, tzPendingConfirmationUsers, geocode.formatted_address);
-            return;
-         } else {
-            console.log(`Can't determine tz in "${ctx.message.text}"`);
-            try {
-               BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
-            } catch (e) {
-               console.error(e);
-            }
-         }
+         BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
       } catch (e) {
-         console.log(e);
-         try {
-            BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
-         } catch (e) {
-            console.error(e);
-         }
+         console.error(e);
       }
+      // try {
+      //    let geocodes = JSON.parse(await request(`https://maps.googleapis.com/maps/api/geocode/json?address=${ctx.message.text}&key=${process.env.SMART_SCHEDULER_GOOGLE_API_KEY}`));
+      //    if (geocodes.results.length > 0) {
+      //       let geocode = geocodes.results[0];
+      //       let location = geocode.geometry.location;
+      //       ConfirmLocation(ctx, location.lat, location.lng, tzPendingConfirmationUsers, geocode.formatted_address);
+      //       return;
+      //    } else {
+      //       console.log(`Can't determine tz in "${ctx.message.text}"`);
+      //       try {
+      //          BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
+      //       } catch (e) {
+      //          console.error(e);
+      //       }
+      //    }
+      // } catch (e) {
+      //    console.log(e);
+      //    try {
+      //       BotReply(ctx, replies.tzInvalidInput, kbs.CancelButton(ctx.from.language_code));
+      //    } catch (e) {
+      //       console.error(e);
+      //    }
+      // }
    }
 }
 

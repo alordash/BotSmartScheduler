@@ -54,7 +54,9 @@ function TzDeterminationKeyboard(language) {
    const replies = LoadReplies(language);
    return Markup
       .keyboard([
-         [{ text: replies.tzUseLocation, request_location: true }, { text: replies.cancel }]
+         [
+            // { text: replies.tzUseLocation, request_location: true },
+            { text: replies.cancel }]
       ]).resize()
       .extra();
 }
