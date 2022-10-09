@@ -2,6 +2,7 @@
   "name": "botsmartscheduler",
   "version": "1.2.0",
   "description": "",
+  "main": "./BotCode/index.js",
   "scripts": {
     "postinstall": "npm install --prefix BotCode"
   },
