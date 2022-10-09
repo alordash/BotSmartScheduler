@@ -192,7 +192,7 @@ class Schedule {
     * @param {Array.<Schedule>} schedules 
     */
    static async InsertSchedules(schedules) {
-      if (schedules?.length <= 0) {
+      if (schedules.length <= 0) {
          return;
       }
       let query = `INSERT INTO schedules (ChatID, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, state, message_id, creation_date, creator) VALUES `;

@@ -43,7 +43,7 @@ class User {
     * @param {Array.<User>} users 
     */
    static async InsertUsers(users) {
-      if (users?.length <= 0) {
+      if (users.length <= 0) {
          return;
       }
       let query = `INSERT INTO userids VALUES `;

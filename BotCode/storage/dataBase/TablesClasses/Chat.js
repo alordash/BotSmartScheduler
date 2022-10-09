@@ -33,7 +33,7 @@ class Chat {
     * @param {Array.<Chat>} chats 
     */
    static async InsertChats(chats) {
-      if (chats?.length <= 0) {
+      if (chats.length <= 0) {
          return;
       }
       let query = `INSERT INTO chats VALUES `;
