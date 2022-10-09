@@ -3,7 +3,7 @@ const { DataBase } = require('./storage/dataBase/DataBase');
 const botConfig = require('./interactions/bot/main');
 const { CheckExpiredSchedules, CheckPendingSchedules, CheckDisplayStatueMessages } = require('./interactions/bot/actions/remindersChecking');
 const utils = require('./interactions/processing/utilities');
-const { CopyDatabase, SaveDatabase } = require('./storage/dataBase/Copying');
+const { CopyDatabase, SaveDatabase } = require('./storage/dataBase/copying');
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
