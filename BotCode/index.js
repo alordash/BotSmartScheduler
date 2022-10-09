@@ -63,7 +63,7 @@ async function init() {
 
    // let dbCopy = await CopyDatabase(process.env.SMART_SCHEDULER_COPY_DB_URL);
 
-   // DataBase.EstablishConnection(dbOptions);
+   DataBase.EstablishConnection(dbOptions);
 
    // if (dbCopy.users.length > 0) {
    //    await SaveDatabase(dbCopy.users, dbCopy.chats, dbCopy.schedules);
