@@ -7,7 +7,7 @@ function startKeepAliveService() {
     console.log("Started keep alive service");
     utils.RepeatActionsWithPeriod(60000, async function () {
         console.log("Sending request to keep alive");
-        request.get(keepAliveUrl, undefined, (e, r) => console.log(`KeepAlive response: ${r}, error: ${e}`));
+        request.get(keepAliveUrl, {}, (e, r) => console.log(`KeepAlive response: ${r}, error: ${e}`));
     });
 }
 
