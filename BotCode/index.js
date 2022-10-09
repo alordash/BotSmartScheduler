@@ -3,6 +3,7 @@ const { DataBase } = require('./storage/dataBase/DataBase');
 const botConfig = require('./interactions/bot/main');
 const { CheckExpiredSchedules, CheckPendingSchedules, CheckDisplayStatueMessages } = require('./interactions/bot/actions/remindersChecking');
 const utils = require('./interactions/processing/utilities');
+const { CopyDatabase, SaveDatabase } = require('./storage/dataBase/Copying');
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
@@ -29,9 +30,8 @@ const dbOptions = {
    }
 }
 
-DataBase.EstablishConnection(dbOptions);
+async function Initialization() {
 
-(async function Initialization() {
    const now = new Date();
    console.log('now.getTimezoneOffset() :>> ', now.getTimezoneOffset());
    let constants = require('./constants.json');
@@ -43,11 +43,11 @@ DataBase.EstablishConnection(dbOptions);
    await botConfig.InitBot(SmartSchedulerBot);
 
    if (process.env.ENABLE_SCHEDULES_CHEKING == 'true') {
-      utils.RepeatActionsWithPeriod(60000, async function() {
+      utils.RepeatActionsWithPeriod(60000, async function () {
          await CheckExpiredSchedules(SmartSchedulerBot);
          await CheckPendingSchedules(SmartSchedulerBot);
       });
-      utils.RepeatActionsWithPeriod(86400000, async function() {
+      utils.RepeatActionsWithPeriod(86400000, async function () {
          await CheckDisplayStatueMessages(SmartSchedulerBot);
       });
    }
@@ -55,4 +55,20 @@ DataBase.EstablishConnection(dbOptions);
    if (process.env.ENABLE_LOGS == 'false') {
       console.log = function () { };
    }
-})();
+}
+
+async function init() {
+
+   let dbCopy = await CopyDatabase(process.env.SMART_SCHEDULER_COPY_DB_URL);
+
+   DataBase.EstablishConnection(dbOptions);
+
+   if (dbCopy.users.length > 0) {
+      await SaveDatabase(dbCopy.users, dbCopy.chats, dbCopy.schedules);
+   }
+
+
+   Initialization();
+}
+
+init();

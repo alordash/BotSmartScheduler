@@ -30,6 +30,24 @@ class Chat {
    }
 
    /**
+    * @param {Array.<Chat>} chats 
+    */
+   static async InsertChats(chats) {
+      if (chats?.length <= 0) {
+         return;
+      }
+      let query = `INSERT INTO chats VALUES `;
+      let i = 0;
+      let values = [];
+      for (const chat of chats) {
+         query = `${query}($${++i}, $${++i}, $${++i}, $${++i}), `;
+         values.push(chat.id, chat.trello_board_id, chat.trello_list_id, chat.trello_token);
+      }
+      query = query.substring(0, query.length - 2);
+      await Connector.instance.paramQuery(query, values);
+   }
+
+   /**
     * @param {String} id 
     * @returns {Chat} 
     */
@@ -41,6 +59,15 @@ class Chat {
          `SELECT * FROM chats
       WHERE id = '${id}'`
       )).rows[0];
+   }
+
+   /**
+    * @returns {Array.<Chat>} 
+    */
+   static async GetAllChats() {
+      return (await Connector.instance.Query(
+         `SELECT * FROM chats`
+      )).rows;
    }
 
    /**

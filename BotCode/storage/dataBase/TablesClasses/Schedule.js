@@ -189,6 +189,24 @@ class Schedule {
    }
 
    /**
+    * @param {Array.<Schedule>} schedules 
+    */
+   static async InsertSchedules(schedules) {
+      if (schedules?.length <= 0) {
+         return;
+      }
+      let query = `INSERT INTO schedules (ChatID, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, state, message_id, creation_date, creator) VALUES `;
+      let i = 0;
+      let values = [];
+      for (const schedule of schedules) {
+         query = `${query}($${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}, $${++i}), `;
+         values.push(schedule.chatid, schedule.num, schedule.text, schedule.username, schedule.target_date, schedule.period_time, schedule.max_date, schedule.file_id, schedule.trello_card_id, schedule.state, schedule.message_id, schedule.creation_date, schedule.creator);
+      }
+      query = query.substring(0, query.length - 2);
+      await Connector.instance.paramQuery(query, values);
+   }
+
+   /**
     * @param {Schedule} schedule
     */
    static async AddSchedule(schedule) {

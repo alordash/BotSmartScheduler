@@ -39,6 +39,24 @@ class User {
       return await Connector.instance.Query(`INSERT INTO userids VALUES (${user.id}, ${user.tz}, '${user.lang}', true)`);
    }
 
+   /**
+    * @param {Array.<User>} users 
+    */
+   static async InsertUsers(users) {
+      if (users?.length <= 0) {
+         return;
+      }
+      let query = `INSERT INTO userids VALUES `;
+      let i = 0;
+      let values = [];
+      for (const user of users) {
+         query = `${query}($${++i}, $${++i}, $${++i}, $${++i}, $${++i}), `;
+         values.push(user.id, user.tz, user.lang, user.subscribed, user.trello_token);
+      }
+      query = query.substring(0, query.length - 2);
+      await Connector.instance.paramQuery(query, values);
+   }
+
    /**@param {Number} id
     * @param {Number} tz
     */
