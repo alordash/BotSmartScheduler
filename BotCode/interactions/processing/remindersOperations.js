@@ -56,16 +56,21 @@ async function RemoveReminders(bot, schedules = []) {
  * @returns {Boolean} 
  */
 async function RemoveInvalidRemindersMarkup(bot, chatID, message_id = null) {
-   if (message_id == null) {
-      let invalidSchedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.invalid);
-      let invalidSchedule = invalidSchedules[0];
-      if (typeof (invalidSchedule) == 'undefined') {
-         return false;
+   try {
+      if (message_id == null) {
+         let invalidSchedules = await DataBase.Schedules.GetSchedules(chatID, GetOptions.invalid);
+         let invalidSchedule = invalidSchedules[0];
+         if (typeof (invalidSchedule) == 'undefined') {
+            return false;
+         }
+         message_id = invalidSchedule.message_id;
       }
-      message_id = invalidSchedule.message_id;
+      let _chatid = utils.UnformatChatId(chatID);
+      bot.telegram.editMessageReplyMarkup(_chatid, message_id);
+   } catch (e) {
+      console.error(e);
+      return false;
    }
-   let _chatid = utils.UnformatChatId(chatID);
-   bot.telegram.editMessageReplyMarkup(_chatid, message_id);
    return true;
 }
 
@@ -85,7 +90,7 @@ async function AddScheduleToTrello(ctx, schedule, chat = null) {
    let ids = await GetUsersIDsFromNicknames(nickExtractionResult.nicks, trelloManager);
    schedule.text = nickExtractionResult.string;
 
-   
+
    let text = ShortenString(schedule.text);
 
    let card = await trelloManager.AddCard(chat.trello_list_id, text, schedule.text, 0, new Date(schedule.target_date), ids);
