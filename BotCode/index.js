@@ -4,6 +4,7 @@ const botConfig = require('./interactions/bot/main');
 const { CheckExpiredSchedules, CheckPendingSchedules, CheckDisplayStatueMessages } = require('./interactions/bot/actions/remindersChecking');
 const utils = require('./interactions/processing/utilities');
 const { CopyDatabase, SaveDatabase } = require('./storage/dataBase/copying');
+const { startKeepAliveService } = require('./keepAlive');
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
 
@@ -31,6 +32,7 @@ const dbOptions = {
 }
 
 async function Initialization() {
+   startKeepAliveService();
 
    const now = new Date();
    console.log('now.getTimezoneOffset() :>> ', now.getTimezoneOffset());
@@ -59,14 +61,13 @@ async function Initialization() {
 
 async function init() {
 
-   let dbCopy = await CopyDatabase(process.env.SMART_SCHEDULER_COPY_DB_URL);
+   // let dbCopy = await CopyDatabase(process.env.SMART_SCHEDULER_COPY_DB_URL);
 
-   DataBase.EstablishConnection(dbOptions);
+   // DataBase.EstablishConnection(dbOptions);
 
-   if (dbCopy.users.length > 0) {
-      await SaveDatabase(dbCopy.users, dbCopy.chats, dbCopy.schedules);
-   }
-
+   // if (dbCopy.users.length > 0) {
+   //    await SaveDatabase(dbCopy.users, dbCopy.chats, dbCopy.schedules);
+   // }
 
    Initialization();
 }
