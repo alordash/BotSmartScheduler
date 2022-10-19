@@ -255,8 +255,10 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
             if (typeof (newSchedules) != 'undefined' && newSchedules.length > 0) {
                 keyboard = kbs.ConfirmSchedulesKeyboard(language);
             }
-            keyboard = kbs.MergeInlineKeyboards(keyboard, trelloKeyboard);
-            options[answers.length - 1] = keyboard;
+            if (typeof (keyboard) != 'undefined') {
+                keyboard = kbs.MergeInlineKeyboards(keyboard, trelloKeyboard);
+                options[answers.length - 1] = keyboard;
+            }
             results = await BotReplyMultipleMessages(ctx, answers, options);
             message_id = results[results.length - 1].message_id;
             for (const nsi in newSchedules) {
