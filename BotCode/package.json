@@ -22,7 +22,7 @@
     "@alordash/node-js-trello": "^1.1.4",
     "@alordash/parse-word-to-number": "^3.0.6",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "lodash": "^4.17.21",
     "pg": "^8.2.1",
     "request": "^2.88.2",
