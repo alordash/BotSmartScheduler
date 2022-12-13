@@ -453,6 +453,28 @@ class Schedule {
       }
       return result;
    }
+   
+   /**
+    * @param {Boolean} decrypt 
+    * @returns {Array.<{schedule: Schedule, lang: String}>}
+    */
+
+    static async GetStatusDisplaySchedules(decrypt = false) {
+      let query = Schedule.ApplyGetOptions(`SELECT chatid, num, text, username, target_date, period_time, max_date, file_id, trello_card_id, schedules.id, state, message_id, creation_date, creator, userids.lang FROM schedules
+      WHERE state = ${ScheduleStates.statusDisplay}`, GetOptions.valid);
+      let res = await Connector.instance.Query(query);
+      if (typeof (res) == 'undefined' || res.rows.length == 0) {
+         return [];
+      }
+      console.log(`Picked status display schedules, count: ${res.rows.length}`);
+      let result = [];
+      for (let row of res.rows) {
+         let lang = row.lang;
+         delete (row.lang);
+         result.push({ schedule: Schedule.FixSchedule(row, decrypt), lang });
+      }
+      return result;
+   }
 
    /**
     * @param {String} chatID 
