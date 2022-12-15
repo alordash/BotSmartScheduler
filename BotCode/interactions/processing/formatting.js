@@ -124,7 +124,7 @@ function FormBoardsList(boardsList, language) {
    let reply = `${replies.trelloShowBoards}\r\n`;
    for (const board of boardsList) {
       reply += `• ${FormBoardLink(board)}
-   id: <b>${board.id}</b>\r\n`;
+   id: <code>${board.id}</code>\r\n`;
    }
    return reply;
 }
