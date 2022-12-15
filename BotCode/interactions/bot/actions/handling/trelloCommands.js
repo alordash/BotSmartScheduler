@@ -79,7 +79,7 @@ async function TrelloCommand(user, ctx, trelloPendingConfirmationUsers) {
 async function TrelloAuthenticate(ctx, trelloPendingConfirmationUsers) {
    let token = ctx.message.text;
    const replies = rp.LoadReplies(ctx.from.language_code);
-   let match = token.match(/^([a-zA-Z0-9]){64}$/);
+   let match = token.match(/^([a-zA-Z0-9]){64,}$/);
    if (match != null) {
       DataBase.Users.SetUserTrelloToken(ctx.from.id, token);
       trelloPendingConfirmationUsers.splice(trelloPendingConfirmationUsers.indexOf(ctx.from.id), 1);
