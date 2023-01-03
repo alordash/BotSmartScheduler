@@ -32,7 +32,7 @@ const dbOptions = {
 }
 
 async function Initialization() {
-   startKeepAliveService();
+//   startKeepAliveService();
 
    const now = new Date();
    console.log('now.getTimezoneOffset() :>> ', now.getTimezoneOffset());
@@ -62,7 +62,7 @@ async function Initialization() {
 async function init() {
 
    // let dbCopy = await CopyDatabase(process.env.SMART_SCHEDULER_COPY_DB_URL);
-
+   console.log('dbOptions :>> ', dbOptions);
    DataBase.EstablishConnection(dbOptions);
 
    // if (dbCopy.users.length > 0) {
