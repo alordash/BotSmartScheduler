@@ -7,6 +7,7 @@ const { CopyDatabase, SaveDatabase } = require('./storage/dataBase/copying');
 const { startKeepAliveService } = require('./keepAlive');
 
 console.log(`process.env.IS_HEROKU = ${process.env.IS_HEROKU}`);
+console.log(`process.env.SMART_SCHEDULER_DB_URL = ${process.env.SMART_SCHEDULER_DB_URL}`);
 
 Number.prototype.div = function (x) {
    return Math.floor(this / x);
