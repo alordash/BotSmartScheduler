@@ -152,10 +152,10 @@ async function ParseScheduleMessage(ctx, chatID, inGroup, msgText, language, men
         let i = 0;
         for (let j = 0; j < schedules.length; j++) {
             let _schedule = schedules[j];
-            if (_schedule.text == parsedDate.string) {
-                i = j;
-                found = true;
-            }
+            // if (_schedule.text == parsedDate.string) {
+            //     i = j;
+            //     found = true;
+            // }
             if (_schedule.num > max_num && _schedule.state == ScheduleStates.valid) {
                 max_num = _schedule.num;
             }
