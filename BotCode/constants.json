@@ -1,7 +1,7 @@
 {
    "MaximumVoiceMessageDuration": 30,
    "repeatScheduleTime": 300000,
-   "MaximumCountOfSchedules": 25,
+   "MaximumCountOfSchedules": 50,
    "MaxMessageLength": 4096,
    "MessagesUntilTzWarning": 8,
    "MaxShortStringLength": 128,
