@@ -11,6 +11,20 @@ let trelloPendingConfirmationUsers = [];
 var i = 0;
 var errorsCount = 0;
 
+const UpdateHandlingTimeoutMs = 60000;
+
+function LimitUpdateHandlingTime(ctx, next) {
+   let timer;
+   const timeout = new Promise((resolve) => {
+      timer = setTimeout(() => {
+         console.error(`Handling of update ${ctx.update.update_id} (${ctx.updateType}) timed out after ${UpdateHandlingTimeoutMs} ms`);
+         resolve();
+      }, UpdateHandlingTimeoutMs);
+   });
+   const result = Promise.race([next(), timeout]).finally(() => clearTimeout(timer));
+   return result;
+}
+
 /**@param {String} inviteLink 
  * @param {Array.<User>} users 
  */
@@ -58,6 +72,7 @@ function sendNotification(bot, inviteLink, users) {
 
 /**@param {*} bot */
 exports.InitBot = async function (bot) {
+   bot.use(LimitUpdateHandlingTime);
    const subscriptionsArgs = [bot, tzPendingConfirmationUsers, trelloPendingConfirmationUsers];
    await Subscriptions.initCommands(...subscriptionsArgs);
    await Subscriptions.initAdvanced(...subscriptionsArgs);
